@@ -35,7 +35,7 @@ export function CategorySelector({ selectedCategory, onSelectCategory }: Categor
               onPress={() => onSelectCategory(cat)}
               className={`rounded-full items-center justify-center w-[32px] h-[32px] ${!isLast ? 'mr-[12px]' : ''} ${isSelected ? 'bg-white' : 'bg-[#262A35]'} active:opacity-80`}
             >
-              <Text className="text-[16px]">{EMOJIS_CAT[cat]}</Text>
+              <Text className="text-[16px]">{EMOJIS_CAT[cat as keyof typeof EMOJIS_CAT]}</Text>
             </Pressable>
           );
         })}
