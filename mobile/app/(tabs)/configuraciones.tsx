@@ -4,11 +4,13 @@ import { Alert, ScrollView, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MenuItem } from '../../components/ui/MenuItem';
 import { SectionHeader } from '../../components/ui/SectionHeader';
+import { useAuth } from '../../contexts/AuthContext';
 import { useGastos } from '../../contexts/GastosContext';
 
 export default function ConfigurationsScreen() {
   // Conectamos con el contexto de la app para extraer el mes contable y total de gastos
   const { mes, totalMes } = useGastos();
+  const { signOut } = useAuth();
 
   return (
     <SafeAreaView className="flex-1 bg-[#111217]">
@@ -21,6 +23,19 @@ export default function ConfigurationsScreen() {
           title="Cuenta de usuario"
           value="themacbook"
           onPress={() => Alert.alert("Cuenta", "Sesión iniciada como themacbook")}
+        />
+        <MenuItem
+          title="Cerrar sesión"
+          onPress={async () => {
+             Alert.alert(
+              "Cerrar sesión",
+              "¿Estás seguro de que deseas salir?",
+              [
+                { text: "Cancelar", style: "cancel" },
+                { text: "Salir", style: "destructive", onPress: signOut }
+              ]
+            );
+          }}
         />
 
         <SectionHeader title="Funcionamiento" />
