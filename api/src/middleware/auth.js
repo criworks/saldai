@@ -31,6 +31,7 @@ const requireAuth = (req, res, next) => {
       return res.status(401).json({ ok: false, error: 'Token inválido o expirado' })
     }
     req.user = decoded
+    req.token = token
     next()
   })
 }

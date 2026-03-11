@@ -4,7 +4,7 @@ const { requireAuth } = require('./src/middleware/auth.js')
 const express = require('express')
 const cors = require('cors')
 const { parsearGasto } = require('./src/parser')
-const supabase = require('./src/supabase')
+const { createSupabaseClient } = require('./src/supabase')
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -34,6 +34,7 @@ app.post('/gastos/parsear', (req, res) => {
 
 // ── POST /gastos ─ Ruta protegida ───────────────────────────────────────────────────────────
 app.post('/gastos', requireAuth, async (req, res) => {
+  const supabase = createSupabaseClient(req.token)
   const { input } = req.body
 
   if (!input || typeof input !== 'string') {
@@ -87,6 +88,7 @@ app.post('/gastos', requireAuth, async (req, res) => {
 
 // ── GET /gastos ─ Ruta protegida ───────────────────────────────────────────────────────────
 app.get('/gastos', requireAuth, async (req, res) => {
+  const supabase = createSupabaseClient(req.token)
   const { mes, categoria } = req.query
 
   let query = supabase.from('gastos').select('*').eq('user_id', req.user.sub).order('creado_en', { ascending: false })
