@@ -1,16 +1,16 @@
-import React from 'react';
-import { View, Text, FlatList, Pressable, ActivityIndicator, RefreshControl } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import React from 'react';
+import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { MESES } from '../../constants/theme';
 import { useGastos } from '../../hooks/useGastos';
-import { MESES, EMOJIS_CAT } from '../../constants/theme';
 
 export default function CategoriasScreen() {
   const router = useRouter();
   const { mes, loading, refreshing, fetchGastos, categorias, totalMes } = useGastos();
   const insets = useSafeAreaInsets();
-  
+
   // El GradientFooter tiene altura 200px aquí (sin emojis), usamos 140 + insets.bottom para no tener exceso de scroll vacío
   const listPaddingBottom = 140 + insets.bottom;
 
@@ -48,7 +48,7 @@ export default function CategoriasScreen() {
             </View>
 
             {/* Nueva Categoría Action */}
-            <Pressable 
+            <Pressable
               className="flex-row items-center gap-[12px] mb-[24px] active:opacity-80"
               onPress={() => router.push('/captura')}
             >
@@ -57,7 +57,7 @@ export default function CategoriasScreen() {
               </View>
               <Text className="text-[#60677D] text-[16px] font-medium">Nueva categoría</Text>
             </Pressable>
-            
+
             {loading && !categorias.length && (
               <View className="gap-[16px]">
                 {[1, 2, 3, 4].map((item) => (
@@ -76,7 +76,7 @@ export default function CategoriasScreen() {
           </>
         }
         renderItem={({ item: [cat, info] }) => {
-          const emoji = EMOJIS_CAT[cat] || '💸'; // Default a 💸 si no hay emoji asignado en el theme
+          const emoji = require('../../../packages/ui/tokens').EMOJIS_CAT[cat] || require('../../../packages/ui/tokens').EMOJIS_CAT["Sin categoría"];
 
           return (
             <View className="flex-row items-center gap-[12px] mb-[16px]">

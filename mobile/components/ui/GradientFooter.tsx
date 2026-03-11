@@ -1,17 +1,17 @@
-import React from 'react';
-import { View, Text, Pressable, ScrollView } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { LinearGradient } from 'expo-linear-gradient';
+import React from 'react';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { EMOJIS_CAT } from '../../constants/theme';
 import { useFilter } from '../../contexts/FilterContext';
+
 
 export function GradientFooter(props: BottomTabBarProps) {
   // Obtiene el safe area del dispositivo (notch en iOS, navigation bar en Android, etc.)
   const insets = useSafeAreaInsets();
-  
-  // paddingBottomBase es el token de GEMINI.md, 
+
+  // paddingBottomBase es el token de GEMINI.md,
   // le sumamos el margen de seguridad para los dispositivos con navegación en pantalla
   const safePaddingBottom = 24 + insets.bottom;
 
@@ -45,15 +45,15 @@ export function GradientFooter(props: BottomTabBarProps) {
         locations={[0, 0.2, 0.7, 1]}
         // Eliminamos px-[24px] del wrapper padre para que el ScrollView de emojis pegue al borde de la pantalla
         className="justify-end"
-        style={{ 
+        style={{
           height: gradientHeight,
-          paddingBottom: safePaddingBottom 
+          paddingBottom: safePaddingBottom
         }}
       >
         {/* Categories Row (Específico del Home, solo se muestra en 'Mes en curso' si hay data) */}
         {isGastosActive && availableCategories.length > 0 && (
           <View className="mb-[24px]">
-            <ScrollView 
+            <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               // flexGrow: 1 y justifyContent: 'center' es el patrón correcto en RN para:
@@ -62,13 +62,13 @@ export function GradientFooter(props: BottomTabBarProps) {
               contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, gap: 12 }}
             >
               {availableCategories.map((category) => {
-                const emoji = EMOJIS_CAT[category] || '💸'; // Si existe un nombre raro, mostramos 💸
+                const emoji = require('../../../packages/ui/tokens').EMOJIS_CAT[category] || require('../../../packages/ui/tokens').EMOJIS_CAT["Sin categoría"];
                 const isBgActive = selectedCategory === null || selectedCategory === category;
                 const bgClass = isBgActive ? 'bg-[#262A35]' : 'bg-transparent';
-                
+
                 return (
-                  <Pressable 
-                    key={category} 
+                  <Pressable
+                    key={category}
                     onPress={() => handleCategoryPress(category)}
                     className={`${bgClass} rounded-full w-[32px] h-[32px] items-center justify-center active:opacity-80`}
                   >
@@ -83,7 +83,7 @@ export function GradientFooter(props: BottomTabBarProps) {
         {/* Filters Row */}
         {!isConfiguracionesActive && (
           <View className="flex-row justify-center items-center gap-[24px] mb-[24px] px-[24px]">
-            <Pressable 
+            <Pressable
               className={`rounded-full px-[16px] py-[8px] active:opacity-80 ${isGastosActive ? 'bg-[#262A35]' : ''}`}
               onPress={() => props.navigation.navigate('index')}
             >
@@ -91,8 +91,8 @@ export function GradientFooter(props: BottomTabBarProps) {
                 Mes en curso
               </Text>
             </Pressable>
-            
-            <Pressable 
+
+            <Pressable
               className={`rounded-full px-[16px] py-[8px] active:opacity-80 ${isCategoriasActive ? 'bg-[#262A35]' : ''}`}
               onPress={() => props.navigation.navigate('categorias')}
             >
@@ -115,7 +115,7 @@ export function GradientFooter(props: BottomTabBarProps) {
                 <Feather name="list" size={24} color="#60677D" />
               </Pressable>
             ) : (
-              <Pressable 
+              <Pressable
                 className="active:opacity-80"
                 onPress={() => props.navigation.navigate('configuraciones')}
               >
@@ -125,8 +125,8 @@ export function GradientFooter(props: BottomTabBarProps) {
             <Pressable className="active:opacity-80">
               <Feather name="bell" size={24} color="#60677D" />
             </Pressable>
-            
-            <Pressable 
+
+            <Pressable
               className="bg-[#262A35] rounded-full px-[24px] py-[12px] active:opacity-80"
               onPress={() => {
                 if (!isConfiguracionesActive) props.navigation.navigate('index');
@@ -139,12 +139,12 @@ export function GradientFooter(props: BottomTabBarProps) {
           </View>
         </View>
       </LinearGradient>
-      
+
       {/* FAB (+) */}
-      {/* El botón de crear redirige a la pantalla "captura" 
+      {/* El botón de crear redirige a la pantalla "captura"
           También ajustamos el bottom dinámicamente para que flote sobre el tab principal */}
       {!isCapturaActive && (
-        <Pressable 
+        <Pressable
           className="absolute right-[24px] w-[56px] h-[56px] bg-[#ffffff] rounded-full items-center justify-center shadow-lg active:opacity-80"
           style={{ bottom: safePaddingBottom }}
           onPress={() => props.navigation.navigate('captura')}

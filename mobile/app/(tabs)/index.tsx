@@ -1,17 +1,16 @@
+import { useEffect } from 'react'
 import {
-  ActivityIndicator,
-  Pressable,
   RefreshControl,
   ScrollView,
   Text,
-  View,
+  View
 } from 'react-native'
-import { useEffect } from 'react'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
-import { COLORES_CAT, MESES, EMOJIS_CAT } from '../../constants/theme'
-import { useGastos } from '../../hooks/useGastos'
 import { ExpenseItem } from '../../components/ui/ExpenseItem'
+import { MESES } from '../../constants/theme'
 import { useFilter } from '../../contexts/FilterContext'
+import { useGastos } from '../../hooks/useGastos'
+export { categoryColor, COLORES_CAT, EMOJIS_CAT } from '@expenses/ui/tokens'
 
 export default function DashboardScreen() {
   const {
@@ -31,14 +30,14 @@ export default function DashboardScreen() {
 
   // Creamos un string con los nombres para que useEffect sepa cuándo cambiaron las categorías reales
   const catNames = categorias.map(c => c[0]).join(',');
-  
+
   useEffect(() => {
     // Sincronizamos las categorías que realmente tienen gastos este mes hacia el Footer
     setAvailableCategories(categorias.map(c => c[0]));
   }, [catNames, setAvailableCategories]);
 
   // Filtramos la lista de datos en base a selectedCategory
-  const gastosFiltrados = datos?.datos.filter(g => 
+  const gastosFiltrados = datos?.datos.filter(g =>
     selectedCategory ? g.categoria === selectedCategory : true
   ) || [];
 
@@ -108,7 +107,7 @@ export default function DashboardScreen() {
                     key={g.id}
                     monto={g.monto_formateado}
                     metodoPago={g.metodo}
-                    emoji={EMOJIS_CAT[g.categoria] || '📌'}
+                    emoji={require('../../../packages/ui/tokens').EMOJIS_CAT[g.categoria] || require('../../../packages/ui/tokens').EMOJIS_CAT["Sin categoría"]}
                     titulo={g.item}
                   />
                 ))}
