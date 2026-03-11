@@ -1,5 +1,6 @@
 require('dotenv').config()
 
+const { requireAuth } = require('./src/middleware/auth.js')
 const express = require('express')
 const cors = require('cors')
 const { parsearGasto } = require('./src/parser')
@@ -8,14 +9,10 @@ const supabase = require('./src/supabase')
 const app = express()
 const PORT = process.env.PORT || 3000
 
-app.use(
-  cors({
-    origin: [
-      'http://localhost:3001',
-      'https://expenses-tracker-frontend-web.vercel.app', // ← tu URL de Vercel
-    ],
-  })
-)
+const FRONTEND_DEPLOY_URL = process.env.NEXT_FRONTEND_DEPLOY_URL
+const FRONTEND_LOCAL_URL = process.env.NEXT_FRONTEND_LOCAL_URL
+
+app.use(cors({ origin: [FRONTEND_DEPLOY_URL, FRONTEND_LOCAL_URL] }))
 app.use(express.json())
 
 // ── POST /gastos/parsear ────────────────────────────────────────────────────
@@ -35,8 +32,8 @@ app.post('/gastos/parsear', (req, res) => {
   return res.status(resultado.ok ? 200 : 422).json(resultado)
 })
 
-// ── POST /gastos ────────────────────────────────────────────────────────────
-app.post('/gastos', async (req, res) => {
+// ── POST /gastos ─ Ruta protegida ───────────────────────────────────────────────────────────
+app.post('/gastos', requireAuth, async (req, res) => {
   const { input } = req.body
 
   if (!input || typeof input !== 'string') {
@@ -65,6 +62,7 @@ app.post('/gastos', async (req, res) => {
       metodo: resultado.datos.metodo,
       fecha: resultado.datos.fecha,
       input_original: input,
+      user_id: req.user.sub,
     })
     .select()
     .single()
@@ -87,11 +85,11 @@ app.post('/gastos', async (req, res) => {
   })
 })
 
-// ── GET /gastos ─────────────────────────────────────────────────────────────
-app.get('/gastos', async (req, res) => {
+// ── GET /gastos ─ Ruta protegida ───────────────────────────────────────────────────────────
+app.get('/gastos', requireAuth, async (req, res) => {
   const { mes, categoria } = req.query
 
-  let query = supabase.from('gastos').select('*').order('creado_en', { ascending: false })
+  let query = supabase.from('gastos').select('*').eq('user_id', req.user.sub).order('creado_en', { ascending: false })
 
   if (mes) {
     const mesNum = parseInt(mes, 10)

@@ -13,6 +13,8 @@
     "@supabase/supabase-js": "^2.39.0",
     "cors": "^2.8.6",
     "dotenv": "^16.4.1",
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.3",
+    "jwks-rsa": "^4.0.1"
   }
 }

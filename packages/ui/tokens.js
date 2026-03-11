@@ -1,36 +1,32 @@
 /**
  * Design Tokens — Expenses Tracker
  *
- * Fuente única de verdad para colores, tipografía y spacing.
- * Usado por web/ (Tailwind CSS) y mobile/ (NativeWind).
- *
- * Convención de uso:
- *   web/    → clases Tailwind con valores arbitrarios: bg-[#111217]
- *   mobile/ → clases NativeWind con valores arbitrarios: bg-[#111217]
- *   ambos   → pueden importar este archivo para lógica dinámica de estilos
+ * Fuente única de verdad para colores, tipografía, spacing y constantes de UI.
+ * Usado por web/ (Tailwind CSS), mobile/ (NativeWind) y cualquier paquete futuro.
  */
 
 export const colors = {
-  // Fondos principales
-  bg:           "#111217", // Main Background
-  bgElevated:   "#262A35", // Interactive/Surface Elements, Nav Tabs, Date pickers, Skeleton
-  bgSubtle:     "#262A35", 
+  // Fondos
+  bg:           "#111217",
+  bgElevated:   "#262A35",
+  bgSubtle:     "#1a1a1a",
 
   // Bordes
-  border:       "#262A35",
-  borderMuted:  "#111217",
-  borderActive: "#ffffff",
+  border:       "#1a1a1a",
+  borderMuted:  "#222222",
+  borderActive: "#555555",
 
   // Texto
-  text:         "#ffffff", // Active/Focus/Primary Text/Amounts
-  textMuted:    "#60677D", // Muted/Inactive/Secondary Text
-  textSubtle:   "#60677D",
-  textDisabled: "#60677D",
+  text:         "#ffffff",
+  textMuted:    "#60677D",
+  textDisabled: "#2a2a2a",
 
-  // Action / Brand
-  action:       "#ffffff", // Main Action Color
+  // Estados
+  success:  "#4a7c59",
+  error:    "#a65b5b",
+  warning:  "#8a6d3b",
 
-  // Categorías (Mantenidos para web. Mobile usa Emojis + bgElevated según guidelines)
+  // Categorías
   cat: {
     basicos:       "#4a7c59",
     suscripciones: "#5b6fa6",
@@ -39,54 +35,11 @@ export const colors = {
     ocio:          "#a65b5b",
     delivery:      "#a67c52",
     transporte:    "#4a7a8a",
-    sinCategoria:  "#60677D",
+    sinCategoria:  "#444444",
   },
-
-  // Estados
-  success:  "#4a7c59",
-  error:    "#663333",
-  warning:  "#8a6d3b",
 };
 
-export const spacing = {
-  xs:  8,
-  sm:  12,
-  md:  16,
-  lg:  24,
-  xl:  32,
-};
-
-export const fontSize = {
-  xs:   12,   // Base
-  sm:   14,   
-  md:   16,   
-  lg:   18,   // Section headers ("Hoy", "Ayer")
-  xl:   24,   // Month titles / Totals
-  xxl:  40,   // Big amount inputs
-  "3xl": 64,  // Massive amount inputs
-};
-
-export const letterSpacing = {
-  tight:  -1,
-  normal:  0,
-  wide:    2,
-  wider:   3,
-  widest:  6,
-};
-
-export const fontWeight = {
-  normal:   "400", // Regular text
-  medium:   "500", // Menu items, section headers
-  semibold: "600", // Totals, Big inputs
-};
-
-export const radius = {
-  none: 0,
-  md:   16,   // Standard cards or structural containers
-  full: 9999, // Pills, nav buttons, and emoji containers
-};
-
-// Mapeo de categorías → color (útil para lookup dinámico)
+// Lookup dinámico de color por nombre de categoría
 export const categoryColor = (categoria) => {
   const map = {
     "Básicos":       colors.cat.basicos,
@@ -98,4 +51,63 @@ export const categoryColor = (categoria) => {
     "Transporte":    colors.cat.transporte,
   };
   return map[categoria] ?? colors.cat.sinCategoria;
+};
+
+// Emojis por categoría
+export const EMOJIS_CAT = {
+  "Básicos":       "🏠",
+  "Mercado":       "🛒",
+  "Suscripciones": "💳",
+  "Transporte":    "🚌",
+  "Ocio":          "☕️",
+  "Delivery":      "💣",
+  "Inversión":     "🌱",
+  "Sin categoría": "💸",
+};
+
+// Colores por categoría (Record compatible con TS)
+export const COLORES_CAT = {
+  "Básicos":       colors.cat.basicos,
+  "Suscripciones": colors.cat.suscripciones,
+  "Mercado":       colors.cat.mercado,
+  "Inversión":     colors.cat.inversion,
+  "Ocio":          colors.cat.ocio,
+  "Delivery":      colors.cat.delivery,
+  "Transporte":    colors.cat.transporte,
+  "Sin categoría": colors.cat.sinCategoria,
+};
+
+export const spacing = {
+  xs:    4,
+  sm:    8,
+  md:    16,
+  lg:    24,
+  xl:    32,
+  xxl:   48,
+  "3xl": 64,
+  "4xl": 80,
+};
+
+export const fontSize = {
+  xs:  11,
+  sm:  14,
+  md:  20,
+  lg:  28,
+  xl:  36,
+  xxl: 48,
+};
+
+export const fontWeight = {
+  light:  "300",
+  normal: "400",
+  medium: "500",
+  bold:   "700",
+};
+
+export const radius = {
+  none: 0,
+  sm:   4,
+  md:   8,
+  lg:   16,
+  full: 9999,
 };
