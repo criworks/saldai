@@ -46,6 +46,13 @@ module.exports = {
           foreground: "hsl(var(--card-foreground))",
         },
       },
+      fontSize: {
+        hero: ["40px", "48px"],
+        title: ["24px", "32px"],
+        subtitle: ["18px", "24px"],
+        body: ["14px", "20px"],
+        detail: ["12px", "16px"],
+      },
       borderWidth: {
         hairline: hairlineWidth(),
       },

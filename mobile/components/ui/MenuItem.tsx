@@ -1,6 +1,6 @@
-import React from 'react';
-import { Text, Pressable, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import React from 'react';
+import { Pressable, Text, View } from 'react-native';
 
 interface MenuItemProps {
   title: string;
@@ -10,13 +10,13 @@ interface MenuItemProps {
 
 export function MenuItem({ title, value, onPress }: MenuItemProps) {
   return (
-    <Pressable 
+    <Pressable
       onPress={onPress}
-      className="flex-row items-center justify-between px-[24px] py-[16px] active:opacity-80"
+      className="flex-row items-center justify-between px-[24px] h-[64px] active:opacity-80"
     >
-      <Text className="text-[#60677D] text-[16px]">{title}</Text>
+      <Text className="text-primary text-body">{title}</Text>
       <View className="flex-row items-center gap-[8px]">
-        {value ? <Text className="text-[#ffffff] text-[16px] font-medium">{value}</Text> : null}
+        {value ? <Text className="text-muted-foreground text-body font-medium">{value}</Text> : null}
         <Feather name="chevron-right" size={16} color="#60677D" />
       </View>
     </Pressable>

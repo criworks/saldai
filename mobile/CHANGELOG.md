@@ -5,6 +5,14 @@ All notable changes to the **Expense Tracker (Mobile)** project will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-03-12
+### Changed
+- **Design Guidelines Implementation:** Full refactor of `global.css`, `tailwind.config.js`, and `lib/theme.ts` to strictly adhere to the "Dark Mode First" palette and typographic scales (hero, title, subtitle, body, detail).
+- **Layout Standardization:** Wrapped all main screens (`index.tsx`, `captura.tsx`, `categorias.tsx`, `configuraciones.tsx`) in `<View className="flex-1 w-full max-w-md mx-auto">` for mobile-first/desktop-scalable layouts. Standardized `paddingBottom` to `160px` for scroll views.
+- **UI Components Refactor:** Updated `MenuItem.tsx` (fixed height and inverted colors) and `ExpenseItem.tsx` (rigid flexbox layout forcing amounts to the right edge).
+- **FAB Morphology:** Changed the submit button in `captura.tsx` from a strict circle to an elongated pill `px-[32px] py-[12px]` as per guidelines.
+- **Color Utility Usage:** Replaced all hardcoded hex values (e.g., `bg-[#111217]`, `text-[#60677D]`) with semantic Tailwind classes (e.g., `bg-background`, `text-muted-foreground`).
+
 ## [1.3.0] - 2026-03-11
 ### Added
 - **OTP Authentication View:** Added `verify.tsx` screen to handle 6-digit email codes instead of magic links.

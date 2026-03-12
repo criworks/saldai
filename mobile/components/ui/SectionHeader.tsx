@@ -7,7 +7,7 @@ interface SectionHeaderProps {
 
 export function SectionHeader({ title }: SectionHeaderProps) {
   return (
-    <Text className="text-[#60677D] text-[12px] px-[24px] pt-[24px] pb-[8px]">
+    <Text className="text-[#60677D] text-xs px-[24px] pt-[24px] pb-[8px]">
       {title}
     </Text>
   );

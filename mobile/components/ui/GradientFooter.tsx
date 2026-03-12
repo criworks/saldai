@@ -87,7 +87,7 @@ export function GradientFooter(props: BottomTabBarProps) {
               className={`rounded-full px-[16px] py-[8px] active:opacity-80 ${isGastosActive ? 'bg-[#262A35]' : ''}`}
               onPress={() => props.navigation.navigate('index')}
             >
-              <Text className={`text-[14px] font-medium ${isGastosActive ? 'text-[#ffffff]' : 'text-[#60677D]'}`}>
+              <Text className={`text-sm font-regular ${isGastosActive ? 'text-[#ffffff]' : 'text-[#60677D]'}`}>
                 Mes en curso
               </Text>
             </Pressable>
@@ -96,13 +96,13 @@ export function GradientFooter(props: BottomTabBarProps) {
               className={`rounded-full px-[16px] py-[8px] active:opacity-80 ${isCategoriasActive ? 'bg-[#262A35]' : ''}`}
               onPress={() => props.navigation.navigate('categorias')}
             >
-              <Text className={`text-[14px] font-medium ${isCategoriasActive ? 'text-[#ffffff]' : 'text-[#60677D]'}`}>
+              <Text className={`text-sm font-regular ${isCategoriasActive ? 'text-[#ffffff]' : 'text-[#60677D]'}`}>
                 Categorías
               </Text>
             </Pressable>
 
             <Pressable className="active:opacity-80">
-              <Text className="text-[#60677D] text-[14px] font-medium">Métodos</Text>
+              <Text className="text-[#60677D] text-sm font-regular">Métodos</Text>
             </Pressable>
           </View>
         )}
@@ -132,7 +132,7 @@ export function GradientFooter(props: BottomTabBarProps) {
                 if (!isConfiguracionesActive) props.navigation.navigate('index');
               }}
             >
-              <Text className="text-[#ffffff] text-[14px] font-medium">
+              <Text className="text-[#ffffff] text-sm font-regular">
                 {isConfiguracionesActive ? 'Configuraciones' : 'Gastos'}
               </Text>
             </Pressable>

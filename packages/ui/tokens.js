@@ -89,12 +89,14 @@ export const spacing = {
 };
 
 export const fontSize = {
-  xs:  11,
+  xs:  12,
   sm:  14,
-  md:  20,
-  lg:  28,
-  xl:  36,
-  xxl: 48,
+  md:  16,
+  lg:  18,
+  xl:  24,
+  "2xl": 32,
+  "3xl": 40,
+  "4xl": 48,
 };
 
 export const fontWeight = {
