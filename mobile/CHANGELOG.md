@@ -9,10 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **OTP Authentication View:** Added `verify.tsx` screen to handle 6-digit email codes instead of magic links.
 - **Reactive Routing:** Added an `InitialLayout` inside `app/_layout.tsx` that reacts to the AuthContext state to navigate between `(auth)` and `(tabs)`.
+- **React Native Reusables (RNR) Primitives:** Added `Button`, `Progress`, `Separator`, and `Text` base components.
+- **Settings Screen (Configuraciones):** Created new settings view with `MenuItem` and `SectionHeader` components, including an action to sign out (Cerrar sesión).
+- **Form Selectors:** Added `CategorySelector` and `PaymentMethodSelector` components for the capture form.
 
 ### Changed
 - **Login Flow:** Switched from `signInWithOtp` with magic links to 6-digit OTP codes.
 - **Supabase Auth Configuration:** Disabled `detectSessionInUrl` and removed the `useDeepLinkHandler` utility since deep links are no longer required for auth.
+- **API Client Auth:** Updated `services/api.ts` to automatically inject the Supabase user JWT token in the `Authorization` header for all requests.
+- **Shared Tokens:** Migrated emoji token mappings (`EMOJIS_CAT`) to use the monorepo shared package `@expenses/ui/tokens`.
 
 ### Removed
 - **Auth Callback Screen:** Removed `callback.tsx` as auth is now verified natively in the UI.
