@@ -91,7 +91,11 @@ app.get('/gastos', requireAuth, async (req, res) => {
   const supabase = createSupabaseClient(req.token)
   const { mes, categoria } = req.query
 
-  let query = supabase.from('gastos').select('*').eq('user_id', req.user.sub).order('creado_en', { ascending: false })
+  let query = supabase
+    .from('gastos')
+    .select('*')
+    .eq('user_id', req.user.sub)
+    .order('creado_en', { ascending: false })
 
   if (mes) {
     const mesNum = parseInt(mes, 10)
@@ -133,6 +137,24 @@ app.get('/gastos', requireAuth, async (req, res) => {
   })
 })
 
+// UptimeRobot pingea /health cada 5 min y evita que el free tier Render duerma tras 15 min de inactividad. Registrar la URL de la API en UptimeRobot (uptimerobot.com, gratis)
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() })
+})
+
+// UptimeRobot pingea /health/db cada 1 hora para evitar que Supabase pause el proyecto tras 7 días sin actividad (free tier). Usar la misma cuenta de UptimeRobot.
+app.get('/health/db', async (req, res) => {
+  try {
+    const { error } = await supabase.from('gastos').select('id').limit(1)
+
+    if (error) throw error
+    res.status(200).json({ status: 'ok', db: 'connected' })
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message })
+  }
+})
+
+// Puerto inyectado por Render en producción. Localmente usa 3000.
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`)
 })
