@@ -5,6 +5,23 @@ All notable changes to the **Expense Tracker (Mobile)** project will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-03-25
+### Added
+- **Design Tokens Sync:** Dynamic import of typography and spacing scales in `tailwind.config.js` pointing directly to the monorepo's single source of truth (`packages/ui/tokens.js`).
+- **Phosphor Icons:** Integrated `phosphor-react-native` and completely replaced `@expo/vector-icons` (Feather/Lucide) across all app components to match the updated UI Kit.
+- **Inter Font Mappings:** Wired the `Inter` font files (loaded in `_layout.tsx`) into the NativeWind/Tailwind CSS font-family config to ensure classes like `font-medium` properly trigger the designated font weight.
+
+### Changed
+- **Bottom Tab Navigation (GradientFooter):** Massive UI refactor completely moving away from a solid black bar layout to a "Floating Islands" design. Added precise `idle`/`active` states utilizing Phosphor filled icons and pill highlights.
+- **Configuraciones Screen:** Restructured settings sections to perfectly match the 1:1 Figma design groups. Removed obsolete arbitrary horizontal paddings in favor of an inherited wrapper spacing pattern (`gap-xl` / 24px).
+- **Movimientos Screen (Dashboard):** Simplified the layout significantly. Hid category/payment filters. Upgraded the structural layout to match Figma spacing (`gap-xl`).
+- **Data Grouping (Gastos):** Completely overhauled the `index.tsx` date parser logic to aggregate expenses by dates labeled `"Hoy"`, `"Ayer"`, and short weekday strings (e.g. `"Jue 26"`). Added critical fallback fixes to prevent `Invalid Date` crashes from incoming API strings `DD/MM/YYYY`.
+- **ExpenseItem Component:** Redesigned into a minimalist pill configuration, eliminating the previous multi-icon and category badge indicators. Set flex limits (`flex-1`, `numberOfLines`) for strict visual containment.
+
+### Removed
+- Removed `@expo/vector-icons` UI dependencies.
+- Removed legacy arbitrary `[16px]` bracket properties in all refactored CSS classes for strict token usage (`text-body`, `p-sm`).
+
 ## [1.3.0] - 2026-03-11
 ### Added
 - **OTP Authentication View:** Added `verify.tsx` screen to handle 6-digit email codes instead of magic links.

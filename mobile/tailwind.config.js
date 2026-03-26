@@ -1,4 +1,15 @@
 const { hairlineWidth } = require("nativewind/theme");
+const tokens = require("../packages/ui/tokens.js");
+
+// Estandarizar Spacing: { xs: '4px', ... }
+const spacingPx = Object.fromEntries(
+  Object.entries(tokens.spacing).map(([k, v]) => [k, `${v}px`])
+);
+
+// Estandarizar Tipografía: { xs: '11px', ... }
+const fontSizePx = Object.fromEntries(
+  Object.entries(tokens.fontSize).map(([k, v]) => [k, `${v}px`])
+);
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -11,6 +22,22 @@ module.exports = {
   presets: [require("nativewind/preset")],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Inter_400Regular', 'sans-serif'],
+        light: ['Inter_300Light', 'sans-serif'],
+        normal: ['Inter_400Regular', 'sans-serif'],
+        medium: ['Inter_500Medium', 'sans-serif'],
+        bold: ['Inter_700Bold', 'sans-serif'],
+      },
+      spacing: spacingPx,
+      fontSize: {
+        'detail': fontSizePx.sm,     // 12px
+        'body': fontSizePx.base,     // 14px
+        'menu': fontSizePx.md,       // 16px
+        'subtitle': fontSizePx.lg,   // 18px
+        'title': fontSizePx.xxl,     // 24px
+        'hero': fontSizePx['3xl'],   // 28px
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

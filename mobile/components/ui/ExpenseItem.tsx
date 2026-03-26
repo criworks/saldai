@@ -4,27 +4,16 @@ import { View, Text } from 'react-native';
 export interface ExpenseItemProps {
   id?: string;
   monto: string;
-  metodoPago: string;
-  emoji: string;
   titulo: string;
 }
 
-export function ExpenseItem({ monto, metodoPago, emoji, titulo }: ExpenseItemProps) {
+export function ExpenseItem({ monto, titulo }: ExpenseItemProps) {
   return (
-    <View className="flex-row items-center gap-[12px]">
-      <View className="bg-[#262A35] rounded-full px-[16px] py-[8px]">
-        <Text className="text-[#ffffff] text-[14px] font-medium">{monto}</Text>
+    <View className="flex-row items-center gap-sm w-full">
+      <View className="bg-secondary rounded-full px-md py-[6px] justify-center items-center">
+        <Text className="text-foreground text-body font-medium leading-[normal]">{monto}</Text>
       </View>
-      
-      <View className="bg-[#262A35] rounded-full w-[32px] h-[32px] items-center justify-center">
-        <Text className="text-[#60677D] text-[12px] font-medium">{metodoPago}</Text>
-      </View>
-      
-      <View className="bg-[#262A35] rounded-full w-[32px] h-[32px] items-center justify-center">
-        <Text className="text-[14px]">{emoji}</Text>
-      </View>
-      
-      <Text className="text-[#60677D] text-[14px] font-medium">{titulo}</Text>
+      <Text className="text-muted-foreground text-body font-normal leading-[normal] flex-1" numberOfLines={1}>{titulo}</Text>
     </View>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import React, { useMemo } from 'react'
 import {
   RefreshControl,
   ScrollView,
@@ -8,113 +8,184 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ExpenseItem } from '../../components/ui/ExpenseItem'
 import { MESES } from '../../constants/theme'
-import { useFilter } from '../../contexts/FilterContext'
-import { useGastos } from '../../hooks/useGastos'
-export { categoryColor, COLORES_CAT, EMOJIS_CAT } from '@expenses/ui/tokens'
+import { useGastos, Gasto } from '../../hooks/useGastos'
+
+// Helper para agrupar fechas: "Hoy", "Ayer" o "Ddd DD"
+function formatGroupDate(dateString: string): string {
+  if (!dateString) return 'Desconocido';
+  
+  let expenseDate: Date;
+
+  // Intentar parsear el formato devuelto por dateParser.js (DD/MM/YYYY)
+  if (dateString.includes('/')) {
+    const parts = dateString.split('/');
+    if (parts.length === 3) {
+      const [day, month, year] = parts.map(Number);
+      expenseDate = new Date(year, month - 1, day);
+    } else {
+      expenseDate = new Date(dateString);
+    }
+  } else if (dateString.includes('-')) {
+    // Fallback ISO por si acaso (YYYY-MM-DD)
+    const parts = dateString.split('T')[0].split('-');
+    if (parts.length === 3) {
+      const [year, month, day] = parts.map(Number);
+      expenseDate = new Date(year, month - 1, day);
+    } else {
+      expenseDate = new Date(dateString);
+    }
+  } else {
+    expenseDate = new Date(dateString);
+  }
+
+  // Si la fecha sigue siendo inválida (isNaN), retornar Desconocido
+  if (isNaN(expenseDate.getTime())) {
+    return 'Desconocido';
+  }
+  
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  if (expenseDate.getTime() === today.getTime()) {
+    return 'Hoy';
+  }
+  if (expenseDate.getTime() === yesterday.getTime()) {
+    return 'Ayer';
+  }
+
+  // Si no es hoy ni ayer, Ddd DD (ej. Jue 26)
+  const formatter = new Intl.DateTimeFormat('es-ES', { weekday: 'short', day: 'numeric' });
+  let formatted = formatter.format(expenseDate);
+  // Capitalize la primera letra y limpiar punto si la plataforma lo añade (ej: jue. 26 -> Jue 26)
+  formatted = formatted.replace('.', '');
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+}
 
 export default function DashboardScreen() {
   const {
     mes,
-    setMes,
     datos,
     loading,
     refreshing,
     fetchGastos,
-    categorias,
     totalMes,
   } = useGastos()
 
   const insets = useSafeAreaInsets()
   const listPaddingBottom = 220 + insets.bottom;
-  const { selectedCategory, setAvailableCategories } = useFilter()
 
-  // Creamos un string con los nombres para que useEffect sepa cuándo cambiaron las categorías reales
-  const catNames = categorias.map(c => c[0]).join(',');
+  // Agrupar los gastos por fecha
+  const gastosAgrupados = useMemo(() => {
+    if (!datos?.datos) return [];
+    
+    // Sort desc por fecha por seguridad
+    const sorted = [...datos.datos].sort((a, b) => 
+      new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
+    );
 
-  useEffect(() => {
-    // Sincronizamos las categorías que realmente tienen gastos este mes hacia el Footer
-    setAvailableCategories(categorias.map(c => c[0]));
-  }, [catNames, setAvailableCategories]);
+    const groups: Record<string, Gasto[]> = {};
+    sorted.forEach((g) => {
+      const label = formatGroupDate(g.fecha);
+      if (!groups[label]) groups[label] = [];
+      groups[label].push(g);
+    });
 
-  // Filtramos la lista de datos en base a selectedCategory
-  const gastosFiltrados = datos?.datos.filter(g =>
-    selectedCategory ? g.categoria === selectedCategory : true
-  ) || [];
+    // Retornamos un array de grupos para iterar fácilmente
+    return Object.entries(groups).map(([label, items]) => ({
+      label,
+      data: items
+    }));
+  }, [datos?.datos]);
 
   return (
-    <SafeAreaView edges={['top', 'left', 'right']} className="flex-1 bg-[#111217]">
+    <SafeAreaView edges={['top', 'left', 'right']} className="flex-1 bg-background">
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 24, paddingBottom: listPaddingBottom }} // paddingBottom alto para el GradientFooter
+        contentContainerStyle={{ 
+          paddingHorizontal: 24, // px-[24px] global container
+          paddingTop: 40,        // pt-[40px] top section start
+          paddingBottom: listPaddingBottom, // pb-[24px] is the internal padding, but we need safe footer margin
+        }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => fetchGastos(true)}
-            tintColor="#262A35"
+            tintColor="#262A35" // color secondary
           />
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* Header - Ahora consistente con Categorias */}
-        <View className="mb-[24px]">
-          {loading && !datos ? (
-            <>
-              <View className="h-[24px] w-[120px] bg-[#262A35] rounded-full mb-[8px]" />
-              <View className="h-[16px] w-[80px] bg-[#262A35] rounded-full" />
-            </>
-          ) : (
-            <>
-              <Text className="text-[#60677D] text-[24px] font-medium mb-[8px]">
-                {MESES[mes - 1]}
-              </Text>
-              <Text className="text-white text-[16px] font-medium">
-                ${totalMes.toLocaleString('es-CL')}
-              </Text>
-            </>
-          )}
-        </View>
-
-        {loading && !datos ? (
-          <View className="mb-[24px]">
-            <View className="h-[16px] w-[80px] bg-[#262A35] rounded-full mb-[16px]" />
-            <View className="gap-[16px]">
-              {[1, 2, 3, 4, 5].map((item) => (
-                <View key={item} className="flex-row items-center justify-between">
-                  <View className="flex-row items-center gap-[12px]">
-                    <View className="w-[40px] h-[40px] bg-[#262A35] rounded-full" />
-                    <View className="gap-[4px]">
-                      <View className="h-[14px] w-[100px] bg-[#262A35] rounded-full" />
-                      <View className="h-[12px] w-[60px] bg-[#262A35] rounded-full" />
-                    </View>
-                  </View>
-                  <View className="h-[14px] w-[70px] bg-[#262A35] rounded-full" />
-                </View>
-              ))}
-            </View>
-          </View>
-        ) : !datos || datos.cantidad === 0 ? (
-          <Text className="text-[#60677D] text-[14px] font-medium">No hay gastos este mes</Text>
-        ) : (
-          <View className="mb-[24px]">
-            <Text className="text-[#60677D] text-[16px] font-medium mb-[16px]">
-              Historial
-            </Text>
-            {gastosFiltrados.length === 0 ? (
-              <Text className="text-[#60677D] text-[14px] font-medium">No hay gastos en esta categoría</Text>
+        <View className="flex-col gap-lg w-full items-center">
+          
+          {/* Header Block (Mes y Total) */}
+          <View className="w-full flex-col pt-xl rounded-[40px]">
+            {loading && !datos ? (
+              <View className="flex-col gap-sm w-full items-start">
+                <View className="h-[28px] w-[120px] bg-secondary rounded-full" />
+                <View className="h-[16px] w-[80px] bg-secondary rounded-full" />
+              </View>
             ) : (
-              <View className="gap-[16px]">
-                {gastosFiltrados.map(g => (
-                  <ExpenseItem
-                    key={g.id}
-                    monto={g.monto_formateado}
-                    metodoPago={g.metodo}
-                    emoji={require('../../../packages/ui/tokens').EMOJIS_CAT[g.categoria] || require('../../../packages/ui/tokens').EMOJIS_CAT["Sin categoría"]}
-                    titulo={g.item}
-                  />
-                ))}
+              <View className="flex-col gap-sm w-full items-start">
+                <Text className="text-muted-foreground text-title font-normal leading-[normal]">
+                  {MESES[mes - 1]}
+                </Text>
+                <Text className="text-foreground text-body font-medium leading-[normal] text-right">
+                  ${totalMes.toLocaleString('es-CL')}
+                </Text>
               </View>
             )}
           </View>
-        )}
+
+          {/* List Body (list-gastos container con gap-[24px]) */}
+          {loading && !datos ? (
+            <View className="flex-col gap-xl w-full rounded-[40px]">
+              {[1, 2].map((group) => (
+                <View key={group} className="flex-col w-full gap-xl">
+                  <View className="h-[20px] w-[60px] bg-secondary rounded-full pt-xl" />
+                  <View className="flex-col gap-xl">
+                    {[1, 2, 3].map((item) => (
+                      <View key={item} className="flex-row items-center gap-sm">
+                        <View className="h-[32px] w-[90px] bg-secondary rounded-full" />
+                        <View className="h-[14px] w-[60px] bg-secondary rounded-full" />
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              ))}
+            </View>
+          ) : !datos || datos.cantidad === 0 ? (
+            <View className="w-full flex-col rounded-[40px]">
+               <Text className="text-muted-foreground text-body font-medium">No hay gastos este mes</Text>
+            </View>
+          ) : (
+            <View className="flex-col w-full gap-xl rounded-[40px]">
+              {gastosAgrupados.map((group) => (
+                <View key={group.label} className="flex-col items-start w-full gap-xl">
+                  {/* List Header ("Hoy", "Ayer") */}
+                  <View className="flex-col items-start w-full pt-xl">
+                    <Text className="text-muted-foreground text-subtitle font-normal leading-[normal]">
+                      {group.label}
+                    </Text>
+                  </View>
+                  
+                  {/* Items Container */}
+                  <View className="flex-col w-full gap-xl">
+                    {group.data.map(g => (
+                      <ExpenseItem
+                        key={g.id}
+                        monto={`$${g.monto.toLocaleString('es-CL')}`}
+                        titulo={g.item}
+                      />
+                    ))}
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+
+        </View>
       </ScrollView>
     </SafeAreaView>
   )

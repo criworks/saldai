@@ -80,21 +80,27 @@ export const COLORES_CAT = {
 export const spacing = {
   xs:    4,
   sm:    8,
-  md:    16,
-  lg:    24,
-  xl:    32,
-  xxl:   48,
-  "3xl": 64,
-  "4xl": 80,
+  md:    12,
+  lg:    16,
+  xl:    24,
+  xxl:   32,
+  "3xl": 40,
+  "4xl": 48,
+  "5xl": 64,
+  "6xl": 80,
 };
 
 export const fontSize = {
-  xs:  11,
-  sm:  14,
-  md:  20,
-  lg:  28,
-  xl:  36,
-  xxl: 48,
+  xs:   11,
+  sm:   12,
+  base: 14,
+  md:   16,
+  lg:   18,
+  xl:   20,
+  xxl:  24,
+  "3xl": 28,
+  "4xl": 36,
+  "5xl": 48,
 };
 
 export const fontWeight = {
