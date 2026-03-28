@@ -1,12 +1,14 @@
 import React from 'react';
 import { Alert, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { MenuItem } from '../../components/ui/MenuItem';
 import { SectionHeader } from '../../components/ui/SectionHeader';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function ConfigurationsScreen() {
   const { signOut } = useAuth();
+  const router = useRouter();
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
@@ -28,7 +30,7 @@ export default function ConfigurationsScreen() {
             <SectionHeader title="General" />
             <MenuItem
               title="Cuenta de usuario"
-              onPress={() => Alert.alert("Próximamente", "Acciones de usuario")}
+              onPress={() => router.push('/cuenta')}
             />
           </View>
 

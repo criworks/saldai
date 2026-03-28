@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { KeyboardAvoidingView, Pressable, Text, TextInput, View } from 'react-native'
+import { KeyboardAvoidingView, Pressable, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { supabase } from '../../services/supabase'
+import { Input } from '../../components/ui/Input'
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('')
@@ -54,10 +55,8 @@ export default function LoginScreen() {
             </Text>
           </View>
 
-          <TextInput
-            className="bg-[#262A35] text-white text-[16px] rounded-xl px-4 h-[52px]"
+          <Input
             placeholder="tu@email.com"
-            placeholderTextColor="#60677D"
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
@@ -72,7 +71,7 @@ export default function LoginScreen() {
           <Pressable
             onPress={handleSendOtp}
             disabled={loading || !email.trim()}
-            className={`bg-white rounded-xl h-[52px] items-center justify-center active:opacity-80 ${loading || !email.trim() ? 'opacity-50' : ''}`}
+            className={`bg-white rounded-[16px] h-[56px] items-center justify-center active:opacity-80 ${loading || !email.trim() ? 'opacity-50' : ''}`}
           >
             <Text className="text-[#111217] text-[16px] font-medium">
               {loading ? 'Enviando...' : 'Enviar código'}

@@ -12,6 +12,7 @@ export function useGastoMutation() {
   const [metodo, setMetodo] = useState('TC')
   const [estado, setEstado] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle')
   const [mensaje, setMensaje] = useState('')
+  const [lastSaved, setLastSaved] = useState<{ monto: string, descripcion: string } | null>(null)
 
   const handleChange = (key: CampoClave, val: string) => {
     setValores(prev => ({ ...prev, [key]: val }))
@@ -33,6 +34,11 @@ export function useGastoMutation() {
       if (json.ok) {
         setEstado('ok')
         setMensaje(`${json.datos.montoFormateado} · ${json.datos.categoria}`)
+        setLastSaved({
+          monto: json.datos.montoFormateado,
+          descripcion: json.datos.item || valores.item
+        })
+
         setValores({ monto: '', item: '', categoria: '', fecha: '' })
         setMetodo('TC')
         
@@ -43,12 +49,15 @@ export function useGastoMutation() {
         setTimeout(() => {
           setEstado('idle')
           setMensaje('')
+          setLastSaved(null)
         }, 4000)
       }
     } catch (error) {
       setEstado('error')
       setMensaje(error instanceof Error ? error.message : 'no se pudo conectar con la api')
-      setTimeout(() => setEstado('idle'), 4000)
+      setTimeout(() => {
+        setEstado('idle')
+      }, 4000)
     }
   }
 
@@ -63,5 +72,6 @@ export function useGastoMutation() {
     handleChange,
     guardarGasto,
     listo,
+    lastSaved
   }
 }
