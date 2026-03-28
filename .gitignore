@@ -200,5 +200,8 @@ REPORT.md
 AGENTS.md
 SKILL.md
 .agents/
+.agent/
+.agent/*
 ai-setup/
 design/
+.git/
