@@ -74,3 +74,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Custom transparent Bottom Tab Bar (`GradientFooter`).
 - Filter by category utilizing Horizontal Scroll View.
 - Capture screen for adding new expenses with Keyboard Avoiding View.
+
+## [0.4.0] - 2026-03-28
+### Added
+- `cuenta.tsx` screen to handle user email modifications using OTP (`verifyOtp`).
+- `@react-native-community/datetimepicker` integrated in `captura.tsx`.
+- Reusable `SuccessNotification.tsx` toast component.
+- Reusable `Input.tsx` shared component.
+
+### Changed
+- Replaced all hardcoded hexadecimal colors with semantic Tailwind classes (e.g. `bg-background`, `text-warning`).
+- Re-architected `captura.tsx` form positioning to precisely match Figma dimensions, sitting seamlessly above native keyboards.
+- Re-engineered `GradientFooter.tsx` to conditionally hide its fade gradient on sub-less views (e.g., `cuenta`, `configuraciones`).
+- Overhauled date grouping in `index.tsx` to use precise `Date` sorting and `Map` to guarantee desc date order.
+
+### Fixed
+- Addressed iOS/Android keyboard flickering (glitches) between numeric and text input transitions using a 100ms debounce in keyboard hide listeners.
+- Prevented keyboard from overlapping the `captura.tsx` form.
+
