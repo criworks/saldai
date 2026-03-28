@@ -10,36 +10,31 @@ import { ExpenseItem } from '../../components/ui/ExpenseItem'
 import { MESES } from '../../constants/theme'
 import { useGastos, Gasto } from '../../hooks/useGastos'
 
-// Helper para agrupar fechas: "Hoy", "Ayer" o "Ddd DD"
-function formatGroupDate(dateString: string): string {
-  if (!dateString) return 'Desconocido';
+// Helper para parsear fechas string (DD/MM/YYYY o ISO) a Date
+function parseExpenseDate(dateString: string): Date {
+  if (!dateString) return new Date(0);
   
-  let expenseDate: Date;
-
-  // Intentar parsear el formato devuelto por dateParser.js (DD/MM/YYYY)
   if (dateString.includes('/')) {
     const parts = dateString.split('/');
     if (parts.length === 3) {
       const [day, month, year] = parts.map(Number);
-      expenseDate = new Date(year, month - 1, day);
-    } else {
-      expenseDate = new Date(dateString);
+      return new Date(year, month - 1, day);
     }
   } else if (dateString.includes('-')) {
-    // Fallback ISO por si acaso (YYYY-MM-DD)
     const parts = dateString.split('T')[0].split('-');
     if (parts.length === 3) {
       const [year, month, day] = parts.map(Number);
-      expenseDate = new Date(year, month - 1, day);
-    } else {
-      expenseDate = new Date(dateString);
+      return new Date(year, month - 1, day);
     }
-  } else {
-    expenseDate = new Date(dateString);
   }
+  
+  const parsed = new Date(dateString);
+  return isNaN(parsed.getTime()) ? new Date(0) : parsed;
+}
 
-  // Si la fecha sigue siendo inválida (isNaN), retornar Desconocido
-  if (isNaN(expenseDate.getTime())) {
+// Helper para agrupar fechas: "Hoy", "Ayer" o "Ddd DD"
+function formatGroupDate(expenseDate: Date): string {
+  if (isNaN(expenseDate.getTime()) || expenseDate.getTime() === 0) {
     return 'Desconocido';
   }
   
@@ -49,10 +44,13 @@ function formatGroupDate(dateString: string): string {
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
 
-  if (expenseDate.getTime() === today.getTime()) {
+  const dateToCompare = new Date(expenseDate);
+  dateToCompare.setHours(0, 0, 0, 0);
+
+  if (dateToCompare.getTime() === today.getTime()) {
     return 'Hoy';
   }
-  if (expenseDate.getTime() === yesterday.getTime()) {
+  if (dateToCompare.getTime() === yesterday.getTime()) {
     return 'Ayer';
   }
 
@@ -81,20 +79,27 @@ export default function DashboardScreen() {
   const gastosAgrupados = useMemo(() => {
     if (!datos?.datos) return [];
     
-    // Sort desc por fecha por seguridad
-    const sorted = [...datos.datos].sort((a, b) => 
-      new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
-    );
+    // Transformar a un array con la fecha real parseada
+    const withDates = datos.datos.map(g => ({
+      ...g,
+      parsedDate: parseExpenseDate(g.fecha)
+    }));
 
-    const groups: Record<string, Gasto[]> = {};
-    sorted.forEach((g) => {
-      const label = formatGroupDate(g.fecha);
-      if (!groups[label]) groups[label] = [];
-      groups[label].push(g);
+    // Ordenar por fecha descendente (más actual primero, más antigua abajo)
+    withDates.sort((a, b) => b.parsedDate.getTime() - a.parsedDate.getTime());
+
+    // Usamos Map para garantizar que se respete el orden de inserción de las llaves (las fechas más nuevas)
+    const groupsMap = new Map<string, typeof withDates>();
+    
+    withDates.forEach((g) => {
+      const label = formatGroupDate(g.parsedDate);
+      if (!groupsMap.has(label)) {
+        groupsMap.set(label, []);
+      }
+      groupsMap.get(label)!.push(g);
     });
 
-    // Retornamos un array de grupos para iterar fácilmente
-    return Object.entries(groups).map(([label, items]) => ({
+    return Array.from(groupsMap.entries()).map(([label, items]) => ({
       label,
       data: items
     }));

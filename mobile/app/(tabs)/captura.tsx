@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -8,12 +8,17 @@ import {
   Text,
   TextInput,
   View,
+  Keyboard,
+  DeviceEventEmitter,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
+import DateTimePicker from '@react-native-community/datetimepicker'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useGastoMutation } from '../../hooks/useGastoMutation'
 import { useGastos } from '../../hooks/useGastos'
 import { CategorySelector } from '../../components/ui/CategorySelector'
 import { PaymentMethodSelector } from '../../components/ui/PaymentMethodSelector'
+import { SuccessNotification } from '../../components/ui/SuccessNotification'
 
 export default function CapturaScreen() {
   const { fetchGastos } = useGastos()
@@ -26,9 +31,16 @@ export default function CapturaScreen() {
     handleChange,
     guardarGasto,
     listo,
+    lastSaved
   } = useGastoMutation()
 
   const montoRef = useRef<TextInput>(null)
+  const descripcionRef = useRef<TextInput>(null)
+  const [showDatePicker, setShowDatePicker] = useState(false)
+  const [date, setDate] = useState(new Date())
+  const [isKeyboardVisible, setKeyboardVisible] = useState(false)
+  const insets = useSafeAreaInsets()
+  const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleAmountChange = (text: string) => {
     // Solo permitimos números
@@ -43,6 +55,60 @@ export default function CapturaScreen() {
     })
   }
 
+  useEffect(() => {
+    const subscription = DeviceEventEmitter.addListener('submitCaptura', handleGuardar)
+    return () => {
+      subscription.remove()
+    }
+  }, [handleGuardar])
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow'
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide'
+
+    const keyboardDidShowListener = Keyboard.addListener(showEvent, () => {
+      if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current)
+      setKeyboardVisible(true)
+    })
+    const keyboardDidHideListener = Keyboard.addListener(hideEvent, () => {
+      hideTimeoutRef.current = setTimeout(() => {
+        setKeyboardVisible(false)
+      }, 100)
+    })
+
+    return () => {
+      if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current)
+      keyboardDidShowListener.remove()
+      keyboardDidHideListener.remove()
+    }
+  }, [])
+
+  const onDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(false)
+    if (selectedDate) {
+      setDate(selectedDate)
+      
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const selectedDay = new Date(selectedDate)
+      selectedDay.setHours(0, 0, 0, 0)
+      
+      const diffTime = Math.abs(today.getTime() - selectedDay.getTime())
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      
+      if (diffDays === 0) {
+        handleChange('fecha', 'Hoy')
+      } else if (diffDays === 1 && selectedDay < today) {
+        handleChange('fecha', 'Ayer')
+      } else {
+        const dd = String(selectedDate.getDate()).padStart(2, '0')
+        const mm = String(selectedDate.getMonth() + 1).padStart(2, '0')
+        const yyyy = selectedDate.getFullYear()
+        handleChange('fecha', `${dd}/${mm}/${yyyy}`)
+      }
+    }
+  }
+
   // Formato con separadores de miles para Chile
   const formattedAmount = valores.monto 
     ? parseInt(valores.monto, 10).toLocaleString('es-CL') 
@@ -50,100 +116,87 @@ export default function CapturaScreen() {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-[#111217]"
+      className="flex-1 bg-background"
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          justifyContent: 'center',
-          paddingHorizontal: 24,
-          paddingBottom: 220, // Espacio para el GradientFooter
-        }}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+      <SuccessNotification 
+        visible={estado === 'ok' && lastSaved !== null}
+        monto={lastSaved?.monto || ''}
+        descripcion={lastSaved?.descripcion || ''}
+      />
+      
+      <View 
+        className="flex-1 w-full justify-end items-center px-[24px] pt-[40px]"
+        style={{ paddingBottom: isKeyboardVisible ? 24 : 100 + 24 + insets.bottom }}
       >
-        <View className="items-end w-full">
-          
-          {/* Amount Input */}
-          <View className="flex-row items-center justify-end mb-[24px]">
-            <Text className="text-[#60677D] text-[40px] font-light mr-[4px]">$</Text>
+        <View className="flex-col items-start gap-[16px] w-full">
+          <View className="flex-row justify-end items-center w-full mb-[8px]">
+            <Text className="text-muted-foreground text-[40px] font-light mr-[4px]">$</Text>
             <TextInput
               ref={montoRef}
               value={formattedAmount}
               onChangeText={handleAmountChange}
               placeholder="0"
-              placeholderTextColor="#60677D"
+              placeholderTextColor="hsl(var(--muted-foreground))"
               keyboardType="numeric"
-              selectionColor="#ffffff"
+              returnKeyType="next"
+              onSubmitEditing={() => descripcionRef.current?.focus()}
+              cursorColor="hsl(var(--foreground))"
               autoFocus={true}
-              className={`text-[40px] font-light p-0 m-0 min-w-[30px] text-right ${valores.monto ? 'text-white' : 'text-[#60677D]'}`}
+              className={`text-[40px] font-light p-0 m-0 min-w-[30px] text-right ${valores.monto ? 'text-foreground' : 'text-muted-foreground'}`}
             />
           </View>
 
-          {/* Description Input */}
-          <TextInput
-            value={valores.item}
-            onChangeText={(val) => handleChange('item', val)}
-            placeholder="Descripción..."
-            placeholderTextColor="#60677D"
-            maxLength={40}
-            selectionColor="#ffffff"
-            className={`text-[16px] text-right p-0 m-0 mb-[32px] w-full ${valores.item ? 'text-white' : 'text-[#60677D]'}`}
-          />
+          <View className="flex-row py-[16px] justify-between items-center w-full">
+            <TextInput
+              ref={descripcionRef}
+              value={valores.item}
+              onChangeText={(val) => handleChange('item', val)}
+              placeholder="Descripción..."
+              placeholderTextColor="hsl(var(--muted-foreground))"
+              maxLength={40}
+              returnKeyType="done"
+              onSubmitEditing={() => Keyboard.dismiss()}
+              cursorColor="hsl(var(--foreground))"
+              className={`flex-1 text-[14px] text-right p-0 m-0 w-full ${valores.item ? 'text-foreground' : 'text-muted-foreground'}`}
+            />
+          </View>
 
-          {/* Date Picker Pill */}
-          <Pressable 
-            className="flex-row items-center bg-[#262A35] rounded-full px-[16px] py-[8px] mb-[32px] active:opacity-80"
-            onPress={() => handleChange('fecha', !valores.fecha || valores.fecha.toLowerCase() === 'hoy' ? 'Ayer' : 'Hoy')}
-          >
-            <Feather name="calendar" size={16} color="#60677D" />
-            <Text className={`text-[14px] mx-[8px] ${valores.fecha ? 'text-white' : 'text-[#60677D]'}`}>
-              {valores.fecha || 'Hoy'}
-            </Text>
-            <Feather name="chevron-down" size={16} color="#60677D" />
-          </Pressable>
-
-          {/* Categories */}
-          <CategorySelector 
-            selectedCategory={valores.categoria}
-            onSelectCategory={(cat) => handleChange('categoria', cat)}
-          />
-
-          {/* Payment Methods */}
-          <PaymentMethodSelector 
-            method={metodo}
-            onSelectMethod={setMetodo}
-          />
+          <View className="flex-row justify-end items-center gap-[8px] w-full">
+            <Pressable 
+              className="flex-row px-[12px] py-[8px] justify-center items-center gap-[8px] rounded-full bg-secondary"
+              onPress={() => setShowDatePicker(true)}
+            >
+              <Feather name="calendar" size={16} color="hsl(var(--muted-foreground))" />
+              <Text className={`text-[14px] font-medium ${valores.fecha ? 'text-foreground' : 'text-muted-foreground'}`}>
+                {valores.fecha || 'Hoy'}
+              </Text>
+              <Feather name="chevron-down" size={16} color="hsl(var(--muted-foreground))" />
+            </Pressable>
+          </View>
         </View>
 
-        {/* Submit Section */}
-        <View className="mt-[64px] items-end w-full">
-          {estado === 'ok' && (
-            <Text className="text-[#4a7c59] text-[12px] tracking-[2px] text-right mb-[16px] w-full">
-              {mensaje}
-            </Text>
-          )}
-          {estado === 'error' && (
-            <Text className="text-[#a65b5b] text-[12px] tracking-[2px] text-right mb-[16px] w-full">
-              {mensaje}
-            </Text>
-          )}
-
-          <Pressable
-            onPress={handleGuardar}
-            disabled={!listo || estado === 'loading'}
-            className={`w-[56px] h-[56px] rounded-full items-center justify-center shadow-lg ${!listo || estado === 'loading' ? 'bg-[#262A35]' : 'bg-white active:opacity-80'}`}
-          >
-            {estado === 'loading' ? (
-              <ActivityIndicator color="#111217" size="small" />
-            ) : (
-              <Feather name="check" size={24} color={!listo ? '#60677D' : '#111217'} />
-            )}
-          </Pressable>
-        </View>
-        
-      </ScrollView>
+        {showDatePicker && (
+          <DateTimePicker
+            value={date}
+            mode="date"
+            display="default"
+            onChange={onDateChange}
+          />
+        )}
+      </View>
+      
+      {/* Elementos Ocultos */}
+      <View className="hidden">
+        <CategorySelector 
+          selectedCategory={valores.categoria}
+          onSelectCategory={(cat) => handleChange('categoria', cat)}
+        />
+        <PaymentMethodSelector 
+          method={metodo}
+          onSelectMethod={setMetodo}
+        />
+      </View>
     </KeyboardAvoidingView>
   )
 }
