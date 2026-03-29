@@ -8,28 +8,35 @@ import {
   Check, 
   CaretRight, 
   WarningCircle, 
-  PencilSimple 
+  PencilSimple,
+  Clock
 } from 'phosphor-react-native';
+
+declare module 'phosphor-react-native' {
+  interface IconProps {
+    className?: string;
+  }
+}
 
 const iconConfig = {
   className: {
-    target: "style",
+    target: "style" as const,
     nativeStyleToProp: {
-      color: true,
-      opacity: true,
+      color: true as const,
     },
   },
 };
 
 // @expo/vector-icons
-cssInterop(Feather, iconConfig);
+cssInterop(Feather, iconConfig as any);
 
 // phosphor-react-native
-cssInterop(BellSimple, iconConfig);
-cssInterop(CardsThree, iconConfig);
-cssInterop(Nut, iconConfig);
-cssInterop(Plus, iconConfig);
-cssInterop(Check, iconConfig);
-cssInterop(CaretRight, iconConfig);
-cssInterop(WarningCircle, iconConfig);
-cssInterop(PencilSimple, iconConfig);
+cssInterop(BellSimple, iconConfig as any);
+cssInterop(CardsThree, iconConfig as any);
+cssInterop(Nut, iconConfig as any);
+cssInterop(Plus, iconConfig as any);
+cssInterop(Check, iconConfig as any);
+cssInterop(CaretRight, iconConfig as any);
+cssInterop(WarningCircle, iconConfig as any);
+cssInterop(PencilSimple, iconConfig as any);
+cssInterop(Clock, iconConfig as any);
