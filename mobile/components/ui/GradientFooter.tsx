@@ -61,10 +61,10 @@ export function GradientFooter(props: BottomTabBarProps) {
   const hasSubmenus = isGastosActive;
 
   const content = (
-    <View className="flex-col gap-[8px] px-[24px]">
+    <View className="flex-col gap-sm px-xl">
       {/* Categories Row (Emojis) */}
       {isGastosActive && availableCategories.length > 0 && (
-        <View className="mb-[16px] -mx-[24px]">
+        <View className="mb-lg -mx-xl">
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -79,9 +79,9 @@ export function GradientFooter(props: BottomTabBarProps) {
                 <Pressable
                   key={category}
                   onPress={() => handleCategoryPress(category)}
-                  className={`${bgClass} rounded-full w-[32px] h-[32px] items-center justify-center active:opacity-80`}
+                  className={`${bgClass} rounded-full w-xxl h-xxl items-center justify-center active:opacity-80`}
                 >
-                  <Text className="text-[14px]">{emoji}</Text>
+                  <Text className="text-body">{emoji}</Text>
                 </Pressable>
               );
             })}
@@ -91,12 +91,12 @@ export function GradientFooter(props: BottomTabBarProps) {
 
       {/* Filters Row (Centrado) */}
       {!isConfiguracionesActive && !isCapturaActive && !isCuentaActive && (
-        <View className="flex-row justify-center items-center w-full mb-[8px]">
+        <View className="flex-row justify-center items-center w-full mb-sm">
           <Pressable
-            className="bg-secondary rounded-full px-[12px] py-[8px] active:opacity-80"
+            className="bg-secondary rounded-full px-md py-sm active:opacity-80"
             onPress={() => props.navigation.navigate('index')}
           >
-            <Text className="text-foreground text-[12px] font-normal leading-[14px]">
+            <Text className="text-foreground text-detail font-normal leading-[14px]">
               En curso
             </Text>
           </Pressable>
@@ -107,16 +107,16 @@ export function GradientFooter(props: BottomTabBarProps) {
       <View className="flex-row justify-between items-center w-full">
         
         {/* Nav Group (Izquierda) */}
-        <View className="flex-row items-center gap-[8px]">
+        <View className="flex-row items-center gap-sm">
           
           {/* Bell (Idle only for now) */}
-          <Pressable className="w-[48px] h-[48px] items-center justify-center rounded-full active:opacity-80">
+          <Pressable className="w-4xl h-4xl items-center justify-center rounded-full active:opacity-80">
             <BellSimple size={24} className="text-muted-foreground" weight="fill" />
           </Pressable>
 
           {/* Configuraciones Item */}
           <Pressable
-            className={`w-[48px] h-[48px] items-center justify-center rounded-full active:opacity-80 ${isConfiguracionesActive ? 'bg-secondary' : ''}`}
+            className={`w-4xl h-4xl items-center justify-center rounded-full active:opacity-80 ${isConfiguracionesActive ? 'bg-secondary' : ''}`}
             onPress={() => props.navigation.navigate('configuraciones')}
           >
             <Nut size={24} className={isConfiguracionesActive ? "text-foreground" : "text-muted-foreground"} weight="fill" />
@@ -124,7 +124,7 @@ export function GradientFooter(props: BottomTabBarProps) {
 
           {/* Gastos Item */}
           <Pressable
-            className={`w-[48px] h-[48px] items-center justify-center rounded-full active:opacity-80 ${isGastosActive ? 'bg-secondary' : ''}`}
+            className={`w-4xl h-4xl items-center justify-center rounded-full active:opacity-80 ${isGastosActive ? 'bg-secondary' : ''}`}
             onPress={() => props.navigation.navigate('index')}
           >
             <CardsThree size={24} className={isGastosActive ? "text-foreground" : "text-muted-foreground"} weight="fill" />
@@ -135,14 +135,14 @@ export function GradientFooter(props: BottomTabBarProps) {
         {/* FAB Item (Derecha) */}
         {isCapturaActive ? (
           <Pressable
-            className="w-[48px] h-[48px] bg-primary rounded-full items-center justify-center active:opacity-80"
+            className="w-4xl h-4xl bg-primary rounded-full items-center justify-center active:opacity-80"
             onPress={() => DeviceEventEmitter.emit('submitCaptura')}
           >
             <Check size={24} className="text-primary-foreground" weight="bold" />
           </Pressable>
         ) : (
           <Pressable
-            className="w-[48px] h-[48px] bg-primary rounded-full items-center justify-center active:opacity-80"
+            className="w-4xl h-4xl bg-primary rounded-full items-center justify-center active:opacity-80"
             onPress={() => props.navigation.navigate('captura')}
           >
             <Plus size={24} className="text-primary-foreground" weight="bold" />

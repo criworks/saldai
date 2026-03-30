@@ -12,9 +12,9 @@ export function CategorySelector({ selectedCategory, onSelectCategory }: Categor
   const categories = Object.keys(EMOJIS_CAT);
 
   return (
-    <View className="flex-row items-center justify-end mb-[24px]">
+    <View className="flex-row items-center justify-end mb-xl">
       <Pressable 
-        className="bg-[#262A35] rounded-full items-center justify-center w-[32px] h-[32px] mr-[12px] active:opacity-80"
+        className="bg-secondary rounded-full items-center justify-center w-xxl h-xxl mr-md active:opacity-80"
         onPress={() => onSelectCategory('Sin categoría')}
       >
         <Feather name="plus" size={16} color="#60677D" />
@@ -33,9 +33,9 @@ export function CategorySelector({ selectedCategory, onSelectCategory }: Categor
             <Pressable 
               key={cat} 
               onPress={() => onSelectCategory(cat)}
-              className={`rounded-full items-center justify-center w-[32px] h-[32px] ${!isLast ? 'mr-[12px]' : ''} ${isSelected ? 'bg-white' : 'bg-[#262A35]'} active:opacity-80`}
+              className={`rounded-full items-center justify-center w-xxl h-xxl ${!isLast ? 'mr-md' : ''} ${isSelected ? 'bg-white' : 'bg-secondary'} active:opacity-80`}
             >
-              <Text className="text-[16px]">{EMOJIS_CAT[cat as keyof typeof EMOJIS_CAT]}</Text>
+              <Text className="text-menu">{EMOJIS_CAT[cat as keyof typeof EMOJIS_CAT]}</Text>
             </Pressable>
           );
         })}

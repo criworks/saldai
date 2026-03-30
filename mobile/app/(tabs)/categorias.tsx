@@ -15,7 +15,7 @@ export default function CategoriasScreen() {
   const listPaddingBottom = 140 + insets.bottom;
 
   return (
-    <SafeAreaView edges={['top', 'left', 'right']} className="flex-1 bg-[#111217]">
+    <SafeAreaView edges={['top', 'left', 'right']} className="flex-1 bg-background">
       <FlatList
         data={categorias}
         keyExtractor={([cat]) => cat}
@@ -31,16 +31,16 @@ export default function CategoriasScreen() {
         ListHeaderComponent={
           <>
             {/* Header */}
-            <View className="mb-[24px]">
+            <View className="mb-xl">
               {loading && !categorias.length ? (
                 <>
-                  <View className="h-[24px] w-[120px] bg-[#262A35] rounded-full mb-[8px]" />
-                  <View className="h-[16px] w-[80px] bg-[#262A35] rounded-full" />
+                  <View className="h-xl w-[120px] bg-secondary rounded-full mb-sm" />
+                  <View className="h-lg w-6xl bg-secondary rounded-full" />
                 </>
               ) : (
                 <>
-                  <Text className="text-[#60677D] text-[24px] font-medium mb-[8px]">{MESES[mes - 1]}</Text>
-                  <Text className="text-white text-[16px] font-medium">
+                  <Text className="text-muted-foreground text-title font-medium mb-sm">{MESES[mes - 1]}</Text>
+                  <Text className="text-white text-menu font-medium">
                     ${totalMes.toLocaleString('es-CL')}
                   </Text>
                 </>
@@ -49,29 +49,29 @@ export default function CategoriasScreen() {
 
             {/* Nueva Categoría Action */}
             <Pressable
-              className="flex-row items-center gap-[12px] mb-[24px] active:opacity-80"
+              className="flex-row items-center gap-md mb-xl active:opacity-80"
               onPress={() => router.push('/captura')}
             >
-              <View className="bg-[#262A35] rounded-full w-[32px] h-[32px] items-center justify-center">
+              <View className="bg-secondary rounded-full w-xxl h-xxl items-center justify-center">
                 <Feather name="plus" size={16} color="#60677D" />
               </View>
-              <Text className="text-[#60677D] text-[16px] font-medium">Nueva categoría</Text>
+              <Text className="text-muted-foreground text-menu font-medium">Nueva categoría</Text>
             </Pressable>
 
             {loading && !categorias.length && (
-              <View className="gap-[16px]">
+              <View className="gap-lg">
                 {[1, 2, 3, 4].map((item) => (
-                  <View key={item} className="flex-row items-center gap-[12px]">
-                    <View className="h-[36px] w-[80px] bg-[#262A35] rounded-full" />
-                    <View className="h-[32px] w-[32px] bg-[#262A35] rounded-full" />
-                    <View className="h-[16px] w-[100px] bg-[#262A35] rounded-full" />
+                  <View key={item} className="flex-row items-center gap-md">
+                    <View className="h-[36px] w-6xl bg-secondary rounded-full" />
+                    <View className="h-xxl w-xxl bg-secondary rounded-full" />
+                    <View className="h-lg w-[100px] bg-secondary rounded-full" />
                   </View>
                 ))}
               </View>
             )}
 
             {!loading && categorias.length === 0 && (
-              <Text className="text-[#60677D] text-[14px] font-medium">No hay datos para este mes</Text>
+              <Text className="text-muted-foreground text-body font-medium">No hay datos para este mes</Text>
             )}
           </>
         }
@@ -79,16 +79,16 @@ export default function CategoriasScreen() {
           const emoji = require('../../../packages/ui/tokens').EMOJIS_CAT[cat] || require('../../../packages/ui/tokens').EMOJIS_CAT["Sin categoría"];
 
           return (
-            <View className="flex-row items-center gap-[12px] mb-[16px]">
-              <View className="bg-[#262A35] rounded-full px-[16px] py-[8px]">
-                <Text className="text-white text-[14px] font-medium">
+            <View className="flex-row items-center gap-md mb-lg">
+              <View className="bg-secondary rounded-full px-lg py-sm">
+                <Text className="text-white text-body font-medium">
                   ${info.total.toLocaleString('es-CL')}
                 </Text>
               </View>
-              <View className="bg-[#262A35] rounded-full w-[32px] h-[32px] items-center justify-center">
-                <Text className="text-[14px]">{emoji}</Text>
+              <View className="bg-secondary rounded-full w-xxl h-xxl items-center justify-center">
+                <Text className="text-body">{emoji}</Text>
               </View>
-              <Text className="text-[#60677D] text-[16px] font-medium">{cat}</Text>
+              <Text className="text-muted-foreground text-menu font-medium">{cat}</Text>
             </View>
           );
         }}

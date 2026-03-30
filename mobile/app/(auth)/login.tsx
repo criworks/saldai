@@ -45,12 +45,12 @@ export default function LoginScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-[#111217]">
+    <SafeAreaView className="flex-1 bg-background">
       <KeyboardAvoidingView behavior={undefined} className="flex-1 justify-center px-6">
         <View className="gap-6">
           <View className="gap-2">
-            <Text className="text-white text-[24px] font-bold">Ingresar</Text>
-            <Text className="text-[#60677D] text-[14px]">
+            <Text className="text-white text-title font-bold">Ingresar</Text>
+            <Text className="text-muted-foreground text-body">
               Te enviamos un código de 6 dígitos a tu email.
             </Text>
           </View>
@@ -65,7 +65,7 @@ export default function LoginScreen() {
           />
 
           {error && (
-            <Text className="text-[#a65b5b] text-[14px]">{error}</Text>
+            <Text className="text-destructive text-body">{error}</Text>
           )}
 
           <Pressable
@@ -73,7 +73,7 @@ export default function LoginScreen() {
             disabled={loading || !email.trim()}
             className={`bg-white rounded-[16px] h-[56px] items-center justify-center active:opacity-80 ${loading || !email.trim() ? 'opacity-50' : ''}`}
           >
-            <Text className="text-[#111217] text-[16px] font-medium">
+            <Text className="text-background text-menu font-medium">
               {loading ? 'Enviando...' : 'Enviar código'}
             </Text>
           </Pressable>

@@ -6,7 +6,7 @@ export const Input = forwardRef<TextInput, TextInputProps>((props, ref) => {
     <TextInput
       ref={ref}
       {...props}
-      className={`h-[56px] px-[24px] rounded-[16px] bg-secondary text-[14px] font-normal font-['Inter'] placeholder:text-muted-foreground caret-foreground ${props.value ? 'text-foreground' : 'text-muted-foreground'} ${props.className || ''}`}
+      className={`h-[56px] px-xl rounded-[16px] bg-secondary text-body font-normal font-['Inter'] placeholder:text-muted-foreground caret-foreground ${props.value ? 'text-foreground' : 'text-muted-foreground'} ${props.className || ''}`}
     />
   );
 });

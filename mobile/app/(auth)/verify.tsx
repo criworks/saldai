@@ -56,19 +56,19 @@ export default function VerifyScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-[#111217]">
+    <SafeAreaView className="flex-1 bg-background">
       <KeyboardAvoidingView behavior={undefined} className="flex-1 justify-center px-6">
         <View className="gap-6">
           <View className="gap-2">
-            <Text className="text-white text-[24px] font-bold">Verificar email</Text>
-            <Text className="text-[#60677D] text-[14px]">
+            <Text className="text-white text-title font-bold">Verificar email</Text>
+            <Text className="text-muted-foreground text-body">
               Ingresa el código de 6 dígitos que enviamos a{' '}
               <Text className="text-white">{email}</Text>.
             </Text>
           </View>
 
           <TextInput
-            className="bg-[#262A35] text-white text-[20px] tracking-[10px] text-center rounded-xl px-4 h-[52px]"
+            className="bg-secondary text-white text-[20px] tracking-[10px] text-center rounded-xl px-4 h-[52px]"
             placeholder="000000"
             placeholderTextColor="#60677D"
             keyboardType="number-pad"
@@ -80,7 +80,7 @@ export default function VerifyScreen() {
           />
 
           {error && (
-            <Text className={`text-[14px] ${error === 'Código reenviado' ? 'text-green-500' : 'text-[#a65b5b]'}`}>
+            <Text className={`text-body ${error === 'Código reenviado' ? 'text-green-500' : 'text-destructive'}`}>
               {error}
             </Text>
           )}
@@ -90,7 +90,7 @@ export default function VerifyScreen() {
             disabled={loading || token.length !== 6}
             className={`bg-white rounded-xl h-[52px] items-center justify-center active:opacity-80 ${loading || token.length !== 6 ? 'opacity-50' : ''}`}
           >
-            <Text className="text-[#111217] text-[16px] font-medium">
+            <Text className="text-background text-menu font-medium">
               {loading ? 'Verificando...' : 'Verificar'}
             </Text>
           </Pressable>
@@ -100,7 +100,7 @@ export default function VerifyScreen() {
             disabled={loading}
             className="mt-2 py-2"
           >
-            <Text className="text-[#60677D] text-[14px] text-center underline">
+            <Text className="text-muted-foreground text-body text-center underline">
               Reenviar código
             </Text>
           </Pressable>
@@ -110,7 +110,7 @@ export default function VerifyScreen() {
             disabled={loading}
             className="py-2"
           >
-            <Text className="text-[#60677D] text-[14px] text-center">
+            <Text className="text-muted-foreground text-body text-center">
               Usar otro email
             </Text>
           </Pressable>
