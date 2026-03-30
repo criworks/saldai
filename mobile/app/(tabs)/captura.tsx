@@ -126,12 +126,12 @@ export default function CapturaScreen() {
       />
       
       <View 
-        className="flex-1 w-full justify-end items-center px-[24px] pt-[40px]"
+        className="flex-1 w-full justify-end items-center px-xl pt-3xl"
         style={{ paddingBottom: isKeyboardVisible ? 24 : 100 + 24 + insets.bottom }}
       >
-        <View className="flex-col items-start gap-[16px] w-full">
-          <View className="flex-row justify-end items-center w-full mb-[8px]">
-            <Text className="text-muted-foreground text-[40px] font-light mr-[4px]">$</Text>
+        <View className="flex-col items-start gap-lg w-full">
+          <View className="flex-row justify-end items-center w-full mb-sm">
+            <Text className="text-muted-foreground text-[40px] font-light mr-xs">$</Text>
             <TextInput
               ref={montoRef}
               value={formattedAmount}
@@ -145,7 +145,7 @@ export default function CapturaScreen() {
             />
           </View>
 
-          <View className="flex-row py-[16px] justify-between items-center w-full">
+          <View className="flex-row py-lg justify-between items-center w-full">
             <TextInput
               ref={descripcionRef}
               value={valores.item}
@@ -154,17 +154,17 @@ export default function CapturaScreen() {
               maxLength={40}
               returnKeyType="done"
               onSubmitEditing={() => Keyboard.dismiss()}
-              className={`flex-1 text-[14px] text-right p-0 m-0 w-full placeholder:text-muted-foreground caret-foreground ${valores.item ? 'text-foreground' : 'text-muted-foreground'}`}
+              className={`flex-1 text-body text-right p-0 m-0 w-full placeholder:text-muted-foreground caret-foreground ${valores.item ? 'text-foreground' : 'text-muted-foreground'}`}
             />
           </View>
 
-          <View className="flex-row justify-end items-center gap-[8px] w-full">
+          <View className="flex-row justify-end items-center gap-sm w-full">
             <Pressable 
-              className="flex-row px-[12px] py-[8px] justify-center items-center gap-[8px] rounded-full bg-secondary"
+              className="flex-row px-md py-sm justify-center items-center gap-sm rounded-full bg-secondary"
               onPress={() => setShowDatePicker(true)}
             >
               <Feather name="calendar" size={16} className="text-muted-foreground" />
-              <Text className={`text-[14px] font-medium ${valores.fecha ? 'text-foreground' : 'text-muted-foreground'}`}>
+              <Text className={`text-body font-medium ${valores.fecha ? 'text-foreground' : 'text-muted-foreground'}`}>
                 {valores.fecha || 'Hoy'}
               </Text>
               <Feather name="chevron-down" size={16} className="text-muted-foreground" />

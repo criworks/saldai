@@ -5,6 +5,13 @@ All notable changes to the **Expense Tracker (Mobile)** project will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## [1.4.2] - 2026-03-29
+### Changed
+- **UI Design Tokens Migration**: Refactored `login.tsx`, `verify.tsx`, `captura.tsx`, `categorias.tsx`, `cuenta.tsx`, `index.tsx`, `CategorySelector`, `GradientFooter`, `Input`, `PaymentMethodSelector`, and `SuccessNotification` to eliminate hardcoded hexadecimal colors and spacing values (`#111217`, `24px`, etc.). Replaced them with the monorepo's shared Tailwind semantic tokens (`bg-background`, `px-xl`, `text-body`).
+- **OTP Screen Overhaul**: Completely redesigned the `cuenta.tsx` verify OTP input into a visual 6-digit input mimicking a native PIN code layout with a blinking cursor and custom error state.
+- **Success Modals**: Replaced the native OS `Alert.alert` on email change success with a fully custom, theme-compliant `Modal` overlay component in `cuenta.tsx`.
+
 ## [1.4.1] - 2026-03-28
 ### Added
 - **Global `cssInterop`:** Created `lib/icons.ts` to natively support mapping Tailwind semantic classes to `color` props on external SVGs (`@expo/vector-icons`, `phosphor-react-native`).

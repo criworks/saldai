@@ -11,24 +11,24 @@ export function PaymentMethodSelector({ method, onSelectMethod }: PaymentMethodS
   return (
     <View className="flex-row items-center justify-end">
       <Pressable 
-        className="bg-[#262A35] rounded-full items-center justify-center w-[32px] h-[32px] mr-[16px] active:opacity-80"
+        className="bg-secondary rounded-full items-center justify-center w-xxl h-xxl mr-lg active:opacity-80"
         onPress={() => {}}
       >
         <Feather name="plus" size={16} color="#60677D" />
       </Pressable>
       
       <Pressable 
-        className="mr-[16px] active:opacity-80"
+        className="mr-lg active:opacity-80"
         onPress={() => onSelectMethod('EF')}
       >
-        <Text className={`text-[14px] ${method === 'EF' ? 'text-white font-bold' : 'text-[#60677D]'}`}>EF</Text>
+        <Text className={`text-body ${method === 'EF' ? 'text-white font-bold' : 'text-muted-foreground'}`}>EF</Text>
       </Pressable>
       
       <Pressable 
         className="active:opacity-80"
         onPress={() => onSelectMethod('TC')}
       >
-        <Text className={`text-[14px] ${method === 'TC' ? 'text-white font-bold' : 'text-[#60677D]'}`}>TC</Text>
+        <Text className={`text-body ${method === 'TC' ? 'text-white font-bold' : 'text-muted-foreground'}`}>TC</Text>
       </Pressable>
     </View>
   );

@@ -109,9 +109,9 @@ export default function DashboardScreen() {
     <SafeAreaView edges={['top', 'left', 'right']} className="flex-1 bg-background">
       <ScrollView
         contentContainerStyle={{ 
-          paddingHorizontal: 24, // px-[24px] global container
-          paddingTop: 40,        // pt-[40px] top section start
-          paddingBottom: listPaddingBottom, // pb-[24px] is the internal padding, but we need safe footer margin
+          paddingHorizontal: 24, // px-xl global container
+          paddingTop: 40,        // pt-3xl top section start
+          paddingBottom: listPaddingBottom, // pb-xl is the internal padding, but we need safe footer margin
         }}
         refreshControl={
           <RefreshControl
@@ -129,7 +129,7 @@ export default function DashboardScreen() {
             {loading && !datos ? (
               <View className="flex-col gap-sm w-full items-start">
                 <View className="h-[28px] w-[120px] bg-secondary rounded-full" />
-                <View className="h-[16px] w-[80px] bg-secondary rounded-full" />
+                <View className="h-lg w-6xl bg-secondary rounded-full" />
               </View>
             ) : (
               <View className="flex-col gap-sm w-full items-start">
@@ -143,7 +143,7 @@ export default function DashboardScreen() {
             )}
           </View>
 
-          {/* List Body (list-gastos container con gap-[24px]) */}
+          {/* List Body (list-gastos container con gap-xl) */}
           {loading && !datos ? (
             <View className="flex-col gap-xl w-full rounded-[40px]">
               {[1, 2].map((group) => (
@@ -152,7 +152,7 @@ export default function DashboardScreen() {
                   <View className="flex-col gap-xl">
                     {[1, 2, 3].map((item) => (
                       <View key={item} className="flex-row items-center gap-sm">
-                        <View className="h-[32px] w-[90px] bg-secondary rounded-full" />
+                        <View className="h-xxl w-[90px] bg-secondary rounded-full" />
                         <View className="h-[14px] w-[60px] bg-secondary rounded-full" />
                       </View>
                     ))}
