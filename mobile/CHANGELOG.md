@@ -108,4 +108,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Addressed iOS/Android keyboard flickering (glitches) between numeric and text input transitions using a 100ms debounce in keyboard hide listeners.
-- Prevented keyboard from overlapping the `captura.tsx` form.
+- Prevented keyboard from overlapping the `captura.tsx` form.## [1.5.0] - 2026-03-29
+### Added
+- **Global Alert System**: Created a unified `Alert.tsx` (Dialog-style) component supporting `success`, `warning`, `error`, and `info` types. Implemented it across the app to completely replace native `Alert.alert` dialogs, handling cases like Supabase cooldown times securely.
+- **Global Notification System**: Refactored `SuccessNotification.tsx` into a generic `Notification.tsx` (Pill-style) component.
+
+### Changed
+- **OTP Form Recovery**: Allowed the user to edit the email input natively during the `isVerifying` stage in `cuenta.tsx`. When edited, the system smoothly reverts to the initial email modification state, dropping the previous OTP code and error states.
+- **Keyboard Handling (Captura)**: Solved critical rendering bugs where the form was hidden under the native keyboard. Migrated back to a robust `KeyboardAvoidingView` with `behavior="padding"` while actively tracking OS keyboard heights and dismissing the numeric pad safely before triggering the DatePicker.
+- **Component Renaming**: Consolidated confusing legacy notification files strictly into `Alert.tsx` (large modals) and `Notification.tsx` (small floating pills).

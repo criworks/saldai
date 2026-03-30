@@ -1,9 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, KeyboardAvoidingView, Platform, ScrollView, Pressable, Alert, TextInput, Modal } from 'react-native';
+import { View, Text, KeyboardAvoidingView, Platform, ScrollView, Pressable, Alert as RNAlert, TextInput, Modal } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../services/supabase';
 import { Input } from '../../components/ui/Input';
+import { Notification } from '../../components/ui/Notification';
+import { Alert } from '../../components/ui/Alert';
 import { Clock, PencilSimple, Check } from 'phosphor-react-native';
 
 export default function CuentaScreen() {
@@ -15,10 +17,20 @@ export default function CuentaScreen() {
   const [loading, setLoading] = useState(false);
   
   // New states for redesign
+  const [isEmailFocused, setIsEmailFocused] = useState(false);
   const [isOtpFocused, setIsOtpFocused] = useState(false);
   const [otpError, setOtpError] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [cursorVisible, setCursorVisible] = useState(true);
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
+  const [alertConfig, setAlertConfig] = useState<{ visible: boolean; message: string; type: 'warning' | 'error' | 'info' }>({ visible: false, message: '', type: 'info' });
+
+  const showAlert = (message: string, type: 'warning' | 'error' | 'info') => {
+    setAlertConfig({ visible: true, message, type });
+    setTimeout(() => {
+      setAlertConfig(prev => ({ ...prev, visible: false }));
+    }, 3000);
+  };
 
   const insets = useSafeAreaInsets();
   const otpInputRef = useRef<TextInput>(null);
@@ -36,6 +48,17 @@ export default function CuentaScreen() {
     }
     return () => clearInterval(interval);
   }, [isOtpFocused]);
+
+  // Cooldown effect
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (cooldownSeconds > 0) {
+      interval = setInterval(() => {
+        setCooldownSeconds((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [cooldownSeconds]);
 
   useEffect(() => {
     if (session?.user?.email && !pendingEmail) {
@@ -57,9 +80,16 @@ export default function CuentaScreen() {
     setLoading(false);
 
     if (error) {
-      Alert.alert('Error', error.message);
+      const match = error.message.match(/after (\d+) second/i);
+      if (match) {
+        setCooldownSeconds(parseInt(match[1], 10));
+      } else {
+        showAlert(error.message, 'error');
+      }
     } else {
       setPendingEmail(email);
+      setOtp('');
+      setOtpError(false);
     }
   };
 
@@ -78,6 +108,13 @@ export default function CuentaScreen() {
       setOtpError(true);
     } else {
       setShowSuccess(true);
+      setOriginalEmail(pendingEmail);
+      setPendingEmail('');
+      setOtp('');
+      
+      setTimeout(() => {
+        setShowSuccess(false);
+      }, 3000);
     }
   };
 
@@ -99,9 +136,14 @@ export default function CuentaScreen() {
     setLoading(false);
 
     if (error) {
-      Alert.alert('Error', error.message);
+      const match = error.message.match(/after (\d+) second/i);
+      if (match) {
+        setCooldownSeconds(parseInt(match[1], 10));
+      } else {
+        showAlert(error.message, 'error');
+      }
     } else {
-      Alert.alert('Código reenviado', 'Revisá tu nuevo email.');
+      showAlert('Código reenviado. Revisá tu nuevo email.', 'info');
     }
   };
 
@@ -176,15 +218,17 @@ export default function CuentaScreen() {
                   <Input 
                     value={email}
                     onChangeText={setEmail}
+                    onFocus={() => setIsEmailFocused(true)}
+                    onBlur={() => setIsEmailFocused(false)}
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoCorrect={false}
                     placeholder="tu@email.com"
-                    editable={!isVerifying}
-                    className={`w-full pr-4xl ${isEditing ? 'border-2 border-muted-foreground' : 'border border-transparent'} ${isVerifying ? 'opacity-80' : ''}`}
+                    editable={true}
+                    className={`w-full pr-4xl ${(isEditing || isEmailFocused) ? 'border-2 border-muted-foreground' : 'border border-transparent'} ${(isVerifying && !isEmailFocused) ? 'text-muted-foreground' : ''}`}
                   />
                   <View className="absolute right-lg pointer-events-none">
-                    {isVerifying ? (
+                    {(isVerifying && !isEmailFocused) ? (
                       <Clock size={18} color="#E98B00" weight="fill" />
                     ) : (
                       <PencilSimple size={18} className="text-muted-foreground" weight="fill" />
@@ -275,34 +319,21 @@ export default function CuentaScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* SUCCESS MODAL */}
-      <Modal visible={showSuccess} transparent animationType="fade">
-        <View className="flex-1 bg-black/60 justify-end items-center">
-          <View className="w-full pt-[30px] px-[30px] pb-3xl flex-col items-center gap-xxl rounded-t-[30px] bg-card">
-            <View className="flex-col items-center gap-lg w-full">
-              <View className="h-4xl w-4xl items-center justify-center rounded-full bg-secondary">
-                <Check size={24} color="white" weight="regular" />
-              </View>
-              <Text className="text-white text-center font-['Inter'] text-body font-normal leading-[19.6px]">
-                Tu email ha sido actualizado correctamente.
-              </Text>
-            </View>
-            <Pressable 
-              onPress={() => {
-                 setShowSuccess(false);
-                 setOriginalEmail(pendingEmail);
-                 setPendingEmail('');
-                 setOtp('');
-              }}
-              className="w-full h-[56px] px-xl justify-center items-center rounded-[16px] bg-white active:opacity-80"
-            >
-              <Text className="text-background font-['Inter'] text-body font-semibold leading-[normal]">
-                Ok
-              </Text>
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
+      <Notification 
+        visible={showSuccess} 
+        message="Email actualizado correctamente." 
+        type="success"
+      />
+      <Alert 
+        visible={cooldownSeconds > 0} 
+        message={`Por seguridad debes esperar ${cooldownSeconds} segundos para volver a hacer un cambio.`}
+        type="warning"
+      />
+      <Alert 
+        visible={alertConfig.visible} 
+        message={alertConfig.message} 
+        type={alertConfig.type}
+      />
     </SafeAreaView>
   );
 }

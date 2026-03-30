@@ -18,7 +18,7 @@ import { useGastoMutation } from '../../hooks/useGastoMutation'
 import { useGastos } from '../../hooks/useGastos'
 import { CategorySelector } from '../../components/ui/CategorySelector'
 import { PaymentMethodSelector } from '../../components/ui/PaymentMethodSelector'
-import { SuccessNotification } from '../../components/ui/SuccessNotification'
+import { Notification } from '../../components/ui/Notification'
 
 export default function CapturaScreen() {
   const { fetchGastos } = useGastos()
@@ -63,6 +63,12 @@ export default function CapturaScreen() {
   }, [handleGuardar])
 
   useEffect(() => {
+    // Check if keyboard is already visible on mount
+    const checkKeyboard = Keyboard.metrics();
+    if (checkKeyboard) {
+      setKeyboardVisible(true);
+    }
+
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow'
     const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide'
 
@@ -118,13 +124,15 @@ export default function CapturaScreen() {
     <KeyboardAvoidingView
       className="flex-1 bg-background"
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
     >
-      <SuccessNotification 
+      <Notification 
         visible={estado === 'ok' && lastSaved !== null}
         monto={lastSaved?.monto || ''}
         descripcion={lastSaved?.descripcion || ''}
+        type="success"
       />
-      
+
       <View 
         className="flex-1 w-full justify-end items-center px-xl pt-3xl"
         style={{ paddingBottom: isKeyboardVisible ? 24 : 100 + 24 + insets.bottom }}
@@ -161,7 +169,10 @@ export default function CapturaScreen() {
           <View className="flex-row justify-end items-center gap-sm w-full">
             <Pressable 
               className="flex-row px-md py-sm justify-center items-center gap-sm rounded-full bg-secondary"
-              onPress={() => setShowDatePicker(true)}
+              onPress={() => {
+                Keyboard.dismiss();
+                setShowDatePicker(true);
+              }}
             >
               <Feather name="calendar" size={16} className="text-muted-foreground" />
               <Text className={`text-body font-medium ${valores.fecha ? 'text-foreground' : 'text-muted-foreground'}`}>
