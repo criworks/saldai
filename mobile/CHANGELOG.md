@@ -1,3 +1,14 @@
+
+
+## [1.5.0] - 2026-04-02
+### Added
+- **Vista de Meses Anuales (`app/(tabs)/meses.tsx`)**: Nueva pantalla que muestra un grid semántico de todos los meses del año y sus totales. Incluye navegación reactiva al contexto global (hacer tap en un mes cambia la vista principal al instante).
+
+### Changed
+- **Navegación Dashboard (`app/(tabs)/index.tsx`)**: El título principal del mes ("Marzo", etc.) es ahora un botón `Pressable` con un icono `CaretRight` que abre la vista histórica.
+- **Ruteo de Footer (`components/ui/GradientFooter.tsx`)**: El footer ahora mantiene encendido el tab "Gastos" al navegar hacia la vista de meses. El submenú "En curso" cambia su opacidad (`text-muted-foreground` y `bg-transparent`) para reflejar la jerarquía.
+- **Servicios de API (`services/api.ts`)**: Se integró la función `fetchGastosAnuales` para consumir el nuevo endpoint matemático de Railway.
+
 # Changelog
 
 All notable changes to the **Expense Tracker (Mobile)** project will be documented in this file.

@@ -18,6 +18,7 @@ export default function TabLayout() {
           }}
         >
           <Tabs.Screen name="index" />
+          <Tabs.Screen name="meses" options={{ href: null }} />
           <Tabs.Screen name="categorias" />
           <Tabs.Screen name="configuraciones" />
           <Tabs.Screen name="captura" />
