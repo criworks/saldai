@@ -31,6 +31,20 @@ export async function fetchGastosPorMes(mes: number) {
   return res.json()
 }
 
+export async function fetchGastosAnuales(anio: number | string) {
+  const res = await fetch(`${API_URL}/gastos/anuales?anio=${anio}`, {
+    method: 'GET',
+    headers: await getAuthHeaders(),
+  })
+  
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => null)
+    throw new Error(errorData?.error || 'Error en la respuesta del servidor al obtener gastos anuales')
+  }
+  
+  return res.json()
+}
+
 export async function crearGasto(inputStr: string) {
   const res = await fetch(`${API_URL}/gastos`, {
     method: 'POST',

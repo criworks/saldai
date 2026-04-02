@@ -1,3 +1,14 @@
+
+
+## [1.6.0] - 2026-04-02
+### Added
+- **Vista de Meses Anuales (`mobile/app/(tabs)/meses.tsx`)**: Nueva pantalla en la app móvil que muestra un resumen de gastos totales agrupados por mes para el año en curso. Cumple estrictamente con los Design Tokens de la arquitectura.
+- **Endpoint Analítico (`GET /gastos/anuales`)**: Nuevo endpoint protegido en la API (`api/server.js`) que agrupa y totaliza matemáticamente los montos anuales por mes (0-11) para evitar que el cliente móvil procese históricos completos.
+
+### Changed
+- **Navegación Dashboard (`mobile/app/(tabs)/index.tsx`)**: El título principal del mes ("Marzo", etc.) es ahora un área interactiva que dirige a la nueva vista anual.
+- **Jerarquía Footer (`mobile/components/ui/GradientFooter.tsx`)**: La barra de navegación inferior ahora reconoce la vista "meses" como parte del ecosistema de gastos, manteniendo el icono principal iluminado y apagando sutilmente la píldora de "En curso".
+
 # Changelog
 
 All notable changes to the **Expense Tracker (Monorepo)** project will be documented in this file.

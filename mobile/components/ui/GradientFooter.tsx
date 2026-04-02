@@ -35,7 +35,8 @@ export function GradientFooter(props: BottomTabBarProps) {
   const safePaddingBottom = 24 + insets.bottom;
 
   const routeName = props.state.routeNames[props.state.index];
-  const isGastosActive = routeName === 'index';
+  const isGastosActive = routeName === 'index' || routeName === 'meses';
+  const isMesesViewActive = routeName === 'meses';
   const isCapturaActive = routeName === 'captura';
   const isCategoriasActive = routeName === 'categorias';
   const isConfiguracionesActive = routeName === 'configuraciones';
@@ -63,7 +64,7 @@ export function GradientFooter(props: BottomTabBarProps) {
   const content = (
     <View className="flex-col gap-sm px-xl">
       {/* Categories Row (Emojis) */}
-      {isGastosActive && availableCategories.length > 0 && (
+      {isGastosActive && !isMesesViewActive && availableCategories.length > 0 && (
         <View className="mb-lg -mx-xl">
           <ScrollView
             horizontal
@@ -93,10 +94,10 @@ export function GradientFooter(props: BottomTabBarProps) {
       {!isConfiguracionesActive && !isCapturaActive && !isCuentaActive && (
         <View className="flex-row justify-center items-center w-full mb-sm">
           <Pressable
-            className="bg-secondary rounded-full px-md py-sm active:opacity-80"
+            className={`rounded-full px-md py-sm active:opacity-80 ${isMesesViewActive ? 'bg-transparent' : 'bg-secondary'}`}
             onPress={() => props.navigation.navigate('index')}
           >
-            <Text className="text-foreground text-detail font-normal leading-[14px]">
+            <Text className={`${isMesesViewActive ? 'text-muted-foreground' : 'text-foreground'} text-detail font-normal leading-[14px]`}>
               En curso
             </Text>
           </Pressable>

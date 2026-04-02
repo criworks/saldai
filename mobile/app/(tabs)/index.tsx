@@ -1,9 +1,12 @@
+import { useRouter } from 'expo-router'
+import { CaretRight } from 'phosphor-react-native'
 import React, { useMemo } from 'react'
 import {
   RefreshControl,
   ScrollView,
   Text,
-  View
+  View,
+  Pressable
 } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ExpenseItem } from '../../components/ui/ExpenseItem'
@@ -63,6 +66,7 @@ function formatGroupDate(expenseDate: Date): string {
 }
 
 export default function DashboardScreen() {
+  const router = useRouter()
   const {
     mes,
     datos,
@@ -133,9 +137,15 @@ export default function DashboardScreen() {
               </View>
             ) : (
               <View className="flex-col gap-sm w-full items-start">
-                <Text className="text-muted-foreground text-title font-normal leading-[normal]">
-                  {MESES[mes - 1]}
-                </Text>
+                <Pressable 
+                  className="flex-row items-center gap-xs active:opacity-80"
+                  onPress={() => router.navigate('/meses')}
+                >
+                  <Text className="text-muted-foreground text-title font-normal leading-[normal]">
+                    {MESES[mes - 1]}
+                  </Text>
+                  <CaretRight size={20} className="text-muted-foreground" weight="bold" />
+                </Pressable>
                 <Text className="text-foreground text-body font-medium leading-[normal] text-right">
                   ${totalMes.toLocaleString('es-CL')}
                 </Text>
