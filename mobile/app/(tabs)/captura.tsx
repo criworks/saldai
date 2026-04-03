@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -11,6 +11,7 @@ import {
   Keyboard,
   DeviceEventEmitter,
 } from 'react-native'
+import { useFocusEffect } from 'expo-router'
 import { Feather } from '@expo/vector-icons'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -36,11 +37,12 @@ export default function CapturaScreen() {
 
   const montoRef = useRef<TextInput>(null)
   const descripcionRef = useRef<TextInput>(null)
+  const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [date, setDate] = useState(new Date())
   const [isKeyboardVisible, setKeyboardVisible] = useState(false)
+  const [keyboardHeight, setKeyboardHeight] = useState(0)
   const insets = useSafeAreaInsets()
-  const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleAmountChange = (text: string) => {
     // Solo permitimos números
@@ -63,31 +65,42 @@ export default function CapturaScreen() {
   }, [handleGuardar])
 
   useEffect(() => {
-    // Check if keyboard is already visible on mount
-    const checkKeyboard = Keyboard.metrics();
-    if (checkKeyboard) {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSub = Keyboard.addListener(showEvent, (e) => {
+      if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
+      setKeyboardHeight(e.endCoordinates.height);
       setKeyboardVisible(true);
-    }
-
-    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow'
-    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide'
-
-    const keyboardDidShowListener = Keyboard.addListener(showEvent, () => {
-      if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current)
-      setKeyboardVisible(true)
-    })
-    const keyboardDidHideListener = Keyboard.addListener(hideEvent, () => {
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
       hideTimeoutRef.current = setTimeout(() => {
-        setKeyboardVisible(false)
-      }, 100)
-    })
+        setKeyboardHeight(0);
+        setKeyboardVisible(false);
+      }, 50);
+    });
 
     return () => {
-      if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current)
-      keyboardDidShowListener.remove()
-      keyboardDidHideListener.remove()
-    }
-  }, [])
+      if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      // Screen is focused
+      const focusTimeout = setTimeout(() => {
+        montoRef.current?.focus()
+      }, 100)
+
+      return () => {
+        // Screen is losing focus
+        clearTimeout(focusTimeout)
+        Keyboard.dismiss()
+      }
+    }, [])
+  )
 
   const onDateChange = (event: any, selectedDate?: Date) => {
     setShowDatePicker(false)
@@ -120,11 +133,15 @@ export default function CapturaScreen() {
     ? parseInt(valores.monto, 10).toLocaleString('es-CL') 
     : ''
 
+  const outerPaddingBottom = isKeyboardVisible ? 0 : 96 + insets.bottom;
+  const innerPaddingBottom = isKeyboardVisible 
+    ? (Platform.OS === 'ios' ? keyboardHeight + 24 : 24) 
+    : 24;
+
   return (
-    <KeyboardAvoidingView
-      className="flex-1 bg-background"
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+    <View 
+      className="flex-1 bg-background justify-end items-center"
+      style={{ paddingBottom: outerPaddingBottom }}
     >
       <Notification 
         visible={estado === 'ok' && lastSaved !== null}
@@ -134,8 +151,8 @@ export default function CapturaScreen() {
       />
 
       <View 
-        className="flex-1 w-full justify-end items-center px-xl pt-3xl"
-        style={{ paddingBottom: isKeyboardVisible ? 24 : 100 + 24 + insets.bottom }}
+        className="w-full flex-col items-center px-xl pt-3xl"
+        style={{ paddingBottom: innerPaddingBottom }}
       >
         <View className="flex-col items-start gap-lg w-full">
           <View className="flex-row justify-end items-center w-full mb-sm">
@@ -182,16 +199,16 @@ export default function CapturaScreen() {
             </Pressable>
           </View>
         </View>
-
-        {showDatePicker && (
-          <DateTimePicker
-            value={date}
-            mode="date"
-            display="default"
-            onChange={onDateChange}
-          />
-        )}
       </View>
+
+      {showDatePicker && (
+        <DateTimePicker
+          value={date}
+          mode="date"
+          display="default"
+          onChange={onDateChange}
+        />
+      )}
       
       {/* Elementos Ocultos */}
       <View className="hidden">
@@ -204,6 +221,6 @@ export default function CapturaScreen() {
           onSelectMethod={setMetodo}
         />
       </View>
-    </KeyboardAvoidingView>
+    </View>
   )
 }

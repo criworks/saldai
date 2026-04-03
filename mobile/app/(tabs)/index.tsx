@@ -130,10 +130,10 @@ export default function DashboardScreen() {
           
           {/* Header Block (Mes y Total) */}
           <View className="w-full flex-col pt-xl rounded-[40px]">
-            {loading && !datos ? (
+            {loading ? (
               <View className="flex-col gap-sm w-full items-start">
                 <View className="h-[28px] w-[120px] bg-secondary rounded-full" />
-                <View className="h-lg w-6xl bg-secondary rounded-full" />
+                <View className="h-[16px] w-[80px] bg-secondary rounded-full mt-1" />
               </View>
             ) : (
               <View className="flex-col gap-sm w-full items-start">
@@ -154,16 +154,20 @@ export default function DashboardScreen() {
           </View>
 
           {/* List Body (list-gastos container con gap-xl) */}
-          {loading && !datos ? (
+          {loading ? (
             <View className="flex-col gap-xl w-full rounded-[40px]">
               {[1, 2].map((group) => (
-                <View key={group} className="flex-col w-full gap-xl">
-                  <View className="h-[20px] w-[60px] bg-secondary rounded-full pt-xl" />
-                  <View className="flex-col gap-xl">
+                <View key={group} className="flex-col items-start w-full gap-xl">
+                  <View className="flex-col items-start w-full pt-xl">
+                    <View className="h-[22px] w-[80px] bg-secondary rounded-full" />
+                  </View>
+                  <View className="flex-col w-full gap-xl">
                     {[1, 2, 3].map((item) => (
-                      <View key={item} className="flex-row items-center gap-sm">
-                        <View className="h-xxl w-[90px] bg-secondary rounded-full" />
-                        <View className="h-[14px] w-[60px] bg-secondary rounded-full" />
+                      <View key={item} className="flex-row items-center justify-between w-full">
+                        <View className="flex-row items-center gap-xs">
+                          <View className="h-[34px] w-[90px] bg-secondary rounded-full" />
+                        </View>
+                        <View className="h-[22px] w-[60px] bg-secondary rounded-full" />
                       </View>
                     ))}
                   </View>

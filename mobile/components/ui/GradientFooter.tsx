@@ -5,6 +5,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Pressable, ScrollView, Text, View, Keyboard, Platform, DeviceEventEmitter } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFilter } from '../../contexts/FilterContext';
+import { useGastos } from '../../hooks/useGastos';
 
 export function GradientFooter(props: BottomTabBarProps) {
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
@@ -14,25 +15,28 @@ export function GradientFooter(props: BottomTabBarProps) {
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
     const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
 
-    const keyboardDidShowListener = Keyboard.addListener(showEvent, () => {
+    const showSub = Keyboard.addListener(showEvent, () => {
       if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
       setKeyboardVisible(true);
     });
-    const keyboardDidHideListener = Keyboard.addListener(hideEvent, () => {
+    const hideSub = Keyboard.addListener(hideEvent, () => {
       hideTimeoutRef.current = setTimeout(() => {
         setKeyboardVisible(false);
-      }, 100);
+      }, 50);
     });
 
     return () => {
       if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
-      keyboardDidHideListener.remove();
-      keyboardDidShowListener.remove();
+      showSub.remove();
+      hideSub.remove();
     };
   }, []);
 
   const insets = useSafeAreaInsets();
   const safePaddingBottom = 24 + insets.bottom;
+
+  const { mes, setMes } = useGastos();
+  const currentCalendarMonth = new Date().getMonth() + 1;
 
   const routeName = props.state.routeNames[props.state.index];
   const isGastosActive = routeName === 'index' || routeName === 'meses';
@@ -41,6 +45,7 @@ export function GradientFooter(props: BottomTabBarProps) {
   const isCategoriasActive = routeName === 'categorias';
   const isConfiguracionesActive = routeName === 'configuraciones';
   const isCuentaActive = routeName === 'cuenta';
+  const isEnCursoActive = routeName === 'index' && mes === currentCalendarMonth;
 
   if (isKeyboardVisible) {
     return null;
@@ -94,10 +99,13 @@ export function GradientFooter(props: BottomTabBarProps) {
       {!isConfiguracionesActive && !isCapturaActive && !isCuentaActive && (
         <View className="flex-row justify-center items-center w-full mb-sm">
           <Pressable
-            className={`rounded-full px-md py-sm active:opacity-80 ${isMesesViewActive ? 'bg-transparent' : 'bg-secondary'}`}
-            onPress={() => props.navigation.navigate('index')}
+            className={`rounded-full px-md py-sm active:opacity-80 ${isEnCursoActive ? 'bg-secondary' : 'bg-transparent'}`}
+            onPress={() => {
+              setMes(currentCalendarMonth);
+              props.navigation.navigate('index');
+            }}
           >
-            <Text className={`${isMesesViewActive ? 'text-muted-foreground' : 'text-foreground'} text-detail font-normal leading-[14px]`}>
+            <Text className={`${isEnCursoActive ? 'text-foreground' : 'text-muted-foreground'} text-detail font-normal leading-[14px]`}>
               En curso
             </Text>
           </Pressable>

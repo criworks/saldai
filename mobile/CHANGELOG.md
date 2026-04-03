@@ -1,5 +1,14 @@
 
 
+## [1.5.1] - 2026-04-02
+### Added
+- **Skeletons de Precisión (`app/(tabs)/index.tsx`)**: Implementación de estados de carga precisos (`loading ? ...`) que imitan el alto tipográfico del diseño final (`h-[28px]` / `h-[34px]`) para eliminar los saltos visuales (*layout shift*) al navegar entre historiales de meses.
+
+### Changed
+- **Estado Activo "En curso" (`components/ui/GradientFooter.tsx`)**: Refactor de la jerarquía visual para que el botón "En curso" solo se muestre activo si el usuario está viendo el mes actual calendario (calculado vía context), en lugar de basarse puramente en la ruta nativa.
+- **Teclado Nativo Captura (`app/(tabs)/captura.tsx`)**: Se descartó la animación problemática del componente nativo `KeyboardAvoidingView` en favor de un sistema rígido de paddings basado en el API raw de `Keyboard`. Esto elimina los *glitches* que se presentaban al entrar a la tabulación.
+- **Transición de Tipos de Teclado**: Se incluyó un mecanismo de *debounce* (50ms) en la pantalla de captura y en el footer flotante que intercepta la caída al suelo de la UI cuando el SO cambia del teclado numérico (`Monto`) al alfanumérico (`Descripción`), puenteando el layout para mantener la vista estable en pantalla.
+
 ## [1.5.0] - 2026-04-02
 ### Added
 - **Vista de Meses Anuales (`app/(tabs)/meses.tsx`)**: Nueva pantalla que muestra un grid semántico de todos los meses del año y sus totales. Incluye navegación reactiva al contexto global (hacer tap en un mes cambia la vista principal al instante).
