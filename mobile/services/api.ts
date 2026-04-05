@@ -1,6 +1,7 @@
 import { supabase } from './supabase'
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL
+const isMockMode = process.env.EXPO_PUBLIC_USE_MOCKS === 'true'
 
 // Función auxiliar para obtener los headers con el token de autenticación
 async function getAuthHeaders() {
@@ -17,7 +18,28 @@ async function getAuthHeaders() {
   return headers
 }
 
+const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+
+const MOCK_GASTOS = [
+  { id: '1', monto: 15000, monto_formateado: '$15,000.00', item: 'Uber', categoria: 'Transporte', fecha: new Date().toISOString().split('T')[0], metodo: 'tc' },
+  { id: '2', monto: 3500, monto_formateado: '$3,500.00', item: 'Café', categoria: 'Comida', fecha: new Date().toISOString().split('T')[0], metodo: 'ef' },
+  { id: '3', monto: 120000, monto_formateado: '$120,000.00', item: 'Supermercado', categoria: 'Despensa', fecha: new Date(Date.now() - 86400000).toISOString().split('T')[0], metodo: 'tc' },
+  { id: '4', monto: 45000, monto_formateado: '$45,000.00', item: 'Rappi', categoria: 'Delivery', fecha: new Date(Date.now() - 172800000).toISOString().split('T')[0], metodo: 'tc' },
+];
+
 export async function fetchGastosPorMes(mes: number) {
+  if (isMockMode) {
+    await delay(800);
+    const total = MOCK_GASTOS.reduce((acc, g) => acc + g.monto, 0);
+    return {
+      ok: true,
+      cantidad: MOCK_GASTOS.length,
+      total,
+      totalFormateado: `$${total.toLocaleString()}`,
+      datos: MOCK_GASTOS
+    };
+  }
+
   const res = await fetch(`${API_URL}/gastos?mes=${mes}`, {
     method: 'GET',
     headers: await getAuthHeaders(),
@@ -32,6 +54,22 @@ export async function fetchGastosPorMes(mes: number) {
 }
 
 export async function fetchGastosAnuales(anio: number | string) {
+  if (isMockMode) {
+    await delay(800);
+    // Simple mock para los datos anuales
+    const mockMeses = Array.from({ length: 12 }, (_, i) => ({
+      mes: i + 1,
+      total: Math.floor(Math.random() * 500000) + 100000,
+      cantidad: Math.floor(Math.random() * 20) + 5
+    }));
+    return {
+      ok: true,
+      anio,
+      total_anual: mockMeses.reduce((acc, m) => acc + m.total, 0),
+      meses: mockMeses
+    };
+  }
+
   const res = await fetch(`${API_URL}/gastos/anuales?anio=${anio}`, {
     method: 'GET',
     headers: await getAuthHeaders(),
@@ -46,6 +84,24 @@ export async function fetchGastosAnuales(anio: number | string) {
 }
 
 export async function crearGasto(inputStr: string) {
+  if (isMockMode) {
+    await delay(1000);
+    if (inputStr.toLowerCase().includes('error')) {
+      throw new Error('Error simulado al guardar el gasto (Mock Mode)');
+    }
+    const nuevoGasto = {
+      id: Date.now().toString(),
+      monto: 9999, // Falso monto derivado
+      monto_formateado: '$9,999.00',
+      item: inputStr,
+      categoria: 'Mock',
+      fecha: new Date().toISOString().split('T')[0],
+      metodo: 'tc'
+    };
+    MOCK_GASTOS.unshift(nuevoGasto);
+    return { ok: true, data: nuevoGasto };
+  }
+
   const res = await fetch(`${API_URL}/gastos`, {
     method: 'POST',
     headers: await getAuthHeaders(),
