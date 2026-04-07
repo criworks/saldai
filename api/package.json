@@ -1,7 +1,7 @@
 {
-  "name": "expenses-tracker-api",
+  "name": "saldai-api",
   "version": "1.0.0",
-  "description": "Core Parser + API",
+  "description": "Saldai - Core Parser + API",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -15,6 +15,7 @@
     "dotenv": "^16.4.1",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.3",
-    "jwks-rsa": "^4.0.1"
+    "jwks-rsa": "^4.0.1",
+    "resend": "^6.10.0"
   }
 }

@@ -5,6 +5,7 @@ const express = require('express')
 const cors = require('cors')
 const { parsearGasto } = require('./src/parser')
 const { createSupabaseClient } = require('./src/supabase')
+const { sendEmail } = require('./src/services/email')
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -181,6 +182,26 @@ app.get('/gastos/anuales', requireAuth, async (req, res) => {
     anio,
     totales,
   })
+})
+
+// ── POST /test-email ─ Ruta de prueba para Resend ───────────────────────────────────────────────────────────
+app.post('/test-email', requireAuth, async (req, res) => {
+  const { to, subject, html } = req.body;
+
+  if (!to || !subject || !html) {
+    return res.status(400).json({
+      ok: false,
+      errores: ["Faltan campos requeridos: to, subject, html"],
+    });
+  }
+
+  const result = await sendEmail({ to, subject, html });
+
+  if (result.success) {
+    return res.status(200).json({ ok: true, data: result.data });
+  } else {
+    return res.status(500).json({ ok: false, errores: [result.error] });
+  }
 })
 
 // UptimeRobot pingea /health cada 5 min y evita que el free tier Render duerma tras 15 min de inactividad. Registrar la URL de la API en UptimeRobot (uptimerobot.com, gratis)
