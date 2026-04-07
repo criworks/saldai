@@ -1,4 +1,4 @@
-# 📱 Expenses Tracker — Mobile App
+# 📱 Saldai — Mobile App
 
 Aplicación móvil desarrollada en **React Native** con **Expo** para la gestión y seguimiento de gastos personales. Diseñada con un enfoque estricto en UI/UX utilizando **NativeWind** (Tailwind CSS) y conectada a una API REST propia.
 

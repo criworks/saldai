@@ -81,7 +81,7 @@ export default function Home() {
     <main className="min-h-screen bg-[#0e0e0e] flex flex-col items-center justify-center px-6">
       {/* Header */}
       <div className="mb-16 text-center">
-        <p className="text-[#444] text-xs tracking-[0.3em] uppercase mb-2">expenses</p>
+        <p className="text-[#444] text-xs tracking-[0.3em] uppercase mb-2">saldai</p>
         <div className="w-6 h-px bg-[#333] mx-auto" />
       </div>
 

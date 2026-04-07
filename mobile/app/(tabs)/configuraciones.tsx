@@ -94,7 +94,7 @@ export default function ConfigurationsScreen() {
 
         {/* Branding Footer */}
         <Text className="text-muted-foreground text-base font-normal leading-[normal]">
-          Gast OS v1
+          Saldai v1
         </Text>
 
       </ScrollView>

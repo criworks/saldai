@@ -1,5 +1,5 @@
 import { KeyboardTypeOptions } from 'react-native'
-export { categoryColor, COLORES_CAT, EMOJIS_CAT } from '@expenses/ui/tokens'
+export { categoryColor, COLORES_CAT, EMOJIS_CAT } from '@saldai/ui/tokens'
 
 export const MESES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',

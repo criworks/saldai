@@ -1,5 +1,5 @@
 {
-  "name": "@expenses/ui",
+  "name": "@saldai/ui",
   "version": "1.0.0",
   "description": "Shared design tokens and UI primitives",
   "main": "tokens.js",
