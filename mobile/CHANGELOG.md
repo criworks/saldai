@@ -32,7 +32,7 @@
 
 # Changelog
 
-All notable changes to the **Expense Tracker (Mobile)** project will be documented in this file.
+All notable changes to the **Saldai (Mobile)** project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -84,7 +84,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Login Flow:** Switched from `signInWithOtp` with magic links to 6-digit OTP codes.
 - **Supabase Auth Configuration:** Disabled `detectSessionInUrl` and removed the `useDeepLinkHandler` utility since deep links are no longer required for auth.
 - **API Client Auth:** Updated `services/api.ts` to automatically inject the Supabase user JWT token in the `Authorization` header for all requests.
-- **Shared Tokens:** Migrated emoji token mappings (`EMOJIS_CAT`) to use the monorepo shared package `@expenses/ui/tokens`.
+- **Shared Tokens:** Migrated emoji token mappings (`EMOJIS_CAT`) to use the monorepo shared package `@saldai/ui/tokens`.
 
 ### Removed
 - **Auth Callback Screen:** Removed `callback.tsx` as auth is now verified natively in the UI.

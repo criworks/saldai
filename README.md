@@ -1,4 +1,4 @@
-## Expense Tracker
+## Saldai
 
 Herramienta personal para registrar gastos de forma rápida y sin fricción.
 La idea es simple: escribir un gasto en lenguaje casi natural, que el sistema lo entienda y lo organice solo. Sin formularios complejos, sin usar Notion ni GSheets ni Excel, sin el dolor de registrar todo un sábado mirando movimientos bancarios.

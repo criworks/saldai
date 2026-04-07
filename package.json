@@ -1,7 +1,7 @@
 {
-  "name": "expenses-tracker",
+  "name": "saldai",
   "version": "1.0.0",
-  "description": "Personal Expenses Tracker",
+  "description": "Saldai",
   "private": true,
   "workspaces": [
     "packages/*",

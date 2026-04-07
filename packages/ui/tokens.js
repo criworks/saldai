@@ -1,5 +1,5 @@
 /**
- * Design Tokens — Expenses Tracker
+ * Design Tokens — Saldai
  *
  * Fuente única de verdad para colores, tipografía, spacing y constantes de UI.
  * Usado por web/ (Tailwind CSS), mobile/ (NativeWind) y cualquier paquete futuro.

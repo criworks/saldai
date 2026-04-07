@@ -73,7 +73,7 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex items-center justify-between mb-12">
         <div>
-          <p className="text-[#444] text-xs tracking-[0.3em] uppercase mb-1">expenses</p>
+          <p className="text-[#444] text-xs tracking-[0.3em] uppercase mb-1">saldai</p>
           <h1 className="text-2xl font-light">dashboard</h1>
         </div>
         <Link
