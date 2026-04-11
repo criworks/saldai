@@ -79,7 +79,7 @@ export default function ConfigurationsScreen() {
         </View>
 
         {/* Development Section */}
-        {__DEV__ && (
+        {(__DEV__ && process.env.EXPO_PUBLIC_USE_MOCKS === 'true') && (
           <View className="w-full flex-col -mt-4">
             <SectionHeader title="Dev Mode" />
             <Button

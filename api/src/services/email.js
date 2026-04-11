@@ -15,15 +15,17 @@ const FROM = {
  * @param {string} options.subject - Asunto del correo
  * @param {string} options.html - Contenido en formato HTML
  */
-const sendEmail = async ({ to, subject, html }) => {
+const sendEmail = async ({ to, subject, html, fromType = 'noreply' }) => {
   try {
     if (!process.env.RESEND_API_KEY) {
       console.warn('RESEND_API_KEY no configurada. Saltando envío de correo.')
       return { success: false, error: 'API Key missing' }
     }
 
+    const sender = FROM[fromType] || FROM.noreply;
+
     const { data, error } = await resend.emails.send({
-      from: `Saldai <${fromEmail}>`,
+      from: sender,
       to,
       subject,
       html,

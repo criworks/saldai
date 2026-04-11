@@ -1,14 +1,16 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, KeyboardAvoidingView, Platform, ScrollView, Pressable, Alert as RNAlert, TextInput, Modal } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, KeyboardAvoidingView, Platform, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../services/supabase';
 import { Input } from '../../components/ui/Input';
 import { Notification } from '../../components/ui/Notification';
 import { Alert } from '../../components/ui/Alert';
-import { Clock, PencilSimple, Check } from 'phosphor-react-native';
+import { Clock, PencilSimple } from 'phosphor-react-native';
+import { OtpInput } from '../../components/ui/OtpInput';
 
 export default function CuentaScreen() {
+  // --- STATES ---
   const { session } = useAuth();
   const [email, setEmail] = useState('');
   const [originalEmail, setOriginalEmail] = useState('');
@@ -16,40 +18,18 @@ export default function CuentaScreen() {
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   
-  // New states for redesign
   const [isEmailFocused, setIsEmailFocused] = useState(false);
-  const [isOtpFocused, setIsOtpFocused] = useState(false);
   const [otpError, setOtpError] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [cursorVisible, setCursorVisible] = useState(true);
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
   const [alertConfig, setAlertConfig] = useState<{ visible: boolean; message: string; type: 'warning' | 'error' | 'info' }>({ visible: false, message: '', type: 'info' });
 
-  const showAlert = (message: string, type: 'warning' | 'error' | 'info') => {
-    setAlertConfig({ visible: true, message, type });
-    setTimeout(() => {
-      setAlertConfig(prev => ({ ...prev, visible: false }));
-    }, 3000);
-  };
-
   const insets = useSafeAreaInsets();
-  const otpInputRef = useRef<TextInput>(null);
 
-  // Blinking cursor effect
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isOtpFocused) {
-      setCursorVisible(true);
-      interval = setInterval(() => {
-        setCursorVisible((v) => !v);
-      }, 500);
-    } else {
-      setCursorVisible(false);
-    }
-    return () => clearInterval(interval);
-  }, [isOtpFocused]);
+  const isEditing = email !== originalEmail && email.trim().length > 0 && email !== pendingEmail;
+  const isVerifying = email === pendingEmail && pendingEmail !== originalEmail && pendingEmail.length > 0;
 
-  // Cooldown effect
+  // --- EFFECTS ---
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (cooldownSeconds > 0) {
@@ -69,8 +49,19 @@ export default function CuentaScreen() {
     }
   }, [session, pendingEmail]);
 
-  const isEditing = email !== originalEmail && email.trim().length > 0 && email !== pendingEmail;
-  const isVerifying = email === pendingEmail && pendingEmail !== originalEmail && pendingEmail.length > 0;
+  useEffect(() => {
+    if (otp.length === 6 && isVerifying && !loading && !otpError) {
+      handleVerifyOtp();
+    }
+  }, [otp, isVerifying, loading, otpError]);
+
+  // --- HANDLERS ---
+  const showAlert = (message: string, type: 'warning' | 'error' | 'info') => {
+    setAlertConfig({ visible: true, message, type });
+    setTimeout(() => {
+      setAlertConfig(prev => ({ ...prev, visible: false }));
+    }, 3000);
+  };
 
   const handleModifyEmail = async () => {
     if (!email || email === originalEmail) return;
@@ -118,13 +109,6 @@ export default function CuentaScreen() {
     }
   };
 
-  // Auto-submit OTP
-  useEffect(() => {
-    if (otp.length === 6 && isVerifying && !loading && !otpError) {
-      handleVerifyOtp();
-    }
-  }, [otp, isVerifying, loading, otpError]);
-
   const handleOtpChange = (val: string) => {
     setOtp(val.replace(/[^0-9]/g, '').slice(0, 6));
     if (otpError) setOtpError(false);
@@ -147,38 +131,7 @@ export default function CuentaScreen() {
     }
   };
 
-  const renderOtpDots = () => {
-    const dots = [];
-    for (let i = 0; i < 6; i++) {
-      const char = otp[i];
-      const isCurrent = i === otp.length;
-      
-      let displayChar = '•';
-      let colorClass = 'text-muted-foreground';
-      
-      if (char) {
-        displayChar = char;
-        colorClass = 'text-foreground';
-      } else if (isCurrent && isOtpFocused) {
-        displayChar = '|';
-        colorClass = cursorVisible ? 'text-foreground' : 'text-transparent';
-      }
-
-      dots.push(
-        <Text key={i} className={`text-subtitle font-normal font-['Inter'] leading-[normal] ${colorClass}`}>
-          {displayChar}
-        </Text>
-      );
-    }
-    return dots;
-  };
-
-  const otpBorderClass = otpError 
-    ? 'border-destructive' 
-    : isOtpFocused 
-      ? 'border-muted-foreground' 
-      : 'border-transparent';
-
+  // --- RENDER ---
   return (
     <SafeAreaView edges={['top', 'left', 'right']} className="flex-1 bg-background">
       <KeyboardAvoidingView 
@@ -272,25 +225,10 @@ export default function CuentaScreen() {
                       Ingresa el código de verificación
                     </Text>
                     
-                    {/* Visual OTP Input mimicking the design */}
-                    <Pressable 
-                      className={`w-full h-[56px] px-xl flex-row justify-center items-center gap-lg rounded-[16px] bg-secondary border-2 ${otpBorderClass}`}
-                      onPress={() => otpInputRef.current?.focus()}
-                    >
-                      {renderOtpDots()}
-                    </Pressable>
-
-                    {/* Hidden Input for OTP */}
-                    <TextInput
-                      ref={otpInputRef}
-                      value={otp}
-                      onChangeText={handleOtpChange}
-                      keyboardType="numeric"
-                      maxLength={6}
-                      className="absolute w-[1px] h-[1px] opacity-0"
-                      autoFocus={true}
-                      onFocus={() => setIsOtpFocused(true)}
-                      onBlur={() => setIsOtpFocused(false)}
+                    <OtpInput 
+                      value={otp} 
+                      onChangeText={handleOtpChange} 
+                      error={otpError} 
                     />
                     
                     {otpError && (
@@ -300,14 +238,14 @@ export default function CuentaScreen() {
                     )}
                   </View>
 
-                  <View className="w-full flex-col items-center gap-sm">
+                  <View className="w-full flex-col items-center gap-sm mt-lg">
                     <Pressable
                       onPress={handleResendCode}
-                      disabled={loading}
-                      className="w-full py-lg px-xl justify-center items-center rounded-[16px] active:opacity-80"
+                      disabled={loading || cooldownSeconds > 0}
+                      className="w-full py-md px-xl justify-center items-center rounded-[16px] active:opacity-80"
                     >
                       <Text className="text-muted-foreground font-['Inter'] text-body font-medium leading-[normal]">
-                        Reenviar código
+                        {cooldownSeconds > 0 ? `Reenviar en ${cooldownSeconds}s` : 'Reenviar código'}
                       </Text>
                     </Pressable>
                   </View>
@@ -325,7 +263,7 @@ export default function CuentaScreen() {
         type="success"
       />
       <Alert 
-        visible={cooldownSeconds > 0} 
+        visible={cooldownSeconds > 0 && !isVerifying} 
         message={`Por seguridad debes esperar ${cooldownSeconds} segundos para volver a hacer un cambio.`}
         type="warning"
       />
