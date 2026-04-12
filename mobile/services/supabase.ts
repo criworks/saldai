@@ -28,7 +28,7 @@ const realSupabase = createClient(supabaseUrl, supabaseAnonKey, {
 // Magic email states
 let mockPendingEmail: string | null = null;
 
-import { mockFeedConfig } from './api'
+import { mockFeedConfig } from './mockConfig'
 
 // Mocked client wrapper
 const mockSupabase = {

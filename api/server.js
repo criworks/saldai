@@ -1,3 +1,4 @@
+require('express-async-errors')
 require('dotenv').config()
 
 const { requireAuth } = require('./src/middleware/auth.js')

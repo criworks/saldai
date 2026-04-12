@@ -5,6 +5,17 @@
 - **Componentización de Autenticación**: Nuevos componentes reutilizables `EmailVerificationInput` y `OtpVerification` (integrando a su vez a `OtpInput` y `Alert`) compartidos entre `login.tsx` y `cuenta.tsx`.
 - **Validación de Correo**: Función global `isValidEmail` añadida en `lib/utils.ts` e integrada para ocultar o deshabilitar acciones primarias en flujos de email hasta que el formato introducido sea válido.
 
+
+## [1.5.6] - 2026-04-12
+### Changed
+- **UI Playground Mocker**: Extraída la configuración local (`mockFeedConfig`) desde el módulo `services/api.ts` a un archivo completamente nuevo `services/mockConfig.ts` para quebrar el Require Cycle fatal entre el API y el Contexto de Autenticación de Supabase.
+- **Iconografía Uniforme**: Substitución de todas las importaciones e instancias renderizadas de `<Feather>` por sus equivalentes nativos de `<Phosphor>` (`<Plus>`, `<Calendar>`, `<CaretDown>`) en los selectores de captura de form.
+- **Tipado Base de Monorepo**: Se reubicaron de manera forzada los módulos `typescript` y `@types/react` al bloque interno `devDependencies` del Mobile para silenciar errores del LSP en VSCode/Cursor (`TS2786`).
+
+### Removed
+- **Vectores Legacy**: Eliminada permanentemente la librería `@expo/vector-icons` del bundle móvil.
+- **Dependencias Huérfanas**: Limpieza global de módulos inactivos (`@boxicons/*`, `react-native-worklets` y navegadores no-tabulares de Reanimated 2/3).
+
 ### Changed
 - **Refactorización de Verificación (OTP)**: UX completamente alineada entre `login.tsx` y `cuenta.tsx`. El usuario ahora puede simplemente editar su email para volver a solicitar un código (eliminando el botón redundante "Usar otro correo").
 - **Refactorización de Alertas (`Alert`)**: Implementado soporte `inline={true}`. Las alertas que proveen mensajes contextuales sobre acciones del usuario ahora se empotran debajo del contenido, eliminando las colisiones con notificaciones globales flotantes.

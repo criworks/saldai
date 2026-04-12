@@ -1,4 +1,4 @@
-import { Feather } from '@expo/vector-icons';
+import { Plus } from 'phosphor-react-native';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
@@ -53,7 +53,7 @@ export default function CategoriasScreen() {
               onPress={() => router.push('/captura')}
             >
               <View className="bg-secondary rounded-full w-xxl h-xxl items-center justify-center">
-                <Feather name="plus" size={16} color="#60677D" />
+                <Plus size={16} color="#60677D" />
               </View>
               <Text className="text-muted-foreground text-menu font-medium">Nueva categoría</Text>
             </Pressable>

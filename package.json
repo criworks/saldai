@@ -15,5 +15,9 @@
     "dev": "npm run api & npm run web",
     "cli": "npm run cli --prefix api",
     "test": "npm test --prefix api"
+  },
+  "devDependencies": {
+    "@types/react": "~19.1.10",
+    "typescript": "~5.9.3"
   }
 }

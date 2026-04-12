@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { Plus } from 'phosphor-react-native';
 
 interface PaymentMethodSelectorProps {
   method: string;
@@ -14,7 +14,7 @@ export function PaymentMethodSelector({ method, onSelectMethod }: PaymentMethodS
         className="bg-secondary rounded-full items-center justify-center w-xxl h-xxl mr-lg active:opacity-80"
         onPress={() => {}}
       >
-        <Feather name="plus" size={16} color="#60677D" />
+        <Plus size={16} color="#60677D" />
       </Pressable>
       
       <Pressable 

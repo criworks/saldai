@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, Pressable, ScrollView } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { Plus } from 'phosphor-react-native';
 import { EMOJIS_CAT } from '../../constants/theme';
 
 interface CategorySelectorProps {
@@ -17,7 +17,7 @@ export function CategorySelector({ selectedCategory, onSelectCategory }: Categor
         className="bg-secondary rounded-full items-center justify-center w-xxl h-xxl mr-md active:opacity-80"
         onPress={() => onSelectCategory('Sin categoría')}
       >
-        <Feather name="plus" size={16} color="#60677D" />
+        <Plus size={16} color="#60677D" />
       </Pressable>
       
       <ScrollView 

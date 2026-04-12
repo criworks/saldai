@@ -25,15 +25,7 @@ async function getAuthHeaders() {
 
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
-// ============================================================================
-// MOCK CONTROLS (DEV/QA ONLY)
-// Este objeto permite mutar el estado global de los datos simulados desde
-// el UI Playground para testear casos como "Lista vacía" o "Errores".
-// Al igual que isMockMode, no afecta en producción.
-// ============================================================================
-export const mockFeedConfig = {
-  state: 'normal' as 'normal' | 'empty' | 'huge' | 'error' | 'loading'
-};
+import { mockFeedConfig } from './mockConfig';
 
 const MOCK_GASTOS = [
   { id: '1', monto: 15000, monto_formateado: '$15,000.00', item: 'Uber', categoria: 'Transporte', fecha: new Date().toISOString().split('T')[0], metodo: 'tc' },

@@ -5,6 +5,15 @@ All notable changes to the **Saldai (Monorepo)** project will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## [1.7.2] - 2026-04-12
+### Changed
+- **Dependencias API**: Refactorizado el middleware de autenticación (`auth.js`) para utilizar el SDK nativo de Supabase (`supabase.auth.getUser`) en la validación de tokens JWT en lugar del método manual usando llaves públicas.
+- **Manejo de Errores Async (API)**: Integrado `express-async-errors` en el archivo raíz de Express 4 para garantizar que el runtime intercepte rechazos no cacheados en las promesas y evite timeouts en la base de datos.
+
+### Removed
+- **Validadores de Tokens**: Desinstalados `jsonwebtoken` y `jwks-rsa` de la API.
+
 ## [1.7.1] - 2026-04-11
 ### Added
 - **Componentización de Autenticación**: Nuevos componentes reutilizables `EmailVerificationInput` y `OtpVerification` compartidos entre los flujos de inicio de sesión y cuenta.

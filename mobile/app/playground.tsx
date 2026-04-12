@@ -12,7 +12,7 @@ import { CategorySelector } from '../components/ui/CategorySelector';
 import { PaymentMethodSelector } from '../components/ui/PaymentMethodSelector';
 import { OtpInput } from '../components/ui/OtpInput';
 import { router } from 'expo-router';
-import { mockFeedConfig } from '../services/api';
+import { mockFeedConfig } from '../services/mockConfig';
 
 export default function UIPlayground() {
   const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' } | null>(null);

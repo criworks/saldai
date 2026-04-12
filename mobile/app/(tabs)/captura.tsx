@@ -12,7 +12,7 @@ import {
   DeviceEventEmitter,
 } from 'react-native'
 import { useFocusEffect } from 'expo-router'
-import { Feather } from '@expo/vector-icons'
+import { Calendar, CaretDown } from 'phosphor-react-native'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useGastoMutation } from '../../hooks/useGastoMutation'
@@ -210,11 +210,11 @@ export default function CapturaScreen() {
                 setShowDatePicker(true);
               }}
             >
-              <Feather name="calendar" size={16} className="text-muted-foreground" />
+              <Calendar size={16} className="text-muted-foreground" />
               <Text className={`text-body font-medium ${valores.fecha ? 'text-foreground' : 'text-muted-foreground'}`}>
                 {valores.fecha || 'Hoy'}
               </Text>
-              <Feather name="chevron-down" size={16} className="text-muted-foreground" />
+              <CaretDown size={16} className="text-muted-foreground" />
             </Pressable>
           </View>
         </View>

@@ -1,23 +1,6 @@
-import jwt from 'jsonwebtoken'
-import jwksClient from 'jwks-rsa'
+import { createSupabaseClient } from '../supabase.js'
 
-/**
- * Middleware de autenticación via Supabase JWT.
- * Requiere header: Authorization: Bearer <token>
- */
-const client = jwksClient({
-  jwksUri: `${process.env.SUPABASE_URL}/auth/v1/.well-known/jwks.json`,
-  cache: true,
-})
-
-const getKey = (header, callback) => {
-  client.getSigningKey(header.kid, (err, key) => {
-    if (err) return callback(err)
-    callback(null, key.getPublicKey())
-  })
-}
-
-const requireAuth = (req, res, next) => {
+const requireAuth = async (req, res, next) => {
   const authHeader = req.headers.authorization
 
   if (!authHeader?.startsWith('Bearer ')) {
@@ -26,13 +9,20 @@ const requireAuth = (req, res, next) => {
 
   const token = authHeader.split(' ')[1]
 
-  jwt.verify(token, getKey, { algorithms: ['ES256'] }, (err, decoded) => {
-    if (err) {
+  try {
+    const supabase = createSupabaseClient(token)
+    const { data: { user }, error } = await supabase.auth.getUser(token)
+
+    if (error || !user) {
       return res.status(401).json({ ok: false, error: 'Token inválido o expirado' })
     }
-    req.user = decoded
+
+    req.user = user
     req.token = token
     next()
-  })
+  } catch (err) {
+    return res.status(401).json({ ok: false, error: 'Error interno de autenticación' })
+  }
 }
+
 export { requireAuth }
