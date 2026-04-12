@@ -5,6 +5,17 @@ All notable changes to the **Saldai (Monorepo)** project will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.1] - 2026-04-11
+### Added
+- **Componentización de Autenticación**: Nuevos componentes reutilizables `EmailVerificationInput` y `OtpVerification` compartidos entre los flujos de inicio de sesión y cuenta.
+- **Validación de Correo**: Función global `isValidEmail` integrada para restringir acciones (botón "Enviar código") hasta que el formato introducido sea válido.
+
+### Changed
+- **Refactorización de Verificación (OTP)**: UX alineada entre `login.tsx` y `cuenta.tsx`. Eliminado el botón "Usar otro correo".
+- **Refactorización de Alertas (`Alert`)**: Implementado soporte `inline` para mostrar notificaciones críticas embebidas bajo campos de texto o botones en lugar de usar posición flotante absoluta.
+- **Notificaciones de Éxito (`Notification`)**: Modificados los comportamientos en el reenvío de OTP para presentar notificaciones tipo "toast" en vez de las alertas previas. Se ajustó el sistema para no fijar alturas forzadas que causaban cortes tipográficos (clipping text).
+- **Iconografía**: El icono de espera al solicitar un código temporal en campos de email cambió a blanco para mantener consistencia visual global.
+
 ## [1.7.0] - 2026-04-07
 ### Added
 - **Integración de Emails**: Servicio de envíos configurado en la API vía Resend (`api/src/services/email.js`).

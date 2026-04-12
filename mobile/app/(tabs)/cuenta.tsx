@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, KeyboardAvoidingView, Platform, ScrollView, Pressable } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Alert } from '../../components/ui/Alert';
+import { EmailVerificationInput } from '../../components/ui/EmailVerificationInput';
+import { Notification } from '../../components/ui/Notification';
+import { OtpVerification } from '../../components/ui/OtpVerification';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../services/supabase';
-import { Input } from '../../components/ui/Input';
-import { Notification } from '../../components/ui/Notification';
-import { Alert } from '../../components/ui/Alert';
-import { Clock, PencilSimple } from 'phosphor-react-native';
-import { OtpInput } from '../../components/ui/OtpInput';
+import { isValidEmail } from '../../lib/utils';
 
 export default function CuentaScreen() {
   // --- STATES ---
@@ -17,16 +17,15 @@ export default function CuentaScreen() {
   const [pendingEmail, setPendingEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
-  
-  const [isEmailFocused, setIsEmailFocused] = useState(false);
+
   const [otpError, setOtpError] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
   const [alertConfig, setAlertConfig] = useState<{ visible: boolean; message: string; type: 'warning' | 'error' | 'info' }>({ visible: false, message: '', type: 'info' });
+  const [notificationConfig, setNotificationConfig] = useState<{ visible: boolean; message: string; type: 'success' | 'warning' | 'error' | 'info' }>({ visible: false, message: '', type: 'success' });
 
   const insets = useSafeAreaInsets();
 
-  const isEditing = email !== originalEmail && email.trim().length > 0 && email !== pendingEmail;
+  const isEditing = email !== originalEmail && isValidEmail(email) && email !== pendingEmail;
   const isVerifying = email === pendingEmail && pendingEmail !== originalEmail && pendingEmail.length > 0;
 
   // --- EFFECTS ---
@@ -63,9 +62,16 @@ export default function CuentaScreen() {
     }, 3000);
   };
 
+  const showNotification = (message: string, type: 'success' | 'warning' | 'error' | 'info' = 'success') => {
+    setNotificationConfig({ visible: true, message, type });
+    setTimeout(() => {
+      setNotificationConfig(prev => ({ ...prev, visible: false }));
+    }, 3000);
+  };
+
   const handleModifyEmail = async () => {
     if (!email || email === originalEmail) return;
-    
+
     setLoading(true);
     const { error } = await supabase.auth.updateUser({ email });
     setLoading(false);
@@ -98,25 +104,20 @@ export default function CuentaScreen() {
     if (error) {
       setOtpError(true);
     } else {
-      setShowSuccess(true);
+      showNotification('Email actualizado correctamente.', 'success');
       setOriginalEmail(pendingEmail);
-      
+
       // En modo mock (Dev/QA), actualizamos el email localmente para visualizar el cambio
       // ya que el AuthContext mockeado no muta su estado interno (test@mock.com) automáticamente.
       // Esta condición es ignorada en producción.
       if (process.env.EXPO_PUBLIC_USE_MOCKS === 'true') {
         setEmail(pendingEmail);
       }
-      
+
       setPendingEmail('');
       setOtp('');
-      
-      setTimeout(() => {
-        setShowSuccess(false);
-      }, 3000);
     }
-  };
-
+    };
   const handleOtpChange = (val: string) => {
     setOtp(val.replace(/[^0-9]/g, '').slice(0, 6));
     if (otpError) setOtpError(false);
@@ -135,20 +136,20 @@ export default function CuentaScreen() {
         showAlert(error.message, 'error');
       }
     } else {
-      showAlert('Código reenviado. Revisá tu nuevo email.', 'info');
+      showNotification('Código reenviado. Revisá tu nuevo email.', 'info');
     }
   };
 
   // --- RENDER ---
   return (
     <SafeAreaView edges={['top', 'left', 'right']} className="flex-1 bg-background">
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
-          contentContainerStyle={{ 
-            flexGrow: 1, 
+          contentContainerStyle={{
+            flexGrow: 1,
             paddingHorizontal: 24,
             paddingTop: 40,
             paddingBottom: 220 + insets.bottom,
@@ -163,39 +164,24 @@ export default function CuentaScreen() {
                 Cuenta
               </Text>
             </View>
-            
+
             <View className="w-full flex-col items-center gap-xl">
-              
+
               {/* EMAIL INPUT */}
               <View className="w-full flex-col items-start gap-sm">
-                <Text 
+                <Text
                   className="text-muted-foreground font-['Inter'] text-body font-normal leading-[normal]"
                   numberOfLines={1}
                 >
                   Tu email
                 </Text>
-                
-                <View className="w-full relative justify-center">
-                  <Input 
-                    value={email}
-                    onChangeText={setEmail}
-                    onFocus={() => setIsEmailFocused(true)}
-                    onBlur={() => setIsEmailFocused(false)}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    placeholder="tu@email.com"
-                    editable={true}
-                    className={`w-full pr-4xl ${(isEditing || isEmailFocused) ? 'border-2 border-muted-foreground' : 'border border-transparent'} ${(isVerifying && !isEmailFocused) ? 'text-muted-foreground' : ''}`}
-                  />
-                  <View className="absolute right-lg pointer-events-none">
-                    {(isVerifying && !isEmailFocused) ? (
-                      <Clock size={18} color="#E98B00" weight="fill" />
-                    ) : (
-                      <PencilSimple size={18} className="text-muted-foreground" weight="fill" />
-                    )}
-                  </View>
-                </View>
+
+                <EmailVerificationInput
+                  value={email}
+                  onChangeText={setEmail}
+                  isVerifying={isVerifying}
+                  isEditing={isEditing}
+                />
               </View>
 
               {/* ACTION BUTTON (Modify Email) */}
@@ -215,50 +201,30 @@ export default function CuentaScreen() {
 
               {/* VERIFY OTP SECTION */}
               {isVerifying && (
-                <View className="w-full flex-col items-center gap-xl">
-                  <View className="w-full p-xl flex-col justify-center items-start gap-lg rounded-[16px] border border-warning-border">
-                    <View className="justify-center items-start gap-lg rounded-[16px]">
-                      <Clock size={18} color="#E98B00" weight="fill" />
-                    </View>
-                    <Text className="text-warning font-['Inter'] text-detail font-normal leading-[normal]">
-                      Ingresa el código de 6 dígitos que enviamos a tu nuevo email para confirmar el cambio.
-                    </Text>
-                  </View>
-
-                  <View className="w-full flex-col items-start gap-sm">
-                    <Text 
-                      className="text-muted-foreground font-['Inter'] text-body font-normal leading-[normal]"
-                      numberOfLines={1}
-                    >
-                      Ingresa el código de verificación
-                    </Text>
-                    
-                    <OtpInput 
-                      value={otp} 
-                      onChangeText={handleOtpChange} 
-                      error={otpError} 
-                    />
-                    
-                    {otpError && (
-                      <Text className="text-destructive font-['Inter'] text-detail font-normal leading-[normal] mt-sm">
-                        Código incorrecto o ha expirado. Intenta nuevamente.
-                      </Text>
-                    )}
-                  </View>
-
-                  <View className="w-full flex-col items-center gap-sm mt-lg">
-                    <Pressable
-                      onPress={handleResendCode}
-                      disabled={loading || cooldownSeconds > 0}
-                      className="w-full py-md px-xl justify-center items-center rounded-[16px] active:opacity-80"
-                    >
-                      <Text className="text-muted-foreground font-['Inter'] text-body font-medium leading-[normal]">
-                        {cooldownSeconds > 0 ? `Reenviar en ${cooldownSeconds}s` : 'Reenviar código'}
-                      </Text>
-                    </Pressable>
-                  </View>
-                </View>
+                <OtpVerification
+                  message="Ingresa el código de 6 dígitos que enviamos a tu nuevo email para confirmar el cambio."
+                  otp={otp}
+                  onOtpChange={handleOtpChange}
+                  error={otpError}
+                  onResend={handleResendCode}
+                  loading={loading}
+                  cooldownSeconds={cooldownSeconds}
+                />
               )}
+
+              {/* ALERTS INLINE */}
+              <Alert
+                visible={cooldownSeconds > 0 && !isVerifying}
+                message={`Por seguridad debes esperar ${cooldownSeconds} segundos para volver a hacer un cambio.`}
+                type="warning"
+                inline={true}
+              />
+              <Alert
+                visible={alertConfig.visible}
+                message={alertConfig.message}
+                type={alertConfig.type}
+                inline={true}
+              />
 
             </View>
           </View>
@@ -266,20 +232,9 @@ export default function CuentaScreen() {
       </KeyboardAvoidingView>
 
       <Notification 
-        visible={showSuccess} 
-        message="Email actualizado correctamente." 
-        type="success"
+        visible={notificationConfig.visible} 
+        message={notificationConfig.message} 
+        type={notificationConfig.type}
       />
-      <Alert 
-        visible={cooldownSeconds > 0 && !isVerifying} 
-        message={`Por seguridad debes esperar ${cooldownSeconds} segundos para volver a hacer un cambio.`}
-        type="warning"
-      />
-      <Alert 
-        visible={alertConfig.visible} 
-        message={alertConfig.message} 
-        type={alertConfig.type}
-      />
-    </SafeAreaView>
-  );
+      </SafeAreaView>  );
 }

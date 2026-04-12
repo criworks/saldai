@@ -1,6 +1,6 @@
+import { Check, Info, Warning, XCircle } from 'phosphor-react-native';
 import React from 'react';
-import { View, Text } from 'react-native';
-import { Warning, Check, Info, XCircle } from 'phosphor-react-native';
+import { Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export type NotificationType = 'success' | 'warning' | 'error' | 'info';
@@ -36,19 +36,19 @@ export function Notification({ visible, message, type = 'success', monto, descri
   const displayText = message ? message : `Agregado ${monto} ${descripcion}`;
 
   return (
-    <View 
+    <View
       className="absolute top-0 left-0 right-0 z-50 items-center px-xl"
       style={{ paddingTop: insets.top > 0 ? insets.top + 16 : 40 }}
       pointerEvents="none"
     >
-      <View 
-        className="h-[33px] px-[16px] py-[8px] flex-row justify-center items-center gap-[8px] rounded-full border-2 border-[#353A47]"
+      <View
+        className="px-[16px] py-[8px] flex-row justify-center items-center gap-[8px] rounded-full border-2 border-[#353A47]"
         style={{ backgroundColor: 'rgba(38, 42, 53, 0.40)' }}
       >
         {getIcon()}
-        <Text 
-          className="text-white font-['Inter'] text-[14px] font-medium leading-[normal]" 
-          numberOfLines={1} 
+        <Text
+          className="text-white font-['Inter'] text-body font-medium leading-[normal]"
+          numberOfLines={1}
           ellipsizeMode="tail"
         >
           {displayText}
