@@ -5,6 +5,17 @@ All notable changes to the **Saldai (Monorepo)** project will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.1] - 2026-04-11
+### Added
+- **Componentización de Autenticación**: Nuevos componentes reutilizables `EmailVerificationInput` y `OtpVerification` compartidos entre los flujos de inicio de sesión y cuenta.
+- **Validación de Correo**: Función global `isValidEmail` integrada para restringir acciones (botón "Enviar código") hasta que el formato introducido sea válido.
+
+### Changed
+- **Refactorización de Verificación (OTP)**: UX alineada entre `login.tsx` y `cuenta.tsx`. Eliminado el botón "Usar otro correo".
+- **Refactorización de Alertas (`Alert`)**: Implementado soporte `inline` para mostrar notificaciones críticas embebidas bajo campos de texto o botones en lugar de usar posición flotante absoluta.
+- **Notificaciones de Éxito (`Notification`)**: Modificados los comportamientos en el reenvío de OTP para presentar notificaciones tipo "toast" en vez de las alertas previas. Se ajustó el sistema para no fijar alturas forzadas que causaban cortes tipográficos (clipping text).
+- **Iconografía**: El icono de espera al solicitar un código temporal en campos de email cambió a blanco para mantener consistencia visual global.
+
 ## [1.7.0] - 2026-04-07
 ### Added
 - **Integración de Emails**: Servicio de envíos configurado en la API vía Resend (`api/src/services/email.js`).
@@ -19,19 +30,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.6.0] - 2026-04-02
 ### Added
-- **Vista de Meses Anuales (`mobile/app/(tabs)/meses.tsx`)**: Nueva pantalla en la app móvil que muestra un resumen de gastos totales agrupados por mes para el año en curso. Cumple estrictamente con los Design Tokens de la arquitectura.
-- **Endpoint Analítico (`GET /gastos/anuales`)**: Nuevo endpoint protegido en la API (`api/server.js`) que agrupa y totaliza matemáticamente los montos anuales por mes (0-11) para evitar que el cliente móvil procese históricos completos.
+- **Soporte de Autenticación**: Nuevo sistema de Auth middleware (`/api/src/middleware/auth.js`) integrado para proteger las rutas de gastos y categorías.
+- **Flujo de Acceso Móvil**: Nuevas pantallas `login.tsx` y layouts en la app para soportar el flujo Supabase OTP.
 
 ### Changed
-- **Navegación Dashboard (`mobile/app/(tabs)/index.tsx`)**: El título principal del mes ("Marzo", etc.) es ahora un área interactiva que dirige a la nueva vista anual.
-- **Jerarquía Footer (`mobile/components/ui/GradientFooter.tsx`)**: La barra de navegación inferior ahora reconoce la vista "meses" como parte del ecosistema de gastos, manteniendo el icono principal iluminado y apagando sutilmente la píldora de "En curso".
-
-## [1.0.0] - 2026-03-11
-### Added
-- **Global Documentation:** Relocated `REPORT.md` to the project root to centralize technical learning and session histories.
-- **Agent Tooling:** Promoted the `end-session` Gemini skill from the mobile workspace to the root `.gemini/skills/` directory to manage monorepo-wide versions.
-- **Architectural Rules:** Added rule #8 to root `GEMINI.md` formalizing the separation between monorepo changelogs and mobile-specific changelogs.
-
-## [0.4.0] - 2026-03-28
-- Promoted design tokens to be strictly semantic across the monorepo.
-
+- **Base de Datos y API**: Refactorizado `supabase.js` para crear el cliente con los tokens provistos por el cliente en cada request, respetando RLS.
+- **Mobile Context**: Actualizado `GastosContext` y `AuthContext` para interceptar validaciones de estado y limpiar la data local al desconectarse.
