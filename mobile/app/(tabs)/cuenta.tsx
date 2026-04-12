@@ -100,6 +100,14 @@ export default function CuentaScreen() {
     } else {
       setShowSuccess(true);
       setOriginalEmail(pendingEmail);
+      
+      // En modo mock (Dev/QA), actualizamos el email localmente para visualizar el cambio
+      // ya que el AuthContext mockeado no muta su estado interno (test@mock.com) automáticamente.
+      // Esta condición es ignorada en producción.
+      if (process.env.EXPO_PUBLIC_USE_MOCKS === 'true') {
+        setEmail(pendingEmail);
+      }
+      
       setPendingEmail('');
       setOtp('');
       

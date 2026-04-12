@@ -6,6 +6,7 @@ interface AuthContextValue {
   session: Session | null
   loading: boolean
   signOut: () => Promise<void>
+  triggerMockSession?: () => void
 }
 
 const AuthContext = createContext<AuthContextValue>({
@@ -14,6 +15,9 @@ const AuthContext = createContext<AuthContextValue>({
   signOut: async () => {},
 })
 
+// ============================================================================
+// MOCK MODE SETUP (DEV/QA ONLY)
+// ============================================================================
 const isMockMode = process.env.EXPO_PUBLIC_USE_MOCKS === 'true';
 
 const mockSession: Session = {
@@ -40,12 +44,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (isMockMode) {
       console.log('🚧 Running in MOCK MODE (Auth)');
-      // Simulate network delay
-      const timer = setTimeout(() => {
-        setSession(mockSession)
-        setLoading(false)
-      }, 500)
-      return () => clearTimeout(timer)
+      // Do not auto-login in mock mode to allow testing the login flow
+      setLoading(false);
+      
+      // We still listen to auth state changes so that when our mock verifyOtp 
+      // succeeds (and potentially calls a callback), we could handle it.
+      // However, mock verifyOtp doesn't trigger onAuthStateChange automatically, 
+      // so we might need a manual trigger or just set session.
+      // For simplicity in mock mode, if we are here, we let the UI handle the state.
+      return;
     }
 
     // Sesión activa al abrir la app
@@ -64,14 +71,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     if (isMockMode) {
+      // Simulate the network call using our mockSupabase
+      await supabase.auth.signOut();
       setSession(null);
       return;
     }
     await supabase.auth.signOut()
   }
 
+  const triggerMockSession = () => {
+    if (isMockMode) {
+      setSession(mockSession);
+    }
+  }
+
   return (
-    <AuthContext.Provider value={{ session, loading, signOut }}>
+    <AuthContext.Provider value={{ session, loading, signOut, triggerMockSession }}>
       {children}
     </AuthContext.Provider>
   )

@@ -30,6 +30,7 @@ type GastosContextType = {
   datos: DatosResponse | null;
   loading: boolean;
   refreshing: boolean;
+  error: string | null;
   fetchGastos: (isRefresh?: boolean) => Promise<void>;
   categorias: [string, CategoriaInfo][];
   totalMes: number;
@@ -42,14 +43,19 @@ export function GastosProvider({ children }: { children: ReactNode }) {
   const [datos, setDatos] = useState<DatosResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  
+  // Nuevo estado para propagar errores de red al UI sin crashear (útil en prod y testeable vía Mocks)
+  const [error, setError] = useState<string | null>(null);
 
   const fetchGastos = useCallback(async (isRefresh = false) => {
     isRefresh ? setRefreshing(true) : setLoading(true);
+    setError(null);
     try {
       const json = await fetchGastosPorMes(mes);
       if (json.ok) setDatos(json);
     } catch (e) {
       console.error(e);
+      setError(e instanceof Error ? e.message : 'Error al cargar los gastos');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -76,7 +82,7 @@ export function GastosProvider({ children }: { children: ReactNode }) {
 
   return (
     <GastosContext.Provider value={{
-      mes, setMes, datos, loading, refreshing, fetchGastos, categorias, totalMes
+      mes, setMes, datos, loading, refreshing, error, fetchGastos, categorias, totalMes
     }}>
       {children}
     </GastosContext.Provider>

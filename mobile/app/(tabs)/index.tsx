@@ -12,6 +12,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ExpenseItem } from '../../components/ui/ExpenseItem'
 import { MESES } from '../../constants/theme'
 import { useGastos, Gasto } from '../../hooks/useGastos'
+import { Alert } from '../../components/ui/Alert'
 
 // Helper para parsear fechas string (DD/MM/YYYY o ISO) a Date
 function parseExpenseDate(dateString: string): Date {
@@ -72,6 +73,7 @@ export default function DashboardScreen() {
     datos,
     loading,
     refreshing,
+    error,
     fetchGastos,
     totalMes,
   } = useGastos()
@@ -111,6 +113,8 @@ export default function DashboardScreen() {
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} className="flex-1 bg-background">
+      <Alert visible={!!error} message={error || ''} type="error" />
+      
       <ScrollView
         contentContainerStyle={{ 
           paddingHorizontal: 24, // px-xl global container
@@ -174,8 +178,19 @@ export default function DashboardScreen() {
                 </View>
               ))}
             </View>
+          ) : error ? (
+            // ============================================================================
+            // FALLBACK ERROR (Producción & QA Mock)
+            // Se muestra si falla la request a Supabase o si forzamos 'error' en el Dev Mode.
+            // ============================================================================
+            <View className="w-full flex-col pt-xl pb-24 items-center">
+               <Text className="text-destructive text-body font-medium text-center">Error al cargar datos</Text>
+               <Pressable onPress={() => fetchGastos(true)} className="mt-4 px-6 py-3 bg-secondary rounded-full active:opacity-80">
+                  <Text className="text-foreground font-medium">Reintentar</Text>
+               </Pressable>
+            </View>
           ) : !datos || datos.cantidad === 0 ? (
-            <View className="w-full flex-col rounded-[40px]">
+            <View className="w-full flex-col pt-xl rounded-[40px] items-start">
                <Text className="text-muted-foreground text-body font-medium">No hay gastos este mes</Text>
             </View>
           ) : (

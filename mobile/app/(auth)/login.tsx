@@ -5,8 +5,10 @@ import { supabase } from '../../services/supabase'
 import { Input } from '../../components/ui/Input'
 import { Alert } from '../../components/ui/Alert'
 import { Notification } from '../../components/ui/Notification'
+import { useRouter } from 'expo-router'
 import { Clock } from 'phosphor-react-native'
 import { OtpInput } from '../../components/ui/OtpInput'
+import { useAuth } from '../../contexts/AuthContext'
 
 export default function LoginScreen() {
   // --- STATES ---
@@ -23,6 +25,8 @@ export default function LoginScreen() {
   const [showSuccess, setShowSuccess] = useState(false)
 
   const insets = useSafeAreaInsets()
+  const router = useRouter()
+  const { triggerMockSession } = useAuth()
 
   // --- EFFECTS ---
   useEffect(() => {
@@ -94,7 +98,12 @@ export default function LoginScreen() {
       setOtpError(true)
     } else {
       setShowSuccess(true)
-      // AuthContext will detect session and redirect to (tabs)
+      // En modo mock, AuthContext no intercepta el evento de auth (porque el SDK mockeado no despacha onAuthStateChange igual), 
+      // así que disparamos la sesión mockeada manualmente para QA.
+      // ¡Esto no afectará producción ya que EXPO_PUBLIC_USE_MOCKS es falso en build!
+      if (process.env.EXPO_PUBLIC_USE_MOCKS === 'true' && triggerMockSession) {
+        setTimeout(() => triggerMockSession(), 1000)
+      }
     }
   }
 

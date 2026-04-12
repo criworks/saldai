@@ -1,5 +1,30 @@
 # CHANGELOG
 
+## [1.5.4] - 2026-04-11
+### Added
+- **Arquitectura de QA Offline (Mocks Globales)**: Se implementó un robusto ecosistema de simulación de red inyectado vía `EXPO_PUBLIC_USE_MOCKS=true`.
+- **UI Playground Controls**: Se agregó una botonera global al `app/playground.tsx` capaz de mutar el estado global mockeado de la aplicación (`mockFeedConfig.state`) en tiempo real (forzar errores de red, listas vacías, listas gigantes, carga infinita).
+- **Simulación Supabase Auth (`supabase.ts`)**: Se interceptaron los métodos `signInWithOtp`, `updateUser` y `signOut` devolviendo latencias falsas realistas de 800ms.
+- **Magic Strings de Testing**: El hook de captura de gastos y Auth ahora reconoce emails/textos mágicos (`"error api"`, `"error rate"`, `"long espera"`) para devolver excepciones nativas y probar el comportamiento asíncrono y los límites de la UI.
+- **Soporte de Layout de Errores Global (`GastosContext.tsx`)**: Se agregó un `error` state al contexto principal para capturar excepciones emitidas por la red (o el Mocker) y devolver Fallbacks visuales con botones de reintento en el Feed Principal y en Historial de Meses.
+- **Casos Borde Visuales**: Se crearon instancias de estrés extremo en el Playground usando el componente `ExpenseItem` con valores absurdamente grandes para validar el sistema Flexbox contra roturas de línea en Tailwind.
+
+### Changed
+- **Desacople en AuthContext**: En lugar de asignar la sesión dummy instantáneamente en modo Mock, `AuthContext.tsx` ahora expone `triggerMockSession()`. Esto requiere una "negociación" simulada y permite transiciones visuales (`setTimeout`) que replican el tiempo de latencia 1:1 de Producción.
+- **Comentarios Dead-code**: Documentado extensivamente todo el código falso con comentarios indicando explícitamente al Developer que esto no afecta Producción porque el Bundler lo elimina durante el Tree Shaking estático de variables `process.env`.
+- **Deshabilitación Responsiva (`captura.tsx`)**: El motor de NLP de captura de gastos ahora inhabilita visualmente los inputs (opacity-50) y muestra spinners in-line de forma reactiva mientras la API resuelve las promesas, evitando el "doble guardado" accidental por parte del usuario.
+
+## [1.5.3] - 2026-04-11
+### Added
+- **Componente OTP Reutilizable**: Se extrajo la lógica de renderizado de PIN visual (con el cursor intermitente de 500ms y los puntos reactivos) a un nuevo componente compartido `<OtpInput />` (`mobile/components/ui/OtpInput.tsx`). Esto asegura un comportamiento uniforme de los inputs de verificación a través de toda la aplicación.
+
+### Changed
+- **Arquitectura de Login Condicional**: Se refactorizó drásticamente el flujo de inicio de sesión inicial. La vista `verify.tsx` fue fusionada dentro de `login.tsx` utilizando un nuevo estado `isVerifying`. Al solicitar un código OTP, en vez de navegar a otra ruta de React Navigation, la UI transiciona transparentemente sobre el mismo Canvas, bloqueando el campo del email y montando el nuevo componente `<OtpInput />`. Esto alinea funcionalmente el inicio de sesión con la lógica ya probada en la actualización de Cuenta.
+- **Limpieza de Código y Legibilidad**: Se insertaron bloques de comentarios semánticos (`// --- STATES ---`, `// --- EFFECTS ---`, `// --- HANDLERS ---`, `// --- RENDER ---`) tanto en `login.tsx` como en `cuenta.tsx`, estructurando los componentes y evitando la desorganización de hooks típicos de componentes grandes de React.
+
+### Removed
+- **Depreciación de Verify Screen**: Se eliminó del file system el archivo `mobile/app/(auth)/verify.tsx` y su correspondiente mapeo en el archivo de layout `_layout.tsx`, ya que ahora su responsabilidad yace condicionalmente dentro de `login.tsx`.
+
 ## [1.5.2] - 2026-04-03
 ### Changed
 - **Login Flow Refactor**: Unificamos completamente la experiencia visual de inicio de sesión (`login.tsx` y `verify.tsx`) para que sea estructural y lógicamente idéntica a la sección de cambiar email en cuenta (`cuenta.tsx`).
@@ -87,7 +112,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Shared Tokens:** Migrated emoji token mappings (`EMOJIS_CAT`) to use the monorepo shared package `@saldai/ui/tokens`.
 
 ### Removed
-- **Auth Callback Screen:** Removed `callback.tsx` as auth is now verified natively in the UI.
+- **Auth Callback Screen:** Removed `callback.tsx` as auth is verified natively in the UI.
 - **Expo Linking listeners:** Dropped listeners handling deep-linked tokens.
 
 ## [1.2.0] - 2026-02-28
@@ -124,29 +149,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Custom transparent Bottom Tab Bar (`GradientFooter`).
 - Filter by category utilizing Horizontal Scroll View.
 - Capture screen for adding new expenses with Keyboard Avoiding View.
-
-## [0.4.0] - 2026-03-28
-### Added
-- `cuenta.tsx` screen to handle user email modifications using OTP (`verifyOtp`).
-- `@react-native-community/datetimepicker` integrated in `captura.tsx`.
-- Reusable `SuccessNotification.tsx` toast component.
-- Reusable `Input.tsx` shared component.
-
-### Changed
-- Replaced all hardcoded hexadecimal colors with semantic Tailwind classes (e.g. `bg-background`, `text-warning`).
-- Re-architected `captura.tsx` form positioning to precisely match Figma dimensions, sitting seamlessly above native keyboards.
-- Re-engineered `GradientFooter.tsx` to conditionally hide its fade gradient on sub-less views (e.g., `cuenta`, `configuraciones`).
-- Overhauled date grouping in `index.tsx` to use precise `Date` sorting and `Map` to guarantee desc date order.
-
-### Fixed
-- Addressed iOS/Android keyboard flickering (glitches) between numeric and text input transitions using a 100ms debounce in keyboard hide listeners.
-- Prevented keyboard from overlapping the `captura.tsx` form.## [1.5.0] - 2026-03-29
-### Added
-- **Global Alert System**: Created a unified `Alert.tsx` (Dialog-style) component supporting `success`, `warning`, `error`, and `info` types. Implemented it across the app to completely replace native `Alert.alert` dialogs, handling cases like Supabase cooldown times securely.
-- **Global Notification System**: Refactored `SuccessNotification.tsx` into a generic `Notification.tsx` (Pill-style) component.
-
-### Changed
-- **OTP Form Recovery**: Allowed the user to edit the email input natively during the `isVerifying` stage in `cuenta.tsx`. When edited, the system smoothly reverts to the initial email modification state, dropping the previous OTP code and error states.
-- **Keyboard Handling (Captura)**: Solved critical rendering bugs where the form was hidden under the native keyboard. Migrated back to a robust `KeyboardAvoidingView` with `behavior="padding"` while actively tracking OS keyboard heights and dismissing the numeric pad safely before triggering the DatePicker.
-- **Component Renaming**: Consolidated confusing legacy notification files strictly into `Alert.tsx` (large modals) and `Notification.tsx` (small floating pills).
-\n## [1.6.0] - 2026-04-05\n### Added\n- **UI Playground & Mock Environment**: Added `app/playground.tsx` as an isolated Kitchen Sink to test React Native UI components directly in the browser (`npm run web`).\n- Added `react-native-web` and `@expo/metro-runtime` dependencies to strictly support browser rendering of the Expo Router architecture.\n- Added an `EXPO_PUBLIC_USE_MOCKS` flag to bypass Supabase authentication and intercept API calls inside `services/api.ts` and `contexts/AuthContext.tsx`, replacing them with realistic async dummy data.

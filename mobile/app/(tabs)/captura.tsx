@@ -20,6 +20,7 @@ import { useGastos } from '../../hooks/useGastos'
 import { CategorySelector } from '../../components/ui/CategorySelector'
 import { PaymentMethodSelector } from '../../components/ui/PaymentMethodSelector'
 import { Notification } from '../../components/ui/Notification'
+import { Alert } from '../../components/ui/Alert'
 
 export default function CapturaScreen() {
   const { fetchGastos } = useGastos()
@@ -43,6 +44,16 @@ export default function CapturaScreen() {
   const [isKeyboardVisible, setKeyboardVisible] = useState(false)
   const [keyboardHeight, setKeyboardHeight] = useState(0)
   const insets = useSafeAreaInsets()
+  
+  // Custom Alert para manejar los mensajes de error devueltos por la mutation
+  const [alertConfig, setAlertConfig] = useState<{ visible: boolean; message: string; type: 'error' | 'warning' | 'info' }>({ visible: false, message: '', type: 'error' })
+
+  useEffect(() => {
+    if (estado === 'error') {
+      setAlertConfig({ visible: true, message: mensaje || 'Error desconocido', type: 'error' })
+      setTimeout(() => setAlertConfig(prev => ({ ...prev, visible: false })), 4000)
+    }
+  }, [estado, mensaje])
 
   const handleAmountChange = (text: string) => {
     // Solo permitimos números
@@ -143,6 +154,11 @@ export default function CapturaScreen() {
       className="flex-1 bg-background justify-end items-center"
       style={{ paddingBottom: outerPaddingBottom }}
     >
+      <Alert 
+        visible={alertConfig.visible} 
+        message={alertConfig.message} 
+        type={alertConfig.type} 
+      />
       <Notification 
         visible={estado === 'ok' && lastSaved !== null}
         monto={lastSaved?.monto || ''}
@@ -165,8 +181,8 @@ export default function CapturaScreen() {
               keyboardType="numeric"
               returnKeyType="next"
               onSubmitEditing={() => descripcionRef.current?.focus()}
-              autoFocus={true}
-              className={`text-[40px] font-light p-0 m-0 min-w-[30px] text-right placeholder:text-muted-foreground caret-foreground ${valores.monto ? 'text-foreground' : 'text-muted-foreground'}`}
+              editable={estado !== 'loading'}
+              className={`text-[40px] font-light p-0 m-0 min-w-[30px] text-right placeholder:text-muted-foreground caret-foreground ${valores.monto ? 'text-foreground' : 'text-muted-foreground'} ${estado === 'loading' ? 'opacity-50' : ''}`}
             />
           </View>
 
@@ -179,13 +195,16 @@ export default function CapturaScreen() {
               maxLength={40}
               returnKeyType="done"
               onSubmitEditing={() => Keyboard.dismiss()}
-              className={`flex-1 text-body text-right p-0 m-0 w-full placeholder:text-muted-foreground caret-foreground ${valores.item ? 'text-foreground' : 'text-muted-foreground'}`}
+              editable={estado !== 'loading'}
+              className={`flex-1 text-body text-right p-0 m-0 w-full placeholder:text-muted-foreground caret-foreground ${valores.item ? 'text-foreground' : 'text-muted-foreground'} ${estado === 'loading' ? 'opacity-50' : ''}`}
             />
           </View>
 
           <View className="flex-row justify-end items-center gap-sm w-full">
+            {estado === 'loading' && <ActivityIndicator size="small" color="#E98B00" className="mr-2" />}
             <Pressable 
-              className="flex-row px-md py-sm justify-center items-center gap-sm rounded-full bg-secondary"
+              className={`flex-row px-md py-sm justify-center items-center gap-sm rounded-full bg-secondary ${estado === 'loading' ? 'opacity-50' : ''}`}
+              disabled={estado === 'loading'}
               onPress={() => {
                 Keyboard.dismiss();
                 setShowDatePicker(true);

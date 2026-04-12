@@ -10,7 +10,9 @@ import { Separator } from '../components/ui/separator';
 import { ExpenseItem } from '../components/ui/ExpenseItem';
 import { CategorySelector } from '../components/ui/CategorySelector';
 import { PaymentMethodSelector } from '../components/ui/PaymentMethodSelector';
+import { OtpInput } from '../components/ui/OtpInput';
 import { router } from 'expo-router';
+import { mockFeedConfig } from '../services/api';
 
 export default function UIPlayground() {
   const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
@@ -135,6 +137,23 @@ export default function UIPlayground() {
 
         <Separator className="mb-8" />
 
+        {/* OTP INPUT */}
+        <View className="mb-8">
+          <SectionHeader title="OTP Input (Auth)" />
+          <View className="mt-4 gap-6">
+            <View>
+               <Text className="mb-2 text-foreground font-semibold">Estado Normal:</Text>
+               <OtpInput value="12" onChangeText={() => {}} />
+            </View>
+            <View>
+               <Text className="mb-2 text-foreground font-semibold">Estado de Error:</Text>
+               <OtpInput value="123456" onChangeText={() => {}} error={true} />
+            </View>
+          </View>
+        </View>
+
+        <Separator className="mb-8" />
+
         {/* NOTIFICATIONS & ALERTS */}
         <View className="mb-8">
           <SectionHeader title="Notificaciones & Alertas" />
@@ -178,6 +197,70 @@ export default function UIPlayground() {
             >
               <Text>Alert Warning</Text>
             </Button>
+          </View>
+        </View>
+
+        <Separator className="mb-8" />
+
+        {/* FEED MOCK CONTROLS */}
+        <View className="mb-8">
+          <SectionHeader title="Controladores Mock (Feed)" />
+          <Text className="text-muted-foreground text-sm mb-4">
+            Usa estos botones para cambiar el estado global de la data falsa. Luego ve al tab "Inicio" (o haz pull to refresh) para ver el resultado.
+          </Text>
+          <View className="mt-4 gap-4">
+            <Button variant="outline" onPress={() => { mockFeedConfig.state = 'normal'; setNotification({ message: 'Feed configurado: Normal', type: 'success' }) }}>
+              <Text>Mock: Normal (4 items)</Text>
+            </Button>
+            <Button variant="outline" onPress={() => { mockFeedConfig.state = 'empty'; setNotification({ message: 'Feed configurado: Vacío', type: 'success' }) }}>
+              <Text>Mock: Lista Vacía (0 items)</Text>
+            </Button>
+            <Button variant="outline" onPress={() => { mockFeedConfig.state = 'huge'; setNotification({ message: 'Feed configurado: Lista Gigante', type: 'success' }) }}>
+              <Text>Mock: Lista Gigante (150 items)</Text>
+            </Button>
+            <Button variant="outline" onPress={() => { mockFeedConfig.state = 'loading'; setNotification({ message: 'Feed configurado: Cargando', type: 'success' }) }}>
+              <Text>Mock: Carga Infinita</Text>
+            </Button>
+            <Button variant="outline" onPress={() => { mockFeedConfig.state = 'error'; setNotification({ message: 'Feed configurado: Error', type: 'success' }) }}>
+              <Text>Mock: Forzar Error de Red</Text>
+            </Button>
+          </View>
+        </View>
+
+        <Separator className="mb-8" />
+
+        {/* UI EDGE CASES */}
+        <View className="mb-8">
+          <SectionHeader title="Casos Borde de UI (Limites)" />
+          <Text className="text-muted-foreground text-sm mb-4">
+            Verifica cómo los componentes se comportan ante textos o valores extremos.
+          </Text>
+          
+          <Text className="mb-2 text-foreground font-semibold mt-4">Expense Item (Texto muy largo):</Text>
+          <View className="gap-2">
+            <ExpenseItem 
+              id="edge-1"
+              monto="$1,500.00"
+              titulo="Compra en supermercado que tiene un nombre de item ridículamente largo para probar si el texto hace wrap a multiples líneas o si rompe el layout y se sale de la pantalla"
+            />
+          </View>
+
+          <Text className="mb-2 text-foreground font-semibold mt-6">Expense Item (Monto extremo):</Text>
+          <View className="gap-2">
+            <ExpenseItem 
+              id="edge-2"
+              monto="$999,999,999,999.00"
+              titulo="Café"
+            />
+          </View>
+          
+          <Text className="mb-2 text-foreground font-semibold mt-6">Expense Item (Todo extremo):</Text>
+          <View className="gap-2">
+            <ExpenseItem 
+              id="edge-3"
+              monto="$99,999,999.00"
+              titulo="Transferencia interbancaria internacional para compra de maquinaria pesada"
+            />
           </View>
         </View>
 
