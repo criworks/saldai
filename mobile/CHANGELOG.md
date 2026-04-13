@@ -8,6 +8,8 @@
 
 ## [1.5.6] - 2026-04-12
 
+### Added\n- **Mes Contable (Fake Door):** Implementada una nueva pantalla temporal (Empty State) para la sección de Configuración de Mes Contable (`mobile/app/(tabs)/mes-contable.tsx`). Al igual que Categorías, incluye una ilustración SVG adaptada a móviles y un botón de *Call to Action* (`Avísenme`) alineado a los Tokens visuales.\n
+
 ### Added\n- **Categorías (Fake Door):** Implementada una nueva pantalla temporal (Empty State) para la sección de Configuración de Categorías (`mobile/app/(tabs)/categorias.tsx`). Incluye una ilustración SVG personalizada y un botón de *Call to Action* (`Avísenme`) alineado a los Tokens visuales del monorepo.\n
 
 ### Changed\n- **Botón FAB (Captura):** El botón de guardado flotante en el layout de `captura.tsx` (dentro de `GradientFooter`) cambió de ser un círculo rígido (`w-4xl`) a tener una forma de pastilla alargada (`px-8 py-3`), respetando las proporciones de toque del diseño original para acciones principales.\n
