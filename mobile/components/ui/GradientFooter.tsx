@@ -144,7 +144,7 @@ export function GradientFooter(props: BottomTabBarProps) {
         {/* FAB Item (Derecha) */}
         {isCapturaActive ? (
           <Pressable
-            className="w-4xl h-4xl bg-primary rounded-full items-center justify-center active:opacity-80"
+            className="bg-primary rounded-full items-center justify-center active:opacity-80 px-8 py-3"
             onPress={() => DeviceEventEmitter.emit('submitCaptura')}
           >
             <Check size={24} className="text-primary-foreground" weight="bold" />
