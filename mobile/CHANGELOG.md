@@ -8,6 +8,8 @@
 
 ## [1.5.6] - 2026-04-12
 
+### Added\n- **Modales Universales:** Componente `ConfirmationModal` (`mobile/components/ui/ConfirmationModal.tsx`) diseñado como un overlay translúcido para abstraer flujos de advertencia severos. Implementa inyección de componentes SVG (Phosphor) y soporte para botones destructivos.\n- **Simulación Mocks de Borrado:** Se incluyó el interceptor de latencias falsas en `configuraciones.tsx` para probar de forma segura la UI (Activity Indicators y Toasts) de cierre de sesión y borrado de cuenta sin tocar Supabase.\n\n### Changed\n- **Flujos Destructivos:** Las opciones "Cerrar sesión" y "Eliminar cuenta" en el menú de configuraciones ya no utilizan el `Alert.alert` genérico nativo de OS. Ahora levantan el modal de confirmación tematizado, asegurando una estética continua con los Design Tokens (`bg-card`, `bg-muted`).\n
+
 ### Changed\n- **Navegación Histórica:** Se incrementó el área presible (`hit slop` mediante padding nativo) del selector de mes (`index.tsx`) para mejorar la precisión del toque al incluir tanto el texto del mes como el icono de `CaretRight` dentro del perímetro de contacto dinámico.\n
 
 ### Fixed\n- **Estilos Visuales (Android/Expo):** Se eliminó el plugin legacy `nativewind/babel` de la configuración de Babel (`mobile/babel.config.js`) para solucionar conflictos de inyección y renderizado con Metro en NativeWind v4.\n

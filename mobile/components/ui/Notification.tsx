@@ -33,7 +33,7 @@ export function Notification({ visible, message, type = 'success', monto, descri
     }
   };
 
-  const displayText = message ? message : `Agregado ${monto} ${descripcion}`;
+  const displayText = message ? message : `Agregado ${monto || ''}`.trim();
 
   return (
     <View
