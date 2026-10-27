@@ -62,25 +62,21 @@ export default function ConfigurationsScreen() {
         await new Promise(res => setTimeout(res, 1500));
         await signOut(); // Simulamos que se borra y cerramos sesión
       } else {
-        // Real Edge/RPC call or supabase method to delete user.
-        // Usually Supabase requires an RPC "delete_user" due to RLS,
-        // or an Edge function to safely delete the authenticated user.
-        // For now, we will simulate the API call and sign out to protect DB.
-        
-        // This is a placeholder for the actual backend logic.
+        // Borrar un usuario de auth.users no es algo que el rol de la sesión
+        // pueda hacer, así que va por la función delete_user() de Supabase
+        // (ver supabase/migrations/), que borra los gastos y la cuenta.
         const { error: rpcError } = await supabase.rpc('delete_user');
-        
-        if (rpcError) {
-           console.warn("RPC delete_user missing or failed:", rpcError.message);
-           // Fallback to just logging out if the RPC is not implemented yet on the backend
-        }
-        
+
+        // Si falla, la cuenta sigue viva: no se puede cerrar sesión y decir
+        // que se eliminó.
+        if (rpcError) throw new Error(rpcError.message);
+
         await signOut();
       }
       setNotificationMsg("Cuenta eliminada correctamente");
     } catch (e) {
-      setError("Error al procesar la eliminación.");
-      setTimeout(() => setError(null), 3000);
+      setError("No se pudo eliminar la cuenta. Intenta de nuevo.");
+      setTimeout(() => setError(null), 4000);
     } finally {
       setIsProcessing(false);
     }
