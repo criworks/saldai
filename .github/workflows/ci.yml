@@ -1,0 +1,45 @@
+# Verificación de cada PR hacia development.
+#
+# Corre lo mismo que se corre en local (`npm test`, `npm run lint`,
+# `npm run typecheck`) para que un PR no pueda romper la rama sin que se vea.
+# Todo en un solo job: son pasos de segundos y comparten el `npm ci`, así que
+# separarlos solo haría instalar las dependencias tres veces.
+
+name: CI
+
+on:
+  pull_request:
+    branches: [development]
+  push:
+    branches: [development]
+
+# Un PR que recibe varios pushes seguidos cancela sus corridas anteriores.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verificar:
+    name: Tests, lint y tipos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      # `npm ci` y no `npm install`: respeta el lockfile y falla si está
+      # desincronizado con los package.json, que es justo lo que se quiere saber.
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Tests de la API
+        run: npm test
+
+      - name: Lint de web
+        run: npm run lint
+
+      - name: Tipos de mobile
+        run: npm run typecheck
