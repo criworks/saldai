@@ -1,20 +1,18 @@
 require('express-async-errors')
 require('dotenv').config()
 
+const { cargarConfig } = require('./src/config')
 const { requireAuth } = require('./src/middleware/auth.js')
 const express = require('express')
 const cors = require('cors')
 const { parsearGasto } = require('./src/parser')
-const { createSupabaseClient } = require('./src/supabase')
-const { sendEmail } = require('./src/services/email')
+const { createSupabaseClient, createAnonClient } = require('./src/supabase')
+
+const { puerto: PORT, origenesPermitidos } = cargarConfig()
 
 const app = express()
-const PORT = process.env.PORT || 3000
 
-const FRONTEND_DEPLOY_URL = process.env.NEXT_FRONTEND_DEPLOY_URL
-const FRONTEND_LOCAL_URL = process.env.NEXT_FRONTEND_LOCAL_URL
-
-app.use(cors({ origin: [FRONTEND_DEPLOY_URL, FRONTEND_LOCAL_URL] }))
+app.use(cors({ origin: origenesPermitidos }))
 app.use(express.json())
 
 // ── POST /gastos/parsear ────────────────────────────────────────────────────
@@ -185,34 +183,17 @@ app.get('/gastos/anuales', requireAuth, async (req, res) => {
   })
 })
 
-// ── POST /test-email ─ Ruta de prueba para Resend ───────────────────────────────────────────────────────────
-app.post('/test-email', requireAuth, async (req, res) => {
-  const { to, subject, html } = req.body;
-
-  if (!to || !subject || !html) {
-    return res.status(400).json({
-      ok: false,
-      errores: ["Faltan campos requeridos: to, subject, html"],
-    });
-  }
-
-  const result = await sendEmail({ to, subject, html });
-
-  if (result.success) {
-    return res.status(200).json({ ok: true, data: result.data });
-  } else {
-    return res.status(500).json({ ok: false, errores: [result.error] });
-  }
-})
-
 // UptimeRobot pingea /health cada 5 min y evita que el free tier Render duerma tras 15 min de inactividad. Registrar la URL de la API en UptimeRobot (uptimerobot.com, gratis)
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
-// UptimeRobot pingea /health/db cada 1 hora para evitar que Supabase pause el proyecto tras 7 días sin actividad (free tier). Usar la misma cuenta de UptimeRobot.
+// Golpea la base para evitar que Supabase pause el proyecto tras 7 días sin
+// actividad (free tier). Con RLS activo no devuelve filas: basta con que la
+// consulta llegue y vuelva sin error.
 app.get('/health/db', async (req, res) => {
   try {
+    const supabase = createAnonClient()
     const { error } = await supabase.from('gastos').select('id').limit(1)
 
     if (error) throw error

@@ -1,4 +1,4 @@
-import { createSupabaseClient } from '../supabase.js'
+const { createSupabaseClient } = require('../supabase.js')
 
 const requireAuth = async (req, res, next) => {
   const authHeader = req.headers.authorization
@@ -25,4 +25,4 @@ const requireAuth = async (req, res, next) => {
   }
 }
 
-export { requireAuth }
+module.exports = { requireAuth }

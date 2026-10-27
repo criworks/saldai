@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Saldai",
   "private": true,
+  "engines": {
+    "node": ">=22.0.0 <23"
+  },
   "workspaces": [
     "packages/*",
     "web",
