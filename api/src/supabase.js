@@ -12,4 +12,10 @@ const createSupabaseClient = (userJwt) => {
   })
 }
 
-module.exports = { createSupabaseClient }
+// Cliente sin sesión de usuario. Solo para el health check: con RLS activo no
+// devuelve filas, pero sí confirma que la base responde.
+const createAnonClient = () => {
+  return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY)
+}
+
+module.exports = { createSupabaseClient, createAnonClient }

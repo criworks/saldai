@@ -15,11 +15,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Categorización por palabra completa**: `gaseosa` caía en Básicos por contener "gas" y `barbería` en Ocio por contener "bar". El match ahora es por palabra completa, sin acentos y aceptando el plural ("auriculares" matchea "auricular").
 - **Fechas inválidas**: `31/02` guardaba otro día en silencio. Ahora devuelve error y el gasto no se parsea.
 - **Zona horaria**: el "hoy" se calcula en `America/Santiago` (configurable con `APP_TIMEZONE`) y no en UTC, así un gasto cargado a las 22:00 en Chile ya no quedaba con la fecha del día siguiente.
+- **Health check de base de datos**: `GET /health/db` usaba una variable `supabase` inexistente y siempre respondía 500 sin llegar a la base. Ahora crea un cliente anónimo (`createAnonClient`) y la consulta sí viaja a Supabase.
 
 ### Changed
 - **Prioridad de categorías**: Mercado se evalúa antes de Básicos para que "acuenta" (supermercado) no caiga en "cuenta".
 - **Keywords**: agregadas `metrogas`, `lipigas`, `abastible` (Básicos) y `apple tv` / `appletv` (Suscripciones).
+- **Validación de entorno**: nuevo `api/src/config.js`. La API no arranca si faltan `SUPABASE_URL` o `SUPABASE_ANON_KEY`, y avisa por consola cuando falta una variable opcional. Los orígenes de CORS se filtran, así que ya no se registran entradas `undefined`.
+- **Middleware de autenticación**: `auth.js` pasó de `import/export` (ESM) a CommonJS, igual que el resto de la API. Deja de depender de la versión de Node que elija el host.
+- **Versión de Node fijada**: `engines: node >=22 <23` en la raíz y en `api/`, más `.node-version` para Render.
 
+### Removed
+- **Endpoint `POST /test-email`**: cualquier usuario autenticado podía enviar correos arbitrarios desde la cuenta de Resend del proyecto. El servicio `src/services/email.js` se mantiene para uso interno.
 
 ## [1.7.2] - 2026-04-12
 ### Changed
