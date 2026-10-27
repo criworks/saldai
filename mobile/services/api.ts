@@ -25,6 +25,30 @@ async function getAuthHeaders() {
 
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
+/**
+ * Saca el mensaje de error de una respuesta de la API.
+ *
+ * La API siempre responde `{ ok, errores: string[] }`, nunca `{ error }`, así
+ * que leer `error` dejaba fuera el detalle (por ejemplo "El parámetro 'mes'
+ * debe ser un número entre 1 y 12") y siempre se mostraba el texto genérico.
+ * Los errores del parser vienen varios juntos, así que se muestran todos.
+ */
+async function leerError(res: Response, fallback: string): Promise<string> {
+  const cuerpo = await res.json().catch(() => null)
+  return mensajeDeError(cuerpo, fallback)
+}
+
+function mensajeDeError(cuerpo: unknown, fallback: string): string {
+  if (cuerpo && typeof cuerpo === 'object') {
+    const { errores, error } = cuerpo as { errores?: unknown; error?: unknown }
+    if (Array.isArray(errores) && errores.length > 0) {
+      return errores.filter((e): e is string => typeof e === 'string').join('\n') || fallback
+    }
+    if (typeof error === 'string' && error) return error
+  }
+  return fallback
+}
+
 import { mockFeedConfig } from './mockConfig';
 
 const MOCK_GASTOS = [
@@ -76,8 +100,7 @@ export async function fetchGastosPorMes(mes: number) {
   })
   
   if (!res.ok) {
-    const errorData = await res.json().catch(() => null)
-    throw new Error(errorData?.error || 'Error en la respuesta del servidor al obtener gastos')
+    throw new Error(await leerError(res, 'Error en la respuesta del servidor al obtener gastos'))
   }
   
   return res.json()
@@ -115,8 +138,7 @@ export async function fetchGastosAnuales(anio: number | string) {
   })
   
   if (!res.ok) {
-    const errorData = await res.json().catch(() => null)
-    throw new Error(errorData?.error || 'Error en la respuesta del servidor al obtener gastos anuales')
+    throw new Error(await leerError(res, 'Error en la respuesta del servidor al obtener gastos anuales'))
   }
   
   return res.json()
@@ -180,11 +202,11 @@ export async function crearGasto(inputStr: string) {
     body: JSON.stringify({ input: inputStr }),
   })
 
-  const json = await res.json()
+  const json = await res.json().catch(() => null)
 
-  // La API devuelve un status diferente de ok a nivel de objeto o HTTP status
-  if (!res.ok || !json.ok) {
-     throw new Error(json.errores?.[0] ?? json.error ?? 'Error al guardar el gasto')
+  // La API puede fallar por HTTP status o por `ok: false` en el cuerpo.
+  if (!res.ok || !json?.ok) {
+    throw new Error(mensajeDeError(json, 'Error al guardar el gasto'))
   }
 
   return json

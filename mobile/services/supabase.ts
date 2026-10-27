@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import * as SecureStore from 'expo-secure-store'
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!
@@ -91,5 +91,11 @@ const mockSupabase = {
   }
 }
 
-export const supabase = isMockMode ? mockSupabase as any : realSupabase
+// El cliente se anota como SupabaseClient a propósito: el wrapper de mocks solo
+// reimplementa lo que usa la app, así que sin la anotación el ternario daba
+// `any` y el resto del código perdía todos los tipos de Supabase.
+export const supabase: SupabaseClient = isMockMode
+  ? (mockSupabase as unknown as SupabaseClient)
+  : realSupabase
+
 
