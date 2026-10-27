@@ -7,21 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+### Added
+- **Tests del parser (API)**: Suite real con `node:test` en `api/test/` (41 casos) para `parser`, `categorizer` y `dateParser`. `npm test` ahora corre los tests; la demo con salida en colores quedó como `npm run demo`.
+- **Scripts en la raíz**: `npm run lint` (web) y `npm run typecheck` (mobile), además del `npm test` que ya estaba. Es lo que va a correr CI.
+
 ### Fixed
+- **Monto con sufijo k**: `12.5k` se leía como 125.000 y `1.5k` como 15.000. Con sufijo `k` el punto o la coma son separador decimal, así que ahora son 12.500 y 1.500.
+- **Categorización por palabra completa**: `gaseosa` caía en Básicos por contener "gas" y `barbería` en Ocio por contener "bar". El match ahora es por palabra completa, sin acentos y aceptando el plural ("auriculares" matchea "auricular").
+- **Fechas inválidas**: `31/02` guardaba otro día en silencio. Ahora devuelve error y el gasto no se parsea.
+- **Zona horaria**: el "hoy" se calcula en `America/Santiago` (configurable con `APP_TIMEZONE`) y no en UTC, así un gasto cargado a las 22:00 en Chile ya no quedaba con la fecha del día siguiente.
 - **Health check de base de datos**: `GET /health/db` usaba una variable `supabase` inexistente y siempre respondía 500 sin llegar a la base. Ahora crea un cliente anónimo (`createAnonClient`) y la consulta sí viaja a Supabase.
+- **Errores de la API en mobile**: `fetchGastosPorMes` y `fetchGastosAnuales` leían `error` de la respuesta, pero la API siempre responde `errores: string[]`. El detalle se perdía y siempre se mostraba el texto genérico. Ahora se leen todos los mensajes, y los del parser (que vienen varios juntos) se muestran completos.
+- **Tipos de mobile en cero**: el cliente de Supabase se exportaba como `any` por el ternario del modo mock, así que todo lo que lo usaba perdía los tipos. Queda anotado como `SupabaseClient`. Además `<Portal>` de `@rn-primitives/portal` requiere la prop `name`, que faltaba en `ConfirmationModal`.
 
 ### Changed
+- **Prioridad de categorías**: Mercado se evalúa antes de Básicos para que "acuenta" (supermercado) no caiga en "cuenta".
+- **Keywords**: agregadas `metrogas`, `lipigas`, `abastible` (Básicos) y `apple tv` / `appletv` (Suscripciones).
 - **Validación de entorno**: nuevo `api/src/config.js`. La API no arranca si faltan `SUPABASE_URL` o `SUPABASE_ANON_KEY`, y avisa por consola cuando falta una variable opcional. Los orígenes de CORS se filtran, así que ya no se registran entradas `undefined`.
 - **Middleware de autenticación**: `auth.js` pasó de `import/export` (ESM) a CommonJS, igual que el resto de la API. Deja de depender de la versión de Node que elija el host.
 - **Versión de Node fijada**: `engines: node >=22 <23` en la raíz y en `api/`, más `.node-version` para Render.
+- **`.gitignore`**: reescrito. Era una plantilla de Python en un monorepo de JavaScript (ignoraba `__pycache__`, `*.egg-info`, `.pybuilder/` y hasta `.git/`). Ahora está agrupado por tema y solo ignora lo que corresponde.
+- **Un solo lockfile**: `package-lock.json` de la raíz se versiona (es el del monorepo y lo que hace reproducible `npm ci`) y se ignoran los de cada workspace. Antes el `.gitignore` decía ignorarlos todos, pero el de la raíz estaba versionado igual.
+- **Dependencias de mobile declaradas**: `@supabase/supabase-js` y `@saldai/ui` se usaban sin declararse y funcionaban solo porque npm las subía (hoisting) desde `api`. Un cambio en las dependencias de la API podía romper mobile sin tocar mobile.
 
 ### Removed
 - **Endpoint `POST /test-email`**: cualquier usuario autenticado podía enviar correos arbitrarios desde la cuenta de Resend del proyecto. El servicio `src/services/email.js` se mantiene para uso interno.
-
-## [Unreleased]
-### Fixed
-- **Errores de la API en mobile**: `fetchGastosPorMes` y `fetchGastosAnuales` leían `error` de la respuesta, pero la API siempre responde `errores: string[]`. El detalle se perdía y siempre se mostraba el texto genérico. Ahora se leen todos los mensajes, y los del parser (que vienen varios juntos) se muestran completos.
-- **Tipos de mobile en cero**: el cliente de Supabase se exportaba como `any` por el ternario del modo mock, así que todo lo que lo usaba perdía los tipos. Queda anotado como `SupabaseClient`. Además `<Portal>` de `@rn-primitives/portal` requiere la prop `name`, que faltaba en `ConfirmationModal`.
 
 
 ## [1.7.2] - 2026-04-12
