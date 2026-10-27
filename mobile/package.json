@@ -5,6 +5,8 @@
   "scripts": {
     "start": "expo start",
     "typecheck": "tsc --noEmit",
+    "build:dev:android": "npx eas-cli@latest build --profile development --platform android",
+    "build:dev:ios": "npx eas-cli@latest build --profile development --platform ios",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web"
@@ -26,6 +28,7 @@
     "expo": "~54.0.33",
     "expo-auth-session": "~7.0.10",
     "expo-constants": "~18.0.13",
+    "expo-dev-client": "~6.0.20",
     "expo-font": "~14.0.11",
     "expo-linear-gradient": "~15.0.8",
     "expo-linking": "~8.0.11",
