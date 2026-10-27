@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [Unreleased]
+### Added
+- **Tests del parser (API)**: Suite real con `node:test` en `api/test/` (41 casos) para `parser`, `categorizer` y `dateParser`. `npm test` ahora corre los tests; la demo con salida en colores quedó como `npm run demo`.
+
+### Fixed
+- **Monto con sufijo k**: `12.5k` se leía como 125.000 y `1.5k` como 15.000. Con sufijo `k` el punto o la coma son separador decimal, así que ahora son 12.500 y 1.500.
+- **Categorización por palabra completa**: `gaseosa` caía en Básicos por contener "gas" y `barbería` en Ocio por contener "bar". El match ahora es por palabra completa, sin acentos y aceptando el plural ("auriculares" matchea "auricular").
+- **Fechas inválidas**: `31/02` guardaba otro día en silencio. Ahora devuelve error y el gasto no se parsea.
+- **Zona horaria**: el "hoy" se calcula en `America/Santiago` (configurable con `APP_TIMEZONE`) y no en UTC, así un gasto cargado a las 22:00 en Chile ya no quedaba con la fecha del día siguiente.
+
+### Changed
+- **Prioridad de categorías**: Mercado se evalúa antes de Básicos para que "acuenta" (supermercado) no caiga en "cuenta".
+- **Keywords**: agregadas `metrogas`, `lipigas`, `abastible` (Básicos) y `apple tv` / `appletv` (Suscripciones).
+
+
 ## [1.7.2] - 2026-04-12
 ### Changed
 - **Dependencias API**: Refactorizado el middleware de autenticación (`auth.js`) para utilizar el SDK nativo de Supabase (`supabase.auth.getUser`) en la validación de tokens JWT en lugar del método manual usando llaves públicas.
