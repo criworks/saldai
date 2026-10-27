@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- **Development build con EAS**: nuevo `mobile/eas.json` con los perfiles `development`, `preview` y `production`, más `expo-dev-client` y los scripts `build:dev:android` / `build:dev:ios`. Expo Go queda atado a su versión de SDK y deja de abrir el proyecto cuando se actualiza; el development build es la app del proyecto y no depende de eso.
 - **Tests del parser (API)**: Suite real con `node:test` en `api/test/` (41 casos) para `parser`, `categorizer` y `dateParser`. `npm test` ahora corre los tests; la demo con salida en colores quedó como `npm run demo`.
 
 ### Fixed

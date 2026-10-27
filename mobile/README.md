@@ -79,7 +79,34 @@ npx expo start
 Presiona las siguientes teclas en la terminal para abrir la app:
 *   `i` para abrir en el simulador de **iOS**
 *   `a` para abrir en el emulador de **Android**
-*   Escanea el código QR con la app **Expo Go** para verlo en tu dispositivo físico.
+*   Escanea el código QR para abrirlo en tu dispositivo físico.
+
+### Probar en un dispositivo físico: development build
+
+Expo Go está atado a la versión de SDK que trae instalada, así que cuando se
+actualiza deja de abrir el proyecto ("Project is incompatible with this version
+of Expo Go"). Un *development build* evita eso: es la app del proyecto
+instalada en el dispositivo, con el cliente de desarrollo adentro, así que
+carga el bundle del `expo start` de siempre sin depender de Expo Go.
+
+Los perfiles están en `mobile/eas.json`. Una sola vez por dispositivo:
+
+```bash
+cd mobile
+npx eas-cli@latest login            # con la cuenta dueña del proyecto EAS
+npm run build:dev:android           # o build:dev:ios
+```
+
+EAS buildea en la nube y devuelve un link para instalar el APK (o el build de
+iOS). Después de instalarlo, el ciclo de trabajo es el de siempre:
+
+```bash
+npm start      # y se abre la app instalada, no Expo Go
+```
+
+Hay que volver a buildear solo cuando cambian las dependencias nativas o la
+configuración de `app.json`; los cambios de JavaScript y de estilos entran por
+el dev server como antes.
 
 ---
 
