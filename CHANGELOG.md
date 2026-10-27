@@ -18,6 +18,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - **Endpoint `POST /test-email`**: cualquier usuario autenticado podía enviar correos arbitrarios desde la cuenta de Resend del proyecto. El servicio `src/services/email.js` se mantiene para uso interno.
 
+## [Unreleased]
+### Changed
+- **`.gitignore`**: reescrito. Era una plantilla de Python en un monorepo de JavaScript (ignoraba `__pycache__`, `*.egg-info`, `.pybuilder/` y hasta `.git/`). Ahora está agrupado por tema y solo ignora lo que corresponde.
+- **Un solo lockfile**: `package-lock.json` de la raíz se versiona (es el del monorepo y lo que hace reproducible `npm ci`) y se ignoran los de cada workspace. Antes el `.gitignore` decía ignorarlos todos, pero el de la raíz estaba versionado igual.
+- **Dependencias de mobile declaradas**: `@supabase/supabase-js` y `@saldai/ui` se usaban sin declararse y funcionaban solo porque npm las subía (hoisting) desde `api`. Un cambio en las dependencias de la API podía romper mobile sin tocar mobile.
+
+### Added
+- **Scripts en la raíz**: `npm run lint` (web) y `npm run typecheck` (mobile), además del `npm test` que ya estaba. Es lo que va a correr CI.
+
+
 ## [1.7.2] - 2026-04-12
 ### Changed
 - **Dependencias API**: Refactorizado el middleware de autenticación (`auth.js`) para utilizar el SDK nativo de Supabase (`supabase.auth.getUser`) en la validación de tokens JWT en lugar del método manual usando llaves públicas.
