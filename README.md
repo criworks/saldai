@@ -29,17 +29,22 @@ Método default: TC.
 
 # Uso local
 
-```
-# bash
-npm install
+Monorepo con npm workspaces (`api`, `web`, `mobile`, `packages/ui`). Node 22.
 
-# CLI
-npm run cli
-npm test
-
-# Servidor
-npm start
 ```
+npm install        # instala todos los workspaces
+
+npm run api        # API en modo watch
+npm run web        # dashboard Next.js
+npm run dev        # ambos
+
+npm run cli        # parser interactivo en la terminal
+npm test           # tests de la API
+npm run lint       # eslint de web
+npm run typecheck  # tsc de mobile
+```
+
+Mobile se levanta desde su carpeta: `cd mobile && npm start`.
 
 # Roadmap
 
@@ -67,7 +72,7 @@ npm start
 **Deploy API** ✅
 
 - 4.1 - Subir código a GitHub ✅
-- 4.2 - Deploy en Railway → URL pública ✅
+- 4.2 - Deploy en Render → URL pública ✅
 
 **Frontend web — dashboard** ✅
 
