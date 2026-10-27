@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Tests del parser (API)**: Suite real con `node:test` en `api/test/` (41 casos) para `parser`, `categorizer` y `dateParser`. `npm test` ahora corre los tests; la demo con salida en colores quedó como `npm run demo`.
 - **Scripts en la raíz**: `npm run lint` (web) y `npm run typecheck` (mobile), además del `npm test` que ya estaba. Es lo que va a correr CI.
+- **Development build con EAS**: nuevo `mobile/eas.json` con los perfiles `development`, `preview` y `production`, más `expo-dev-client` y los scripts `build:dev:android` / `build:dev:ios`. Expo Go queda atado a su versión de SDK y deja de abrir el proyecto cuando se actualiza; el development build es la app del proyecto y no depende de eso.
 - **Migraciones de Supabase versionadas** (`supabase/migrations/`): hasta ahora el schema se editaba a mano desde el dashboard y el proyecto no tenía ninguna migración registrada. Incluye un baseline del estado actual de `public.gastos`.
 - **`public.delete_user()`**: la pantalla de configuraciones llamaba esta función para borrar la cuenta, pero nunca existió. Borra los gastos y la cuenta del usuario de la sesión, con `security definer` acotado.
 - **Políticas RLS de UPDATE y DELETE** en `public.gastos`: la tabla solo tenía SELECT e INSERT, así que editar o borrar un gasto fallaba en silencio.
