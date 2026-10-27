@@ -18,6 +18,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - **Endpoint `POST /test-email`**: cualquier usuario autenticado podía enviar correos arbitrarios desde la cuenta de Resend del proyecto. El servicio `src/services/email.js` se mantiene para uso interno.
 
+## [Unreleased]
+### Added
+- **Migraciones de Supabase versionadas** (`supabase/migrations/`): hasta ahora el schema se editaba a mano desde el dashboard y el proyecto no tenía ninguna migración registrada. Incluye un baseline del estado actual de `public.gastos`.
+- **`public.delete_user()`**: la pantalla de configuraciones llamaba esta función para borrar la cuenta, pero nunca existió. Borra los gastos y la cuenta del usuario de la sesión, con `security definer` acotado.
+- **Políticas RLS de UPDATE y DELETE** en `public.gastos`: la tabla solo tenía SELECT e INSERT, así que editar o borrar un gasto fallaba en silencio.
+- **Índice `(user_id, creado_en desc)`** en `public.gastos`: la tabla solo tenía el índice de la primary key, y ninguna consulta de la app busca por id.
+
+### Fixed
+- **Eliminar cuenta en mobile**: si la llamada a `delete_user` fallaba, la app lo registraba con `console.warn`, cerraba sesión y mostraba "Cuenta eliminada correctamente" igual. Ahora el error se muestra y la sesión no se cierra.
+
+### Changed
+- **Políticas RLS existentes**: acotadas al rol `authenticated` (antes `public`, que incluye `anon`) y con `auth.uid()` envuelto en `(select ...)`, que es lo que pedía el advisor de performance de Supabase.
+
+
 ## [1.7.2] - 2026-04-12
 ### Changed
 - **Dependencias API**: Refactorizado el middleware de autenticación (`auth.js`) para utilizar el SDK nativo de Supabase (`supabase.auth.getUser`) en la validación de tokens JWT en lugar del método manual usando llaves públicas.
