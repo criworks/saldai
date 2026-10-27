@@ -18,6 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - **Endpoint `POST /test-email`**: cualquier usuario autenticado podía enviar correos arbitrarios desde la cuenta de Resend del proyecto. El servicio `src/services/email.js` se mantiene para uso interno.
 
+## [Unreleased]
+### Fixed
+- **Errores de la API en mobile**: `fetchGastosPorMes` y `fetchGastosAnuales` leían `error` de la respuesta, pero la API siempre responde `errores: string[]`. El detalle se perdía y siempre se mostraba el texto genérico. Ahora se leen todos los mensajes, y los del parser (que vienen varios juntos) se muestran completos.
+- **Tipos de mobile en cero**: el cliente de Supabase se exportaba como `any` por el ternario del modo mock, así que todo lo que lo usaba perdía los tipos. Queda anotado como `SupabaseClient`. Además `<Portal>` de `@rn-primitives/portal` requiere la prop `name`, que faltaba en `ConfirmationModal`.
+
+
 ## [1.7.2] - 2026-04-12
 ### Changed
 - **Dependencias API**: Refactorizado el middleware de autenticación (`auth.js`) para utilizar el SDK nativo de Supabase (`supabase.auth.getUser`) en la validación de tokens JWT en lugar del método manual usando llaves públicas.
