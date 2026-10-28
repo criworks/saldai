@@ -3,11 +3,15 @@
   "version": "1.0.0",
   "description": "Saldai - Core Parser + API",
   "main": "server.js",
+  "engines": {
+    "node": ">=22.0.0 <23"
+  },
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
     "cli": "node index.js",
-    "test": "node index.js --test"
+    "demo": "node index.js --test",
+    "test": "node --test"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",

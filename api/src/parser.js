@@ -11,7 +11,8 @@
  *   "15000/jumbo//ef"                           ← categoría vacía → se infiere del item
  *
  * Campos:
- * - MONTO:     requerido. Acepta $, puntos/comas de miles, k. Ej: $1.200 | 1200 | 12k
+ * - MONTO:     requerido. Acepta $, puntos de miles y sufijo k. Ej: $1.200 | 1200 | 12k | 12.5k
+ *              La coma no sirve de separador de miles: siempre parte campos.
  * - ITEM:      requerido. Nombre o descripción corta. Fallback para categorizar si categoría vacía.
  * - CATEGORIA: opcional. Keyword que matchea contra categorías conocidas.
  *              Si está presente → siempre gana (override).
@@ -38,20 +39,27 @@ const METODOS = {
 
 /**
  * Parsea un monto string a número entero CLP.
+ *
+ * Con sufijo k, el punto o la coma son separador decimal: "12.5k" son 12.500.
+ * Sin sufijo, son separadores de miles: "$12.500" también son 12.500.
  */
 function parsearMonto(raw) {
-  const limpio = raw
-    .trim()
-    .replace(/^\$\s*/, '')
-    .replace(/\./g, '')
-    .replace(/,/g, '')
-    .replace(/k$/i, '000')
+  const texto = raw.trim().replace(/^\$\s*/, '').replace(/\s/g, '')
+  const invalido = { valor: 0, error: `Monto inválido: "${raw}"` }
 
-  const valor = parseInt(limpio, 10)
-  if (isNaN(valor) || valor <= 0) {
-    return { valor: 0, error: `Monto inválido: "${raw}"` }
+  const conSufijoK = /^(\d+(?:[.,]\d+)?)k$/i.exec(texto)
+  if (conSufijoK) {
+    const valor = Math.round(parseFloat(conSufijoK[1].replace(',', '.')) * 1000)
+    return valor > 0 ? { valor } : invalido
   }
-  return { valor }
+
+  // Entero suelto, o grupos de miles bien formados: 45000 | 12.500 | 1.234.567
+  if (!/^\d+$|^\d{1,3}(?:[.,]\d{3})+$/.test(texto)) {
+    return invalido
+  }
+
+  const valor = parseInt(texto.replace(/[.,]/g, ''), 10)
+  return valor > 0 ? { valor } : invalido
 }
 
 /**
@@ -173,7 +181,8 @@ function parsearGasto(input) {
   if (advCat) advertencias.push(advCat)
 
   // ── [3] FECHA (opcional) ────────────────────────────────────────
-  const { fechaStr, advertencia: advFecha } = parsearFecha(partes[3])
+  const { fechaISO, fechaStr, advertencia: advFecha, error: errorFecha } = parsearFecha(partes[3])
+  if (errorFecha) errores.push(errorFecha)
   if (advFecha) advertencias.push(advFecha)
 
   // ── [4] METODO (opcional) ───────────────────────────────────────
@@ -198,7 +207,8 @@ function parsearGasto(input) {
       categoria,
       categoriaSrc, // "campo" | "item" | "ninguna" — útil para debug/UI
       metodo,
-      fecha: fechaStr,
+      fecha: fechaISO, // AAAA-MM-DD, el formato que guarda la columna date
+      fechaFormateada: fechaStr, // DD/MM/AAAA, para mostrar
     },
   }
 }

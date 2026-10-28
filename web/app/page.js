@@ -150,7 +150,7 @@ export default function Home() {
         <div className="mt-10 text-center animate-fade-in">
           <p className="text-[#e8e8e8] text-lg font-light mb-1">{resultado.montoFormateado}</p>
           <p className="text-[#444] text-xs tracking-widest uppercase">
-            {resultado.categoria} · {resultado.metodo} · {resultado.fecha}
+            {resultado.categoria} · {resultado.metodo} · {resultado.fechaFormateada}
           </p>
         </div>
       )}

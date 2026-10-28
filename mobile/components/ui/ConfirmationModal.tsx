@@ -24,7 +24,7 @@ export function ConfirmationModal({
   if (!visible) return null;
 
   return (
-    <Portal>
+    <Portal name="confirmation-modal">
       <Modal
         visible={visible}
         transparent
