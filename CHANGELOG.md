@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Eliminar cuenta en mobile**: si la llamada a `delete_user` fallaba, la app lo registraba con `console.warn`, cerraba sesión y mostraba "Cuenta eliminada correctamente" igual. Ahora el error se muestra y la sesión no se cierra.
 
 ### Changed
+- **Identificadores de la app alineados con la marca**: en `mobile/app.json`, `slug` pasa de `expense-tracker` a `saldai`, `scheme` de `gastos` a `saldai` y el package de Android de `com.crirun.expensestracker` a `com.crirun.saldai`, más el `bundleIdentifier` de iOS que faltaba. El package de Android no se puede cambiar después de publicar en Play Store, así que había que hacerlo antes del primer release. Requiere renombrar el proyecto en expo.dev a `saldai` antes del próximo build de EAS.
 - **`gastos.fecha` es `date` y no text**: guardarla como `DD/MM/AAAA` impedía filtrar y ordenar por fecha. La migración convierte los datos existentes y agrega el índice `(user_id, fecha desc)`. La API devuelve `fecha` en ISO (`AAAA-MM-DD`) y agrega `fechaFormateada` (`DD/MM/AAAA`) para mostrar, igual que `monto` y `montoFormateado`.
 - **Prioridad de categorías**: Mercado se evalúa antes de Básicos para que "acuenta" (supermercado) no caiga en "cuenta".
 - **Keywords**: agregadas `metrogas`, `lipigas`, `abastible` (Básicos) y `apple tv` / `appletv` (Suscripciones).
