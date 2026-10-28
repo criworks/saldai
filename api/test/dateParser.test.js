@@ -92,3 +92,13 @@ test('el cambio de mes y de año se cruza bien', () => {
   assert.equal(parsearFecha('ayer', primeroDeEnero).fechaStr, '31/12/2025')
   assert.equal(parsearFecha('15', primeroDeEnero).fechaStr, '15/12/2025')
 })
+
+test('devuelve la fecha en ISO para la base de datos y en DD/MM/AAAA para mostrar', () => {
+  const resultado = parsearFecha('05/03/2026', HOY)
+  assert.equal(resultado.fechaISO, '2026-03-05')
+  assert.equal(resultado.fechaStr, '05/03/2026')
+})
+
+test('una fecha inválida no trae ISO', () => {
+  assert.equal(parsearFecha('31/02/2026', HOY).fechaISO, undefined)
+})

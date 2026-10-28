@@ -4,7 +4,8 @@ const assert = require('node:assert/strict')
 const { parsearGasto } = require('../src/parser')
 
 /** Las fechas relativas se prueban en dateParser.test.js; aquí solo el formato. */
-const FORMATO_FECHA = /^\d{2}\/\d{2}\/\d{4}$/
+const FORMATO_ISO = /^\d{4}-\d{2}-\d{2}$/
+const FORMATO_MOSTRAR = /^\d{2}\/\d{2}\/\d{4}$/
 
 const datosDe = (input) => {
   const resultado = parsearGasto(input)
@@ -20,7 +21,8 @@ test('parsea el caso completo', () => {
   assert.equal(datos.categoria, 'Ocio')
   assert.equal(datos.categoriaSrc, 'campo')
   assert.equal(datos.metodo, 'TC')
-  assert.match(datos.fecha, FORMATO_FECHA)
+  assert.match(datos.fecha, FORMATO_ISO)
+  assert.match(datos.fechaFormateada, FORMATO_MOSTRAR)
 })
 
 test('acepta todos los delimitadores', () => {

@@ -40,6 +40,7 @@ const GastosContext = createContext<GastosContextType | undefined>(undefined);
 
 export function GastosProvider({ children }: { children: ReactNode }) {
   const [mes, setMes] = useState(new Date().getMonth() + 1);
+  const [anio] = useState(new Date().getFullYear());
   const [datos, setDatos] = useState<DatosResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -51,7 +52,7 @@ export function GastosProvider({ children }: { children: ReactNode }) {
     isRefresh ? setRefreshing(true) : setLoading(true);
     setError(null);
     try {
-      const json = await fetchGastosPorMes(mes);
+      const json = await fetchGastosPorMes(mes, anio);
       if (json.ok) setDatos(json);
     } catch (e) {
       console.error(e);
@@ -60,7 +61,7 @@ export function GastosProvider({ children }: { children: ReactNode }) {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [mes]);
+  }, [mes, anio]);
 
   useEffect(() => {
     fetchGastos();

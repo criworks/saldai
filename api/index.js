@@ -42,7 +42,7 @@ function printResultado(input, resultado) {
     console.log(`  ${BOLD}Monto:     ${RESET}${CYAN}${d.montoFormateado}${RESET}`)
     console.log(`  ${BOLD}Item:      ${RESET}${d.item}`)
     console.log(`  ${BOLD}Categoría: ${RESET}${CYAN}${d.categoria}${RESET} ${srcLabel}`)
-    console.log(`  ${BOLD}Fecha:     ${RESET}${d.fecha}`)
+    console.log(`  ${BOLD}Fecha:     ${RESET}${d.fechaFormateada}`)
     console.log(`  ${BOLD}Método:    ${RESET}${d.metodo}`)
   }
 

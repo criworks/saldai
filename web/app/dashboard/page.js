@@ -31,6 +31,14 @@ const COLORES_CAT = {
   'Sin categoría': '#444',
 }
 
+// La API devuelve la fecha como AAAA-MM-DD (la columna es date); acá se muestra
+// como DD/MM/AAAA.
+function formatearFecha(fecha) {
+  if (!fecha) return ''
+  const [anio, mes, dia] = String(fecha).slice(0, 10).split('-')
+  return dia && mes && anio ? `${dia}/${mes}/${anio}` : String(fecha)
+}
+
 export default function Dashboard() {
   const hoy = new Date()
   const [mes, setMes] = useState(hoy.getMonth() + 1)
@@ -165,7 +173,7 @@ export default function Dashboard() {
                     <div>
                       <p className="text-sm font-light text-[#ccc]">{g.item}</p>
                       <p className="text-xs text-[#333] mt-0.5">
-                        {g.categoria} · {g.fecha}
+                        {g.categoria} · {formatearFecha(g.fecha)}
                       </p>
                     </div>
                   </div>

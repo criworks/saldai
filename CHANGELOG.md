@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Índice `(user_id, creado_en desc)`** en `public.gastos`: la tabla solo tenía el índice de la primary key, y ninguna consulta de la app busca por id.
 
 ### Fixed
+- **`GET /gastos?mes=` mezclaba años**: el filtro era `fecha ilike '%/10/%'`, que devolvía octubre de todos los años. Ahora `fecha` es una columna `date` y el filtro es un rango `[primer día del mes, primer día del siguiente)`. El endpoint acepta `anio` opcional y, sin él, asume el año en curso.
 - **Monto con sufijo k**: `12.5k` se leía como 125.000 y `1.5k` como 15.000. Con sufijo `k` el punto o la coma son separador decimal, así que ahora son 12.500 y 1.500.
 - **Categorización por palabra completa**: `gaseosa` caía en Básicos por contener "gas" y `barbería` en Ocio por contener "bar". El match ahora es por palabra completa, sin acentos y aceptando el plural ("auriculares" matchea "auricular").
 - **Fechas inválidas**: `31/02` guardaba otro día en silencio. Ahora devuelve error y el gasto no se parsea.
@@ -27,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Eliminar cuenta en mobile**: si la llamada a `delete_user` fallaba, la app lo registraba con `console.warn`, cerraba sesión y mostraba "Cuenta eliminada correctamente" igual. Ahora el error se muestra y la sesión no se cierra.
 
 ### Changed
+- **`gastos.fecha` es `date` y no text**: guardarla como `DD/MM/AAAA` impedía filtrar y ordenar por fecha. La migración convierte los datos existentes y agrega el índice `(user_id, fecha desc)`. La API devuelve `fecha` en ISO (`AAAA-MM-DD`) y agrega `fechaFormateada` (`DD/MM/AAAA`) para mostrar, igual que `monto` y `montoFormateado`.
 - **Prioridad de categorías**: Mercado se evalúa antes de Básicos para que "acuenta" (supermercado) no caiga en "cuenta".
 - **Keywords**: agregadas `metrogas`, `lipigas`, `abastible` (Básicos) y `apple tv` / `appletv` (Suscripciones).
 - **Validación de entorno**: nuevo `api/src/config.js`. La API no arranca si faltan `SUPABASE_URL` o `SUPABASE_ANON_KEY`, y avisa por consola cuando falta una variable opcional. Los orígenes de CORS se filtran, así que ya no se registran entradas `undefined`.

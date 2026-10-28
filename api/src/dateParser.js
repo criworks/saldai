@@ -53,7 +53,7 @@ function existe(anio, mes, dia) {
 /**
  * @param {string|undefined} input - texto de fecha del usuario
  * @param {Date} [hoy] - fecha de referencia. Solo se pasa en los tests.
- * @returns {{ fecha?: Date, fechaStr?: string, raw: string, advertencia?: string, error?: string }}
+ * @returns {{ fecha?: Date, fechaISO?: string, fechaStr?: string, raw: string, advertencia?: string, error?: string }}
  */
 function parsearFecha(input, hoy = hoyCivil()) {
   const raw = (input || "").trim().toLowerCase();
@@ -147,9 +147,11 @@ function formatear(date, raw) {
   const yyyy = date.getUTCFullYear();
   return {
     fecha: date,
+    // ISO para la base de datos (la columna es date) y DD/MM/AAAA para mostrar.
+    fechaISO: `${yyyy}-${mm}-${dd}`,
     fechaStr: `${dd}/${mm}/${yyyy}`,
     raw,
   };
 }
 
-module.exports = { parsearFecha, ZONA_HORARIA };
+module.exports = { parsearFecha, hoyCivil, ZONA_HORARIA };

@@ -68,7 +68,7 @@ const MOCK_GASTOS_HUGE = Array.from({ length: 150 }).map((_, i) => ({
   metodo: 'tc'
 }));
 
-export async function fetchGastosPorMes(mes: number) {
+export async function fetchGastosPorMes(mes: number, anio?: number) {
   if (isMockMode) {
     if (mockFeedConfig.state === 'loading') {
       await delay(10000); // Simulate an infinite/long loading state
@@ -94,7 +94,11 @@ export async function fetchGastosPorMes(mes: number) {
     };
   }
 
-  const res = await fetch(`${API_URL}/gastos?mes=${mes}`, {
+  // El año es parte del filtro: sin él la API asume el año en curso.
+  const params = new URLSearchParams({ mes: String(mes) })
+  if (anio !== undefined) params.set('anio', String(anio))
+
+  const res = await fetch(`${API_URL}/gastos?${params.toString()}`, {
     method: 'GET',
     headers: await getAuthHeaders(),
   })

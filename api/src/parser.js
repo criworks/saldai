@@ -181,7 +181,7 @@ function parsearGasto(input) {
   if (advCat) advertencias.push(advCat)
 
   // ── [3] FECHA (opcional) ────────────────────────────────────────
-  const { fechaStr, advertencia: advFecha, error: errorFecha } = parsearFecha(partes[3])
+  const { fechaISO, fechaStr, advertencia: advFecha, error: errorFecha } = parsearFecha(partes[3])
   if (errorFecha) errores.push(errorFecha)
   if (advFecha) advertencias.push(advFecha)
 
@@ -207,7 +207,8 @@ function parsearGasto(input) {
       categoria,
       categoriaSrc, // "campo" | "item" | "ninguna" — útil para debug/UI
       metodo,
-      fecha: fechaStr,
+      fecha: fechaISO, // AAAA-MM-DD, el formato que guarda la columna date
+      fechaFormateada: fechaStr, // DD/MM/AAAA, para mostrar
     },
   }
 }
