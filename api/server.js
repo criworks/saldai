@@ -7,6 +7,8 @@ const express = require('express')
 const cors = require('cors')
 const { parsearGasto } = require('./src/parser')
 const { createSupabaseClient, createAnonClient } = require('./src/supabase')
+const { hoyCivil } = require('./src/dateParser')
+const { rangoDelMes, rangoDelAnio } = require('./src/rangos')
 
 const { puerto: PORT, origenesPermitidos } = cargarConfig()
 
@@ -89,7 +91,7 @@ app.post('/gastos', requireAuth, async (req, res) => {
 // ── GET /gastos ─ Ruta protegida ───────────────────────────────────────────────────────────
 app.get('/gastos', requireAuth, async (req, res) => {
   const supabase = createSupabaseClient(req.token)
-  const { mes, categoria } = req.query
+  const { mes, anio, categoria } = req.query
 
   let query = supabase
     .from('gastos')
@@ -106,8 +108,20 @@ app.get('/gastos', requireAuth, async (req, res) => {
         datos: null,
       })
     }
-    const mesPad = String(mesNum).padStart(2, '0')
-    query = query.ilike('fecha', `%/${mesPad}/%`)
+
+    // Sin 'anio' se asume el año en curso. Antes el filtro era
+    // `fecha ilike '%/10/%'`, que devolvía octubre de todos los años.
+    const anioNum = anio === undefined ? hoyCivil().getUTCFullYear() : parseInt(anio, 10)
+    if (isNaN(anioNum) || anioNum < 2000 || anioNum > 2100) {
+      return res.status(400).json({
+        ok: false,
+        errores: ["El parámetro 'anio' debe ser un año entre 2000 y 2100"],
+        datos: null,
+      })
+    }
+
+    const { desde, hasta } = rangoDelMes(anioNum, mesNum)
+    query = query.gte('fecha', desde).lt('fecha', hasta)
   }
 
   if (categoria) {
@@ -150,11 +164,15 @@ app.get('/gastos/anuales', requireAuth, async (req, res) => {
     })
   }
 
+  const anioNum = parseInt(anio, 10)
+  const { desde, hasta } = rangoDelAnio(anioNum)
+
   const { data, error } = await supabase
     .from('gastos')
     .select('monto, fecha')
     .eq('user_id', req.user.sub)
-    .ilike('fecha', `%/${anio}`)
+    .gte('fecha', desde)
+    .lt('fecha', hasta)
 
   if (error) {
     console.error('Supabase error:', error)
@@ -167,12 +185,10 @@ app.get('/gastos/anuales', requireAuth, async (req, res) => {
 
   const totales = Array(12).fill(0)
   for (const gasto of data) {
-    const parts = gasto.fecha.split('/')
-    if (parts.length === 3) {
-      const mesIndex = parseInt(parts[1], 10) - 1
-      if (mesIndex >= 0 && mesIndex < 12) {
-        totales[mesIndex] += gasto.monto
-      }
+    // La columna es date, así que Supabase la devuelve como AAAA-MM-DD.
+    const mesIndex = parseInt(String(gasto.fecha).slice(5, 7), 10) - 1
+    if (mesIndex >= 0 && mesIndex < 12) {
+      totales[mesIndex] += gasto.monto
     }
   }
 
