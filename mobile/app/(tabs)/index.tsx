@@ -10,6 +10,7 @@ import {
 } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ExpenseItem } from '../../components/ui/ExpenseItem'
+import { formatearMonto } from '@saldai/core'
 import { MESES } from '../../constants/theme'
 import { useGastos, Gasto } from '../../hooks/useGastos'
 import { Alert } from '../../components/ui/Alert'
@@ -151,7 +152,7 @@ export default function DashboardScreen() {
                   <CaretRight size={20} className="text-muted-foreground" weight="bold" />
                 </Pressable>
                 <Text className="text-foreground text-body font-medium leading-[normal] text-right">
-                  ${totalMes.toLocaleString('es-CL')}
+                  {formatearMonto(totalMes)}
                 </Text>
               </View>
             )}
@@ -209,7 +210,7 @@ export default function DashboardScreen() {
                     {group.data.map(g => (
                       <ExpenseItem
                         key={g.id}
-                        monto={`$${g.monto.toLocaleString('es-CL')}`}
+                        monto={formatearMonto(g.monto)}
                         titulo={g.item}
                       />
                     ))}

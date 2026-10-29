@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- **`@saldai/core`**: paquete nuevo con el dominio compartido, sin framework y sin red: el catálogo de categorías y su regla de match, los métodos de pago, el formato de montos en pesos y las conversiones y rangos de fechas. Lo consumen la API y mobile (y web cuando le toque), así que un gasto significa lo mismo en todas las salidas. 23 tests propios; `npm test` en la raíz ahora corre los del core y los de la API.
 - **Tests del parser (API)**: Suite real con `node:test` en `api/test/` (41 casos) para `parser`, `categorizer` y `dateParser`. `npm test` ahora corre los tests; la demo con salida en colores quedó como `npm run demo`.
 - **Scripts en la raíz**: `npm run lint` (web) y `npm run typecheck` (mobile), además del `npm test` que ya estaba. Es lo que va a correr CI.
 - **Development build con EAS**: nuevo `mobile/eas.json` con los perfiles `development`, `preview` y `production`, más `expo-dev-client` y los scripts `build:dev:android` / `build:dev:ios`. Expo Go queda atado a su versión de SDK y deja de abrir el proyecto cuando se actualiza; el development build es la app del proyecto y no depende de eso.
@@ -17,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Índice `(user_id, creado_en desc)`** en `public.gastos`: la tabla solo tenía el índice de la primary key, y ninguna consulta de la app busca por id.
 
 ### Fixed
+- **Mobile mostraba categorías y montos que no existen**: los mocks inventaban "Comida", "Despensa", "Test" y "Mock", que ningún selector ni color conocía, y formateaban el monto como `$15,000.00` en vez de `$15.000`. Ahora se arman desde el catálogo y el formateador del core, así que el modo mock se ve como producción.
+- **El selector de método no marcaba nada en el playground**: el estado inicial era `'tc'` en minúscula y los botones comparaban contra `'TC'`. Los dos lados salen ahora de `METODO_DEFAULT`.
+- **Listas duplicadas que se podían desincronizar**: los nombres de los meses estaban escritos a mano en `mobile/constants/theme.ts`, el formato de monto estaba repetido en ocho lugares de mobile y los emojis y colores de categoría eran una lista paralela a la de la API. Todo eso sale ahora del core, y los emojis y colores se derivan del catálogo, así que una categoría nueva no puede quedar con keywords en la API pero sin nada que mostrar. El dashboard web mantiene sus propias copias por ahora, porque web está en pausa; se migra cuando se retome.
 - **Build de desarrollo pedía instalar `expo-updates`**: los tres perfiles de `mobile/eas.json` declaraban un `channel`, y un channel solo tiene sentido con `expo-updates` instalado, que no lo está. EAS interrumpía cada build para ofrecer instalarlo. Se quitaron los `channel`; vuelven cuando adoptemos actualizaciones OTA.
 - **`GET /gastos?mes=` mezclaba años**: el filtro era `fecha ilike '%/10/%'`, que devolvía octubre de todos los años. Ahora `fecha` es una columna `date` y el filtro es un rango `[primer día del mes, primer día del siguiente)`. El endpoint acepta `anio` opcional y, sin él, asume el año en curso.
 - **Monto con sufijo k**: `12.5k` se leía como 125.000 y `1.5k` como 15.000. Con sufijo `k` el punto o la coma son separador decimal, así que ahora son 12.500 y 1.500.

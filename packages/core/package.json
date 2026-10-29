@@ -1,0 +1,16 @@
+{
+  "name": "@saldai/core",
+  "version": "1.0.0",
+  "description": "Dominio compartido de Saldai: categorías, métodos de pago, montos y fechas",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./categorias": "./categorias.js",
+    "./metodos": "./metodos.js",
+    "./dinero": "./dinero.js",
+    "./fechas": "./fechas.js"
+  },
+  "scripts": {
+    "test": "node --test"
+  }
+}

@@ -1,10 +1,11 @@
 import { KeyboardTypeOptions } from 'react-native'
-export { categoryColor, COLORES_CAT, EMOJIS_CAT } from '@saldai/ui/tokens'
 
-export const MESES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
-]
+// El catálogo de categorías y los nombres de los meses son dominio y viven en
+// @saldai/core; acá solo se reexportan para que las pantallas tengan un solo
+// import. El color y el emoji de cada categoría son diseño y vienen de los
+// tokens.
+export { MESES, NOMBRES_CATEGORIAS, SIN_CATEGORIA } from '@saldai/core'
+export { categoryColor, categoryEmoji, COLORES_CAT, EMOJIS_CAT } from '@saldai/ui/tokens'
 
 export type CampoClave = 'monto' | 'item' | 'categoria' | 'fecha'
 

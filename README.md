@@ -29,7 +29,9 @@ Método default: TC.
 
 # Uso local
 
-Monorepo con npm workspaces (`api`, `web`, `mobile`, `packages/ui`). Node 22.
+Monorepo con npm workspaces (`api`, `web`, `mobile`, `packages/core`, `packages/ui`). Node 22.
+
+`packages/core` es el dominio compartido: categorías, métodos de pago, formato de montos y fechas. No depende de ningún framework ni toca la red, y lo consumen la API y mobile para que un gasto signifique lo mismo en las dos. `packages/ui` son los tokens de diseño, y le pone color y emoji a las categorías que define el core.
 
 ```
 npm install        # instala todos los workspaces
@@ -39,7 +41,7 @@ npm run web        # dashboard Next.js
 npm run dev        # ambos
 
 npm run cli        # parser interactivo en la terminal
-npm test           # tests de la API
+npm test           # tests del core y de la API
 npm run lint       # eslint de web
 npm run typecheck  # tsc de mobile
 ```

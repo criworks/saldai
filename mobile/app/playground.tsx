@@ -1,3 +1,4 @@
+import { METODO_DEFAULT } from '@saldai/core';
 import React, { useState } from 'react';
 import { View, ScrollView } from 'react-native';
 import { Text } from '../components/ui/text';
@@ -18,7 +19,7 @@ export default function UIPlayground() {
   const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
   const [alert, setAlert] = useState<{ message: string, type: 'success' | 'warning' | 'error' | 'info' } | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedMethod, setSelectedMethod] = useState<string>('tc');
+  const [selectedMethod, setSelectedMethod] = useState<string>(METODO_DEFAULT);
 
   if (!__DEV__) return null;
 

@@ -1,3 +1,4 @@
+import { formatearNumero } from '@saldai/core'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import {
   ActivityIndicator,
@@ -140,9 +141,7 @@ export default function CapturaScreen() {
   }
 
   // Formato con separadores de miles para Chile
-  const formattedAmount = valores.monto 
-    ? parseInt(valores.monto, 10).toLocaleString('es-CL') 
-    : ''
+  const formattedAmount = valores.monto ? formatearNumero(parseInt(valores.monto, 10)) : ''
 
   const outerPaddingBottom = isKeyboardVisible ? 0 : 96 + insets.bottom;
   const innerPaddingBottom = isKeyboardVisible 
