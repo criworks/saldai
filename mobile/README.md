@@ -55,8 +55,9 @@ Esta aplicación opera bajo un conjunto **muy estricto** de reglas de diseño. L
 
 ### Requisitos Previos
 *   [Node.js](https://nodejs.org/) 22 (la versión fijada del monorepo, ver `.node-version`)
-*   [Expo CLI](https://docs.expo.dev/get-started/installation/)
-*   App **Expo Go** instalada en tu dispositivo físico iOS/Android, o un emulador configurado.
+*   Un *development build* instalado en el dispositivo (ver más abajo). Expo Go
+    no sirve: queda atado a su versión de SDK y deja de abrir el proyecto.
+*   `mobile/.env` con las variables de `mobile/.env.example`.
 
 ### Instalación
 
@@ -65,9 +66,10 @@ Esta aplicación opera bajo un conjunto **muy estricto** de reglas de diseño. L
     cd mobile
     ```
 
-2.  Instala las dependencias:
+2.  Instala las dependencias **desde la raíz** del repo, que es donde viven los
+    workspaces:
     ```bash
-    npm install
+    cd .. && npm install
     ```
 
 ### Ejecución
@@ -75,13 +77,13 @@ Esta aplicación opera bajo un conjunto **muy estricto** de reglas de diseño. L
 Levanta el servidor de desarrollo de Expo:
 
 ```bash
-npx expo start
+npx expo start --dev-client
 ```
 
 Presiona las siguientes teclas en la terminal para abrir la app:
 *   `i` para abrir en el simulador de **iOS**
 *   `a` para abrir en el emulador de **Android**
-*   Escanea el código QR para abrirlo en tu dispositivo físico.
+*   Escanea el código QR para abrirlo en el development build de tu dispositivo físico.
 
 ### Probar en un dispositivo físico: development build
 
@@ -109,6 +111,33 @@ npm start      # y se abre la app instalada, no Expo Go
 Hay que volver a buildear solo cuando cambian las dependencias nativas o la
 configuración de `app.json`; los cambios de JavaScript y de estilos entran por
 el dev server como antes.
+
+### Tener la app funcionando sin el computador: build de `preview`
+
+El development build **no trae el código adentro**: lo carga del `expo start`
+de tu máquina, así que con el computador apagado no abre. Para una app que
+funcione sola, el perfil `preview` empaqueta el JavaScript dentro del APK:
+
+```bash
+cd mobile
+npm run build:preview:android
+```
+
+Sigue siendo `distribution: internal`, o sea EAS devuelve un link de descarga y
+no pasa por la Play Store. Se instala una vez y queda. Para publicar de verdad
+está el perfil `production`, que genera un `.aab` en vez de un APK.
+
+**Antes del primer build de `preview` hay que crear las variables en EAS.** El
+bundle se arma en la nube de Expo, que no ve tu `.env`, así que
+`EXPO_PUBLIC_API_URL`, `EXPO_PUBLIC_SUPABASE_URL` y
+`EXPO_PUBLIC_SUPABASE_ANON_KEY` tienen que existir en el dashboard de Expo, en
+Environment variables, en el environment `preview`. Si faltan, el APK sale con
+las tres en `undefined` y la app abre pero no autentica ni lee gastos. Cada
+perfil de `eas.json` declara con `environment` cuál de esos sets usa.
+
+La rama en la que estás parado decide qué código queda empaquetado. Para un APK
+con lo que hay en producción, hay que buildear desde `main`. A qué API le pega
+la app no depende de la rama, depende de `EXPO_PUBLIC_API_URL`.
 
 ---
 
