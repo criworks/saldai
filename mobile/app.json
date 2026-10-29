@@ -29,16 +29,17 @@
       "favicon": "./assets/favicon.png"
     },
     "owner": "cri.run",
-    "extra": {
-      "eas": {
-        "projectId": "2eea2452-0ecc-468b-ad6b-4ae619e977b4"
-      }
-    },
     "plugins": [
       "expo-router",
       "expo-font",
       "expo-secure-store",
       "@react-native-community/datetimepicker"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "ff740251-bb4b-4e33-9142-f3b00bd3ad46"
+      }
+    }
   }
 }
