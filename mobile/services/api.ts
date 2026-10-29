@@ -1,3 +1,4 @@
+import { categorizar, formatearMonto, METODO_DEFAULT, TARJETA, EFECTIVO } from '@saldai/core'
 import { supabase } from './supabase'
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL
@@ -51,22 +52,43 @@ function mensajeDeError(cuerpo: unknown, fallback: string): string {
 
 import { mockFeedConfig } from './mockConfig';
 
+// Los mocks tienen que verse como lo que devuelve la API de verdad: categoría
+// del catálogo, método en mayúsculas y monto en formato chileno. Antes
+// inventaban categorías ("Comida", "Despensa", "Test") que ningún selector ni
+// color conocía, y el monto venía en formato gringo ($15,000.00).
+const mockGasto = (
+  id: string,
+  monto: number,
+  item: string,
+  categoria: string,
+  diasAtras = 0,
+  metodo: string = METODO_DEFAULT
+) => ({
+  id,
+  monto,
+  monto_formateado: formatearMonto(monto),
+  item,
+  categoria,
+  fecha: new Date(Date.now() - diasAtras * 86400000).toISOString().split('T')[0],
+  metodo,
+})
+
 const MOCK_GASTOS = [
-  { id: '1', monto: 15000, monto_formateado: '$15,000.00', item: 'Uber', categoria: 'Transporte', fecha: new Date().toISOString().split('T')[0], metodo: 'tc' },
-  { id: '2', monto: 3500, monto_formateado: '$3,500.00', item: 'Café', categoria: 'Comida', fecha: new Date().toISOString().split('T')[0], metodo: 'ef' },
-  { id: '3', monto: 120000, monto_formateado: '$120,000.00', item: 'Supermercado', categoria: 'Despensa', fecha: new Date(Date.now() - 86400000).toISOString().split('T')[0], metodo: 'tc' },
-  { id: '4', monto: 45000, monto_formateado: '$45,000.00', item: 'Rappi', categoria: 'Delivery', fecha: new Date(Date.now() - 172800000).toISOString().split('T')[0], metodo: 'tc' },
+  mockGasto('1', 15000, 'Uber', 'Transporte', 0, TARJETA),
+  mockGasto('2', 3500, 'Café', 'Ocio', 0, EFECTIVO),
+  mockGasto('3', 120000, 'Supermercado', 'Mercado', 1, TARJETA),
+  mockGasto('4', 45000, 'Rappi', 'Delivery', 2, TARJETA),
 ];
 
-const MOCK_GASTOS_HUGE = Array.from({ length: 150 }).map((_, i) => ({
-  id: `huge-${i}`,
-  monto: Math.floor(Math.random() * 50000) + 1000,
-  monto_formateado: `$${(Math.floor(Math.random() * 50000) + 1000).toLocaleString('es-CL')}`,
-  item: `Gasto Masivo ${i}`,
-  categoria: 'Test',
-  fecha: new Date(Date.now() - Math.floor(Math.random() * 10) * 86400000).toISOString().split('T')[0],
-  metodo: 'tc'
-}));
+const MOCK_GASTOS_HUGE = Array.from({ length: 150 }).map((_, i) =>
+  mockGasto(
+    `huge-${i}`,
+    Math.floor(Math.random() * 50000) + 1000,
+    `Gasto Masivo ${i}`,
+    'Ocio',
+    Math.floor(Math.random() * 10)
+  )
+);
 
 export async function fetchGastosPorMes(mes: number, anio?: number) {
   if (isMockMode) {
@@ -89,7 +111,7 @@ export async function fetchGastosPorMes(mes: number, anio?: number) {
       ok: true,
       cantidad: datos.length,
       total,
-      totalFormateado: `$${total.toLocaleString('es-CL')}`,
+      totalFormateado: formatearMonto(total),
       datos: datos
     };
   }
@@ -180,15 +202,10 @@ export async function crearGasto(inputStr: string) {
       await delay(800);
     }
 
-    const nuevoGasto = {
-      id: Date.now().toString(),
-      monto: montoBase,
-      monto_formateado: `$${montoBase.toLocaleString('es-CL')}`,
-      item: partes[1] || inputStr,
-      categoria: 'Mock',
-      fecha: new Date().toISOString().split('T')[0],
-      metodo: 'tc'
-    };
+    // La categoría se infiere con la misma regla que usa la API, así el mock
+    // responde como responde producción.
+    const item = partes[1] || inputStr;
+    const nuevoGasto = mockGasto(Date.now().toString(), montoBase, item, categorizar(item));
     MOCK_GASTOS.unshift(nuevoGasto);
     
     return { 

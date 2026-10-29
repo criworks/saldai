@@ -17,7 +17,7 @@
     "web": "npm run dev --prefix web",
     "dev": "npm run api & npm run web",
     "cli": "npm run cli --prefix api",
-    "test": "npm test --prefix api",
+    "test": "npm test --prefix packages/core && npm test --prefix api",
     "lint": "npm run lint --prefix web",
     "typecheck": "npm run typecheck --prefix mobile"
   },

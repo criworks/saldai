@@ -1,7 +1,7 @@
 const test = require('node:test')
 const assert = require('node:assert/strict')
 
-const { categorizar, CATEGORIAS, SIN_CATEGORIA } = require('../src/categorizer')
+const { categorizar, CATEGORIAS, SIN_CATEGORIA } = require('@saldai/core')
 
 test('matchea keywords exactas de cada categoría', () => {
   assert.equal(categorizar('spotify'), 'Suscripciones')

@@ -8,7 +8,7 @@ const cors = require('cors')
 const { parsearGasto } = require('./src/parser')
 const { createSupabaseClient, createAnonClient } = require('./src/supabase')
 const { hoyCivil } = require('./src/dateParser')
-const { rangoDelMes, rangoDelAnio } = require('./src/rangos')
+const { rangoDelMes, rangoDelAnio, mesDeIso } = require('@saldai/core')
 
 const { puerto: PORT, origenesPermitidos } = cargarConfig()
 
@@ -65,7 +65,7 @@ app.post('/gastos', requireAuth, async (req, res) => {
       metodo: resultado.datos.metodo,
       fecha: resultado.datos.fecha,
       input_original: input,
-      user_id: req.user.sub,
+      user_id: req.userId,
     })
     .select()
     .single()
@@ -96,7 +96,7 @@ app.get('/gastos', requireAuth, async (req, res) => {
   let query = supabase
     .from('gastos')
     .select('*')
-    .eq('user_id', req.user.sub)
+    .eq('user_id', req.userId)
     .order('creado_en', { ascending: false })
 
   if (mes) {
@@ -170,7 +170,7 @@ app.get('/gastos/anuales', requireAuth, async (req, res) => {
   const { data, error } = await supabase
     .from('gastos')
     .select('monto, fecha')
-    .eq('user_id', req.user.sub)
+    .eq('user_id', req.userId)
     .gte('fecha', desde)
     .lt('fecha', hasta)
 
@@ -186,9 +186,9 @@ app.get('/gastos/anuales', requireAuth, async (req, res) => {
   const totales = Array(12).fill(0)
   for (const gasto of data) {
     // La columna es date, así que Supabase la devuelve como AAAA-MM-DD.
-    const mesIndex = parseInt(String(gasto.fecha).slice(5, 7), 10) - 1
-    if (mesIndex >= 0 && mesIndex < 12) {
-      totales[mesIndex] += gasto.monto
+    const mes = mesDeIso(gasto.fecha)
+    if (mes !== null) {
+      totales[mes - 1] += gasto.monto
     }
   }
 

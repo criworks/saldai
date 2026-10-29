@@ -5,5 +5,8 @@
   "main": "tokens.js",
   "exports": {
     "./tokens": "./tokens.js"
+  },
+  "dependencies": {
+    "@saldai/core": "*"
   }
 }

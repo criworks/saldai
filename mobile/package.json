@@ -21,6 +21,7 @@
     "@rn-primitives/progress": "^1.2.0",
     "@rn-primitives/separator": "^1.2.0",
     "@rn-primitives/slot": "^1.2.0",
+    "@saldai/core": "*",
     "@saldai/ui": "*",
     "@supabase/supabase-js": "^2.39.0",
     "class-variance-authority": "^0.7.1",

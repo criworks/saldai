@@ -1,3 +1,4 @@
+import { METODO_DEFAULT } from '@saldai/core'
 import { useState } from 'react'
 import { CampoClave } from '../constants/theme'
 import { crearGasto } from '../services/api'
@@ -9,7 +10,7 @@ export function useGastoMutation() {
     categoria: '',
     fecha: '',
   })
-  const [metodo, setMetodo] = useState('TC')
+  const [metodo, setMetodo] = useState(METODO_DEFAULT)
   const [estado, setEstado] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle')
   const [mensaje, setMensaje] = useState('')
   const [lastSaved, setLastSaved] = useState<{ monto: string, descripcion: string } | null>(null)
@@ -40,7 +41,7 @@ export function useGastoMutation() {
         })
 
         setValores({ monto: '', item: '', categoria: '', fecha: '' })
-        setMetodo('TC')
+        setMetodo(METODO_DEFAULT)
         
         if (onSuccessCallback) {
           onSuccessCallback()
