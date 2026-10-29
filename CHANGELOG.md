@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Índice `(user_id, creado_en desc)`** en `public.gastos`: la tabla solo tenía el índice de la primary key, y ninguna consulta de la app busca por id.
 
 ### Fixed
+- **Build de desarrollo pedía instalar `expo-updates`**: los tres perfiles de `mobile/eas.json` declaraban un `channel`, y un channel solo tiene sentido con `expo-updates` instalado, que no lo está. EAS interrumpía cada build para ofrecer instalarlo. Se quitaron los `channel`; vuelven cuando adoptemos actualizaciones OTA.
 - **`GET /gastos?mes=` mezclaba años**: el filtro era `fecha ilike '%/10/%'`, que devolvía octubre de todos los años. Ahora `fecha` es una columna `date` y el filtro es un rango `[primer día del mes, primer día del siguiente)`. El endpoint acepta `anio` opcional y, sin él, asume el año en curso.
 - **Monto con sufijo k**: `12.5k` se leía como 125.000 y `1.5k` como 15.000. Con sufijo `k` el punto o la coma son separador decimal, así que ahora son 12.500 y 1.500.
 - **Categorización por palabra completa**: `gaseosa` caía en Básicos por contener "gas" y `barbería` en Ocio por contener "bar". El match ahora es por palabra completa, sin acentos y aceptando el plural ("auriculares" matchea "auricular").
