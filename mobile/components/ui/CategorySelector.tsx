@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable, ScrollView } from 'react-native';
 import { Plus } from 'phosphor-react-native';
-import { EMOJIS_CAT } from '../../constants/theme';
+import { categoryEmoji, NOMBRES_CATEGORIAS, SIN_CATEGORIA } from '../../constants/theme';
 
 interface CategorySelectorProps {
   selectedCategory: string;
@@ -9,13 +9,15 @@ interface CategorySelectorProps {
 }
 
 export function CategorySelector({ selectedCategory, onSelectCategory }: CategorySelectorProps) {
-  const categories = Object.keys(EMOJIS_CAT);
+  // Las categorías reales del catálogo. "Sin categoría" no se muestra como
+  // opción: es lo que queda al tocar el botón de limpiar.
+  const categories = NOMBRES_CATEGORIAS;
 
   return (
     <View className="flex-row items-center justify-end mb-xl">
       <Pressable 
         className="bg-secondary rounded-full items-center justify-center w-xxl h-xxl mr-md active:opacity-80"
-        onPress={() => onSelectCategory('Sin categoría')}
+        onPress={() => onSelectCategory(SIN_CATEGORIA)}
       >
         <Plus size={16} color="#60677D" />
       </Pressable>
@@ -26,7 +28,7 @@ export function CategorySelector({ selectedCategory, onSelectCategory }: Categor
         contentContainerStyle={{ alignItems: 'center' }}
         className="flex-grow-0"
       >
-        {categories.filter(cat => cat !== 'Sin categoría').map((cat, index, arr) => {
+        {categories.map((cat, index, arr) => {
           const isSelected = selectedCategory === cat;
           const isLast = index === arr.length - 1;
           return (
@@ -35,7 +37,7 @@ export function CategorySelector({ selectedCategory, onSelectCategory }: Categor
               onPress={() => onSelectCategory(cat)}
               className={`rounded-full items-center justify-center w-xxl h-xxl ${!isLast ? 'mr-md' : ''} ${isSelected ? 'bg-white' : 'bg-secondary'} active:opacity-80`}
             >
-              <Text className="text-menu">{EMOJIS_CAT[cat as keyof typeof EMOJIS_CAT]}</Text>
+              <Text className="text-menu">{categoryEmoji(cat)}</Text>
             </Pressable>
           );
         })}

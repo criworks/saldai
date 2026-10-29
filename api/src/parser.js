@@ -21,21 +21,8 @@
  * - METODO:    opcional (default: TC). Acepta: ef, efectivo, tc, tarjeta, crédito
  */
 
-const { categorizar } = require('./categorizer')
+const { categorizar, SIN_CATEGORIA, normalizarMetodo, formatearMonto } = require('@saldai/core')
 const { parsearFecha } = require('./dateParser')
-
-// Métodos de pago normalizados
-const METODOS = {
-  ef: 'EF',
-  efectivo: 'EF',
-  cash: 'EF',
-  tc: 'TC',
-  tarjeta: 'TC',
-  credito: 'TC',
-  crédito: 'TC',
-  'tarjeta de credito': 'TC',
-  'tarjeta de crédito': 'TC',
-}
 
 /**
  * Parsea un monto string a número entero CLP.
@@ -63,21 +50,6 @@ function parsearMonto(raw) {
 }
 
 /**
- * Normaliza el método de pago.
- */
-function parsearMetodo(raw) {
-  if (!raw || !raw.trim()) {
-    return { metodo: 'TC', advertencia: 'Método no especificado, se asumió TC' }
-  }
-  const limpio = raw.trim().toLowerCase()
-  const metodo = METODOS[limpio]
-  if (!metodo) {
-    return { metodo: 'TC', advertencia: `Método "${raw}" no reconocido, se asumió TC` }
-  }
-  return { metodo }
-}
-
-/**
  * Resuelve la categoría final con la lógica de prioridad:
  *   1. Si categoriaRaw tiene contenido → matchear contra keywords → si coincide, usar esa
  *   2. Si categoriaRaw tiene contenido pero no matchea → advertir, intentar con item como fallback
@@ -90,12 +62,12 @@ function resolverCategoria(categoriaRaw, item) {
 
   if (hayCategoria) {
     const resultado = categorizar(categoriaRaw.trim())
-    if (resultado !== 'Sin categoría') {
+    if (resultado !== SIN_CATEGORIA) {
       return { categoria: resultado, fuente: 'campo' }
     }
     // No matcheó: advertir y hacer fallback al item
     const resultadoItem = categorizar(item)
-    if (resultadoItem !== 'Sin categoría') {
+    if (resultadoItem !== SIN_CATEGORIA) {
       return {
         categoria: resultadoItem,
         fuente: 'item',
@@ -104,7 +76,7 @@ function resolverCategoria(categoriaRaw, item) {
     }
     // Ninguno matcheó
     return {
-      categoria: 'Sin categoría',
+      categoria: SIN_CATEGORIA,
       fuente: 'ninguna',
       advertencia: `Categoría "${categoriaRaw}" no reconocida y el item tampoco permitió inferirla`,
     }
@@ -112,12 +84,12 @@ function resolverCategoria(categoriaRaw, item) {
 
   // Campo vacío → inferir del item
   const resultadoItem = categorizar(item)
-  if (resultadoItem !== 'Sin categoría') {
+  if (resultadoItem !== SIN_CATEGORIA) {
     return { categoria: resultadoItem, fuente: 'item' }
   }
 
   return {
-    categoria: 'Sin categoría',
+    categoria: SIN_CATEGORIA,
     fuente: 'ninguna',
     advertencia: `No se pudo inferir categoría del item "${item}"`,
   }
@@ -186,11 +158,8 @@ function parsearGasto(input) {
   if (advFecha) advertencias.push(advFecha)
 
   // ── [4] METODO (opcional) ───────────────────────────────────────
-  const { metodo, advertencia: advMetodo } = parsearMetodo(partes[4])
+  const { metodo, advertencia: advMetodo } = normalizarMetodo(partes[4])
   if (advMetodo) advertencias.push(advMetodo)
-
-  // ── Formateo monto CLP ──────────────────────────────────────────
-  const montoFormateado = monto.toLocaleString('es-CL')
 
   if (errores.length > 0) {
     return { ok: false, errores, advertencias, datos: null }
@@ -202,7 +171,7 @@ function parsearGasto(input) {
     advertencias,
     datos: {
       monto,
-      montoFormateado: `$${montoFormateado}`,
+      montoFormateado: formatearMonto(monto),
       item,
       categoria,
       categoriaSrc, // "campo" | "item" | "ninguna" — útil para debug/UI

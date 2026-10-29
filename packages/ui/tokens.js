@@ -3,7 +3,13 @@
  *
  * Fuente única de verdad para colores, tipografía, spacing y constantes de UI.
  * Usado por web/ (Tailwind CSS), mobile/ (NativeWind) y cualquier paquete futuro.
+ *
+ * Las categorías no se listan acá: el catálogo vive en @saldai/core y este
+ * paquete solo le pone color y emoji a cada una. Así una categoría nueva no
+ * puede quedar a medias, con keywords en la API pero sin nada que mostrar.
  */
+
+import { NOMBRES_CATEGORIAS, SIN_CATEGORIA } from "@saldai/core/categorias";
 
 export const colors = {
   // Fondos
@@ -40,43 +46,41 @@ export const colors = {
   },
 };
 
-// Lookup dinámico de color por nombre de categoría
-export const categoryColor = (categoria) => {
-  const map = {
-    "Básicos":       colors.cat.basicos,
-    "Suscripciones": colors.cat.suscripciones,
-    "Mercado":       colors.cat.mercado,
-    "Inversión":     colors.cat.inversion,
-    "Ocio":          colors.cat.ocio,
-    "Delivery":      colors.cat.delivery,
-    "Transporte":    colors.cat.transporte,
-  };
-  return map[categoria] ?? colors.cat.sinCategoria;
+// Color y emoji de cada categoría del catálogo de @saldai/core.
+const presentacionPorCategoria = {
+  "Básicos":       { color: colors.cat.basicos,       emoji: "🏠"  },
+  "Suscripciones": { color: colors.cat.suscripciones, emoji: "💳"  },
+  "Mercado":       { color: colors.cat.mercado,       emoji: "🛒"  },
+  "Inversión":     { color: colors.cat.inversion,     emoji: "🌱"  },
+  "Ocio":          { color: colors.cat.ocio,          emoji: "☕️" },
+  "Delivery":      { color: colors.cat.delivery,      emoji: "💣"  },
+  "Transporte":    { color: colors.cat.transporte,    emoji: "🚌"  },
 };
+
+const sinCategoria = { color: colors.cat.sinCategoria, emoji: "💸" };
+
+const presentacion = (categoria) =>
+  presentacionPorCategoria[categoria] ?? sinCategoria;
+
+// Lookup dinámico de color por nombre de categoría
+export const categoryColor = (categoria) => presentacion(categoria).color;
+
+// Emoji por categoría
+export const categoryEmoji = (categoria) => presentacion(categoria).emoji;
+
+// Los dos mapas se arman desde el catálogo, no a mano, así que siempre tienen
+// exactamente las categorías que existen.
+const porCategoria = (valor) =>
+  [...NOMBRES_CATEGORIAS, SIN_CATEGORIA].reduce(
+    (acc, categoria) => ({ ...acc, [categoria]: valor(categoria) }),
+    {}
+  );
 
 // Emojis por categoría
-export const EMOJIS_CAT = {
-  "Básicos":       "🏠",
-  "Mercado":       "🛒",
-  "Suscripciones": "💳",
-  "Transporte":    "🚌",
-  "Ocio":          "☕️",
-  "Delivery":      "💣",
-  "Inversión":     "🌱",
-  "Sin categoría": "💸",
-};
+export const EMOJIS_CAT = porCategoria(categoryEmoji);
 
 // Colores por categoría (Record compatible con TS)
-export const COLORES_CAT = {
-  "Básicos":       colors.cat.basicos,
-  "Suscripciones": colors.cat.suscripciones,
-  "Mercado":       colors.cat.mercado,
-  "Inversión":     colors.cat.inversion,
-  "Ocio":          colors.cat.ocio,
-  "Delivery":      colors.cat.delivery,
-  "Transporte":    colors.cat.transporte,
-  "Sin categoría": colors.cat.sinCategoria,
-};
+export const COLORES_CAT = porCategoria(categoryColor);
 
 export const spacing = {
   xs:    4,

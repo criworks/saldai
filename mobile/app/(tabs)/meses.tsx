@@ -3,6 +3,7 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, Pressable, ScrollView, RefreshControl } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
+import { formatearMonto } from '@saldai/core';
 import { MESES } from '../../constants/theme';
 import { useGastos } from '../../hooks/useGastos';
 import { fetchGastosAnuales } from '../../services/api';
@@ -113,7 +114,7 @@ export default function MesesScreen() {
                       <View className="h-[22px] w-[80px] bg-secondary rounded-full" />
                     ) : (
                       <Text className="text-body text-foreground font-medium text-right">
-                        ${(totalesAnuales[idx1] || 0).toLocaleString('es-CL')}
+                        {formatearMonto(totalesAnuales[idx1] || 0)}
                       </Text>
                     )}
                   </Pressable>
@@ -136,7 +137,7 @@ export default function MesesScreen() {
                       <View className="h-[22px] w-[80px] bg-secondary rounded-full" />
                     ) : (
                       <Text className="text-body text-foreground font-medium text-right">
-                        ${(totalesAnuales[idx2] || 0).toLocaleString('es-CL')}
+                        {formatearMonto(totalesAnuales[idx2] || 0)}
                       </Text>
                     )}
                   </Pressable>
