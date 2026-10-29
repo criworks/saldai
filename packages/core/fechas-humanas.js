@@ -1,13 +1,17 @@
 /**
- * Date Parser
- * Resuelve strings de fecha humana en español a fechas civiles (sin hora).
+ * Fechas escritas por una persona: "hoy", "ayer", "lunes", "15", "15/02/2025".
  *
- * El "hoy" de referencia es el de la zona horaria de la app, no el del
- * servidor: Render corre en UTC, así que un gasto cargado a las 22:00 en Chile
- * quedaba con la fecha del día siguiente.
+ * El "hoy" de referencia es el de una zona horaria, no el del servidor: Render
+ * corre en UTC, así que un gasto cargado a las 22:00 en Chile quedaba con la
+ * fecha del día siguiente.
+ *
+ * La zona se recibe como argumento y no se lee del entorno, porque este paquete
+ * lo consumen la API y el teléfono, que la resuelven distinto: la API con
+ * `APP_TIMEZONE`, mobile con la zona del dispositivo. El default cubre el caso
+ * normal, que es que el usuario esté en Chile.
  */
 
-const ZONA_HORARIA = process.env.APP_TIMEZONE || 'America/Santiago'
+const ZONA_DEFECTO = 'America/Santiago'
 
 const DIAS_SEMANA = {
   domingo: 0, lunes: 1, martes: 2, miercoles: 3, miércoles: 3,
@@ -22,10 +26,10 @@ function civil(anio, mes, dia) {
   return new Date(Date.UTC(anio, mes - 1, dia));
 }
 
-/** El día de hoy según ZONA_HORARIA. */
-function hoyCivil() {
+/** El día de hoy en `zona`. */
+function hoyCivil(zona = ZONA_DEFECTO) {
   const partes = new Intl.DateTimeFormat("en-US", {
-    timeZone: ZONA_HORARIA,
+    timeZone: zona,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -154,4 +158,4 @@ function formatear(date, raw) {
   };
 }
 
-module.exports = { parsearFecha, hoyCivil, ZONA_HORARIA };
+module.exports = { parsearFecha, hoyCivil, ZONA_DEFECTO };

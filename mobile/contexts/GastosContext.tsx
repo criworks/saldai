@@ -1,28 +1,18 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
+import type { Gasto, GastosDelMes } from '@saldai/core';
 import { fetchGastosPorMes } from '../services/api';
 
-export interface Gasto {
-  id: string | number
-  monto: number
-  monto_formateado: string
-  item: string
-  categoria: string
-  fecha: string
-  metodo: string
-}
+// El contrato de la API vive en @saldai/core, para que mobile y la API no se
+// desincronicen. Antes estaba declarado acá a mano y por eso `fecha` y
+// `categoria` eran `string` suelto.
+export type { Gasto } from '@saldai/core'
 
 export interface CategoriaInfo {
   total: number
   cantidad: number
 }
 
-export interface DatosResponse {
-  ok: boolean
-  cantidad: number
-  total: number
-  totalFormateado: string
-  datos: Gasto[]
-}
+export type DatosResponse = GastosDelMes
 
 type GastosContextType = {
   mes: number;

@@ -21,8 +21,10 @@
  * - METODO:    opcional (default: TC). Acepta: ef, efectivo, tc, tarjeta, crédito
  */
 
-const { categorizar, SIN_CATEGORIA, normalizarMetodo, formatearMonto } = require('@saldai/core')
-const { parsearFecha } = require('./dateParser')
+const { categorizar, SIN_CATEGORIA } = require('./categorias')
+const { normalizarMetodo } = require('./metodos')
+const { formatearMonto } = require('./dinero')
+const { parsearFecha, hoyCivil } = require('./fechas-humanas')
 
 /**
  * Parsea un monto string a número entero CLP.
@@ -111,8 +113,14 @@ function dividir(input) {
 
 /**
  * Parser principal.
+ *
+ * `zona` decide cuál es "hoy" cuando la fecha es relativa ("ayer", "lunes").
+ * `hoy` existe para los tests, que necesitan una fecha fija.
+ *
+ * @param {string} input
+ * @param {{ zona?: string, hoy?: Date }} [opciones]
  */
-function parsearGasto(input) {
+function parsearGasto(input, opciones = {}) {
   const advertencias = []
   const errores = []
 
@@ -153,7 +161,8 @@ function parsearGasto(input) {
   if (advCat) advertencias.push(advCat)
 
   // ── [3] FECHA (opcional) ────────────────────────────────────────
-  const { fechaISO, fechaStr, advertencia: advFecha, error: errorFecha } = parsearFecha(partes[3])
+  const hoy = opciones.hoy ?? hoyCivil(opciones.zona)
+  const { fechaISO, fechaStr, advertencia: advFecha, error: errorFecha } = parsearFecha(partes[3], hoy)
   if (errorFecha) errores.push(errorFecha)
   if (advFecha) advertencias.push(advFecha)
 

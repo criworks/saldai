@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- **El parser vive en `@saldai/core`**: `parsearGasto` y el parseo de fechas humanas ("ayer", "lunes", "15/02") salieron de `api/` y ahora son parte del dominio compartido, así que mobile puede parsear sin pasar por la red. La zona horaria se le pasa como argumento en vez de leerse de `APP_TIMEZONE` dentro del dominio: la API la resuelve en `src/config.js` y el CLI con la variable de entorno, y el core asume Chile si nadie la pasa.
+- **Tipos compartidos del contrato de la API** en `packages/core/index.d.ts`: `Gasto`, `GastoParseado`, `Metodo`, `Categoria`, `FechaISO` y las respuestas de cada endpoint. Mobile los declaraba por su cuenta, con `fecha` y `categoria` como `string` suelto, y de ahí venían errores como leer `error` en singular cuando la API responde `errores[]`. Al tiparlo de verdad aparecieron dos lugares donde el método de pago era un `string` cualquiera.
 - **`@saldai/core`**: paquete nuevo con el dominio compartido, sin framework y sin red: el catálogo de categorías y su regla de match, los métodos de pago, el formato de montos en pesos y las conversiones y rangos de fechas. Lo consumen la API y mobile (y web cuando le toque), así que un gasto significa lo mismo en todas las salidas. 23 tests propios; `npm test` en la raíz ahora corre los del core y los de la API.
 - **Tests del parser (API)**: Suite real con `node:test` en `api/test/` (41 casos) para `parser`, `categorizer` y `dateParser`. `npm test` ahora corre los tests; la demo con salida en colores quedó como `npm run demo`.
 - **Scripts en la raíz**: `npm run lint` (web) y `npm run typecheck` (mobile), además del `npm test` que ya estaba. Es lo que va a correr CI.

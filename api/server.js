@@ -5,12 +5,16 @@ const { cargarConfig } = require('./src/config')
 const { requireAuth } = require('./src/middleware/auth.js')
 const express = require('express')
 const cors = require('cors')
-const { parsearGasto } = require('./src/parser')
 const { createSupabaseClient, createAnonClient } = require('./src/supabase')
-const { hoyCivil } = require('./src/dateParser')
-const { rangoDelMes, rangoDelAnio, mesDeIso } = require('@saldai/core')
+const {
+  parsearGasto,
+  hoyCivil,
+  rangoDelMes,
+  rangoDelAnio,
+  mesDeIso,
+} = require('@saldai/core')
 
-const { puerto: PORT, origenesPermitidos } = cargarConfig()
+const { puerto: PORT, origenesPermitidos, zona: ZONA } = cargarConfig()
 
 const app = express()
 
@@ -30,7 +34,7 @@ app.post('/gastos/parsear', (req, res) => {
     })
   }
 
-  const resultado = parsearGasto(input)
+  const resultado = parsearGasto(input, { zona: ZONA })
   return res.status(resultado.ok ? 200 : 422).json(resultado)
 })
 
@@ -48,7 +52,7 @@ app.post('/gastos', requireAuth, async (req, res) => {
     })
   }
 
-  const resultado = parsearGasto(input)
+  const resultado = parsearGasto(input, { zona: ZONA })
 
   if (!resultado.ok) {
     return res.status(422).json(resultado)
@@ -111,7 +115,7 @@ app.get('/gastos', requireAuth, async (req, res) => {
 
     // Sin 'anio' se asume el año en curso. Antes el filtro era
     // `fecha ilike '%/10/%'`, que devolvía octubre de todos los años.
-    const anioNum = anio === undefined ? hoyCivil().getUTCFullYear() : parseInt(anio, 10)
+    const anioNum = anio === undefined ? hoyCivil(ZONA).getUTCFullYear() : parseInt(anio, 10)
     if (isNaN(anioNum) || anioNum < 2000 || anioNum > 2100) {
       return res.status(400).json({
         ok: false,

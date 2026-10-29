@@ -11,4 +11,6 @@ module.exports = {
   ...require('./metodos'),
   ...require('./dinero'),
   ...require('./fechas'),
+  ...require('./fechas-humanas'),
+  ...require('./parser'),
 }

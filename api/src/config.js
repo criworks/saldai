@@ -37,6 +37,9 @@ function cargarConfig() {
   return {
     puerto: process.env.PORT || 3000,
     origenesPermitidos,
+    // El dominio no lee variables de entorno, así que la zona se resuelve acá
+    // y se le pasa en cada llamada. Render corre en UTC.
+    zona: process.env.APP_TIMEZONE || 'America/Santiago',
   }
 }
 
