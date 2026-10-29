@@ -65,7 +65,7 @@ app.post('/gastos', requireAuth, async (req, res) => {
       metodo: resultado.datos.metodo,
       fecha: resultado.datos.fecha,
       input_original: input,
-      user_id: req.user.sub,
+      user_id: req.userId,
     })
     .select()
     .single()
@@ -96,7 +96,7 @@ app.get('/gastos', requireAuth, async (req, res) => {
   let query = supabase
     .from('gastos')
     .select('*')
-    .eq('user_id', req.user.sub)
+    .eq('user_id', req.userId)
     .order('creado_en', { ascending: false })
 
   if (mes) {
@@ -170,7 +170,7 @@ app.get('/gastos/anuales', requireAuth, async (req, res) => {
   const { data, error } = await supabase
     .from('gastos')
     .select('monto, fecha')
-    .eq('user_id', req.user.sub)
+    .eq('user_id', req.userId)
     .gte('fecha', desde)
     .lt('fecha', hasta)
 
