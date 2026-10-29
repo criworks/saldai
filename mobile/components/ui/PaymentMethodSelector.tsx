@@ -1,11 +1,11 @@
-import { METODOS_VALIDOS } from '@saldai/core';
+import { METODOS_VALIDOS, type Metodo } from '@saldai/core';
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { Plus } from 'phosphor-react-native';
 
 interface PaymentMethodSelectorProps {
-  method: string;
-  onSelectMethod: (method: string) => void;
+  method: Metodo;
+  onSelectMethod: (method: Metodo) => void;
 }
 
 export function PaymentMethodSelector({ method, onSelectMethod }: PaymentMethodSelectorProps) {
