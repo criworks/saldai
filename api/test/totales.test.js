@@ -1,7 +1,7 @@
 const { test } = require('node:test')
 const assert = require('node:assert')
 
-const { arregloDeTotales } = require('../src/totales')
+const { arregloDeTotales } = require('../src/gastos/totales')
 
 test('arma los doce meses en orden, con 0 en los que no vinieron', () => {
   const totales = arregloDeTotales([
