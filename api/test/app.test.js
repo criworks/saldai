@@ -12,7 +12,15 @@ const { crearApp } = require('../src/app')
 
 // Separar la app del `listen()` es justamente lo que permite esto: montarla en
 // un test y pegarle a las rutas de verdad, con el cors y el json puestos.
-const app = crearApp({ origenesPermitidos: ['http://localhost:3000'], zona: 'America/Santiago' })
+// Los límites van altos a propósito: los tests de este archivo prueban las
+// rutas, no el limitador, y con los números de producción un test de más por
+// ruta empezaría a devolver 429. El limitador tiene sus propios tests, con
+// límites chicos, en `limites.test.js`.
+const app = crearApp({
+  origenesPermitidos: ['http://localhost:3000'],
+  zona: 'America/Santiago',
+  limites: { porMinutoSinSesion: 10_000, porMinutoConSesion: 10_000, porMinutoSalud: 10_000 },
+})
 
 test('POST /gastos/parsear parsea sin pedir sesión', async () => {
   const res = await request(app)
@@ -61,4 +69,45 @@ test('GET /health responde sin tocar la base', async () => {
 
   assert.strictEqual(res.status, 200)
   assert.strictEqual(res.body.status, 'ok')
+})
+
+test('una ruta que no existe responde 404 con la forma de siempre', async () => {
+  const res = await request(app).get('/noexiste')
+
+  assert.strictEqual(res.status, 404)
+  assert.strictEqual(res.body.ok, false)
+  assert.match(res.body.errores[0], /No existe la ruta GET \/noexiste/)
+  assert.strictEqual(res.body.datos, null)
+})
+
+test('un cuerpo que no es JSON válido responde 400 y no 500', async () => {
+  const res = await request(app)
+    .post('/gastos/parsear')
+    .set('Content-Type', 'application/json')
+    .send('{esto no es json')
+
+  assert.strictEqual(res.status, 400)
+  assert.strictEqual(res.body.ok, false)
+  assert.match(res.body.errores[0], /no es JSON válido/)
+})
+
+test('un cuerpo más grande que el límite responde 413', async () => {
+  const res = await request(app)
+    .post('/gastos/parsear')
+    .send({ input: 'a'.repeat(20 * 1024) })
+
+  assert.strictEqual(res.status, 413)
+  assert.strictEqual(res.body.ok, false)
+  assert.match(res.body.errores[0], /demasiado grande/)
+})
+
+test('helmet pone las cabeceras y saca la que delata el servidor', async () => {
+  const res = await request(app).get('/health')
+
+  assert.strictEqual(res.headers['x-content-type-options'], 'nosniff')
+  assert.strictEqual(res.headers['x-frame-options'], 'SAMEORIGIN')
+  assert.ok(res.headers['strict-transport-security'])
+  // Express manda `X-Powered-By: Express` por defecto, que le dice a cualquiera
+  // con qué está escrita la API. Helmet la quita.
+  assert.strictEqual(res.headers['x-powered-by'], undefined)
 })
