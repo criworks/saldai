@@ -1,4 +1,4 @@
-import { colors } from '../constants/theme'
+import { colors } from '@/constants/theme'
 
 /**
  * Los colores que usa react-navigation para el chrome de la app (fondo de las

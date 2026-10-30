@@ -20,20 +20,44 @@ Aplicación móvil desarrollada en **React Native** con **Expo** para la gestió
 
 El proyecto sigue una arquitectura limpia de separación de responsabilidades:
 
+El código se agrupa **por feature**, no por tipo de archivo: el estado, los
+componentes y las llamadas de una misma parte del producto viven juntos.
+
 ```text
 mobile/
-├── app/                  # Rutas de Expo Router (Pantallas UI)
-│   ├── (tabs)/           # Navegación inferior (Captura e Index)
-│   └── _layout.tsx       # Layout principal y carga de fuentes globales
-├── components/           # Componentes visuales puros
-│   └── ui/               # Componentes base (ej. GradientFooter)
-├── constants/            # Tokens de diseño y variables globales (theme.ts)
-├── contexts/             # Estado compartido (AuthContext, GastosContext, FilterContext)
-├── hooks/                # Lógica de negocio y manejo de estado (useGastos, useGastoMutation)
-├── lib/                  # Íconos (phosphor), helpers de tema y `cn`
-├── services/             # Capa de red, Supabase y mocks (api.ts, supabase.ts, mockConfig.ts)
+├── app/                  # Rutas de Expo Router: solo pantallas y layouts
+│   ├── (auth)/           # Login
+│   ├── (tabs)/           # Navegación inferior
+│   └── _layout.tsx       # Layout raíz, fuentes y providers
+├── features/
+│   ├── gastos/           # El dominio de la app
+│   │   ├── index.ts      # Lo único que importan las pantallas
+│   │   ├── api.ts        # Las tres llamadas de gastos
+│   │   ├── GastosContext.tsx, FilterContext.tsx, useGastoMutation.ts
+│   │   ├── componentes/  # Componentes que solo tienen sentido con gastos
+│   │   └── __tests__/
+│   └── auth/             # Sesión: contexto y los pasos de verificación
+│       ├── index.ts
+│       ├── AuthContext.tsx
+│       └── componentes/
+├── components/ui/        # Primitivos sin dominio (Button, Input, Alert, Text…)
+├── constants/            # Reexport de tokens y constantes de pantalla (theme.ts)
+├── lib/                  # Cliente de react-query, íconos, helpers de tema y `cn`
+├── services/             # Infraestructura compartida: Supabase y mocks
 └── tailwind.config.js    # Configuración del motor de estilos y tokens
 ```
+
+Cada feature expone su superficie en un `index.ts`. Las pantallas importan
+`@/features/gastos`, nunca un archivo de adentro: así reacomodar la feature no
+toca las rutas. Dentro de una feature los vecinos se importan relativo (`./api`),
+porque importar el propio barril sería circular.
+
+### El alias `@/`
+
+`@/` apunta a la raíz de `mobile/`. Está declarado en tres lugares y los tres
+hacen falta: `tsconfig.json` (para el editor y `tsc`), Metro lo lee de ahí solo
+para el bundle, y `jest.config.js` lo repite en `moduleNameMapper` porque Jest no
+lee `tsconfig.json`.
 
 ---
 
@@ -145,6 +169,6 @@ la app no depende de la rama, depende de `EXPO_PUBLIC_API_URL`.
 
 Si eres un agente de inteligencia artificial (Claude, Gemini, Cursor, etc.) operando en este repositorio:
 1.  **NO** modifiques la UI sin consultar los tokens estrictos en `CLAUDE.md`.
-2.  Mantén la lógica de negocio separada en `hooks/`.
+2.  La lógica de una parte del producto va en su `features/<nombre>/`, y se expone por el `index.ts` de esa feature.
 3.  Usa siempre los primitivos de React Native (NUNCA etiquetas HTML).
 4.  Cualquier cambio estructural mayor debe registrarse en el `REPORT.md`.

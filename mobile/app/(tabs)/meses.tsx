@@ -5,11 +5,11 @@ import { View, Text, Pressable, ScrollView, RefreshControl } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { formatearMonto } from '@saldai/core';
-import { colors, MESES } from '../../constants/theme';
-import { useGastos } from '../../hooks/useGastos';
-import { llaves } from '../../lib/consultas';
-import { fetchGastosAnuales } from '../../services/api';
-import { Alert } from '../../components/ui/Alert';
+import { colors, MESES } from '@/constants/theme';
+import { useGastos } from '@/features/gastos';
+import { llaves } from '@/lib/consultas';
+import { fetchGastosAnuales } from '@/features/gastos';
+import { Alert } from '@/components/ui/Alert';
 
 export default function MesesScreen() {
   const router = useRouter();

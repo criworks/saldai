@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import React, { createContext, useContext, useState, ReactNode, useMemo } from 'react';
 import type { Gasto, GastosDelMes } from '@saldai/core';
-import { llaves } from '../lib/consultas';
-import { fetchGastosPorMes } from '../services/api';
+import { llaves } from '@/lib/consultas';
+import { fetchGastosPorMes } from './api';
 
 // El contrato de la API vive en @saldai/core, para que mobile y la API no se
 // desincronicen. Antes estaba declarado acá a mano y por eso `fecha` y

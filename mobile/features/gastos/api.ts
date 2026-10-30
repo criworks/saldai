@@ -1,7 +1,7 @@
 import type { GastoCreado, GastosDelMes, TotalesAnuales } from '@saldai/core'
-import * as mocks from './mocks'
-import { enModoMock } from './mocks'
-import { supabase } from './supabase'
+import * as mocks from '@/services/mocks'
+import { enModoMock } from '@/services/mocks'
+import { supabase } from '@/services/supabase'
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL
 

@@ -9,11 +9,11 @@ import {
   View,
 } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
-import { ExpenseItem } from '../../components/ui/ExpenseItem'
+import { ExpenseItem } from '@/features/gastos'
 import { formatearMonto } from '@saldai/core'
-import { colors, MESES } from '../../constants/theme'
-import { useGastos, Gasto } from '../../hooks/useGastos'
-import { Alert } from '../../components/ui/Alert'
+import { colors, MESES } from '@/constants/theme'
+import { useGastos, Gasto } from '@/features/gastos'
+import { Alert } from '@/components/ui/Alert'
 
 /**
  * `AAAA-MM-DD` a Date del día, en hora local.

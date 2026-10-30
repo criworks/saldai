@@ -4,9 +4,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState, useRef } from 'react';
 import { Pressable, ScrollView, Text, View, Keyboard, Platform, DeviceEventEmitter } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { categoryEmoji, colors, withAlpha } from '../../constants/theme';
-import { useFilter } from '../../contexts/FilterContext';
-import { useGastos } from '../../hooks/useGastos';
+import { categoryEmoji, colors, withAlpha } from '@/constants/theme';
+import { useFilter } from '../FilterContext';
+import { useGastos } from '../GastosContext';
 
 export function GradientFooter(props: BottomTabBarProps) {
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);

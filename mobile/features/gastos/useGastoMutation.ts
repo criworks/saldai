@@ -2,9 +2,9 @@ import { anioDeIso, mesDeIso, METODO_DEFAULT, parsearGasto } from '@saldai/core'
 import type { Gasto, GastosDelMes } from '@saldai/core'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
-import { CampoClave } from '../constants/theme'
-import { llaves } from '../lib/consultas'
-import { crearGasto } from '../services/api'
+import { CampoClave } from '@/constants/theme'
+import { llaves } from '@/lib/consultas'
+import { crearGasto } from './api'
 
 /**
  * La llave de caché del mes al que pertenece una fecha ISO. `null` si la fecha

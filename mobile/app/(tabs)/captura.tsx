@@ -16,12 +16,12 @@ import { useFocusEffect } from 'expo-router'
 import { Calendar, CaretDown } from 'phosphor-react-native'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { useGastoMutation } from '../../hooks/useGastoMutation'
-import { CategorySelector } from '../../components/ui/CategorySelector'
-import { PaymentMethodSelector } from '../../components/ui/PaymentMethodSelector'
-import { Notification } from '../../components/ui/Notification'
-import { Alert } from '../../components/ui/Alert'
-import { colors } from '../../constants/theme'
+import { useGastoMutation } from '@/features/gastos'
+import { CategorySelector } from '@/features/gastos'
+import { PaymentMethodSelector } from '@/features/gastos'
+import { Notification } from '@/components/ui/Notification'
+import { Alert } from '@/components/ui/Alert'
+import { colors } from '@/constants/theme'
 
 export default function CapturaScreen() {
   const {
