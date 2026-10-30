@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable, ScrollView } from 'react-native';
 import { Plus } from 'phosphor-react-native';
-import { categoryEmoji, NOMBRES_CATEGORIAS, SIN_CATEGORIA } from '../../constants/theme';
+import { categoryEmoji, colors, NOMBRES_CATEGORIAS, SIN_CATEGORIA } from '../../constants/theme';
 
 interface CategorySelectorProps {
   selectedCategory: string;
@@ -19,7 +19,7 @@ export function CategorySelector({ selectedCategory, onSelectCategory }: Categor
         className="bg-secondary rounded-full items-center justify-center w-xxl h-xxl mr-md active:opacity-80"
         onPress={() => onSelectCategory(SIN_CATEGORIA)}
       >
-        <Plus size={16} color="#60677D" />
+        <Plus size={16} color={colors.textMuted} />
       </Pressable>
       
       <ScrollView 

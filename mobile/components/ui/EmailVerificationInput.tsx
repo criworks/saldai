@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View } from 'react-native';
 import { Input } from './Input';
 import { Clock, PencilSimple } from 'phosphor-react-native';
+import { colors } from '../../constants/theme';
 
 export interface EmailVerificationInputProps {
   value: string;
@@ -29,7 +30,7 @@ export function EmailVerificationInput({ value, onChangeText, isVerifying, isEdi
       />
       <View className="absolute right-lg pointer-events-none">
         {(isVerifying && !isFocused) ? (
-          <Clock size={18} color="#ffffff" weight="fill" />
+          <Clock size={18} color={colors.text} weight="fill" />
         ) : (
           <PencilSimple size={18} className="text-muted-foreground" weight="fill" />
         )}

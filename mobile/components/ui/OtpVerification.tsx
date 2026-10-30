@@ -56,7 +56,7 @@ export function OtpVerification({
         <Pressable
           onPress={onResend}
           disabled={loading || cooldownSeconds > 0}
-          className="w-full py-md px-xl justify-center items-center rounded-[16px] active:opacity-80"
+          className="w-full py-md px-xl justify-center items-center rounded-lg active:opacity-80"
         >
           <Text className="text-muted-foreground font-['Inter'] text-body font-medium leading-[normal]">
             {cooldownSeconds > 0 ? `Reenviar en ${cooldownSeconds}s` : 'Reenviar código'}

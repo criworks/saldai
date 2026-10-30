@@ -43,3 +43,8 @@ jobs:
 
       - name: Tipos de mobile
         run: npm run typecheck
+
+      # mobile/global.css se genera desde los tokens: si alguien lo editó a
+      # mano, o cambió un color y no volvió a generarlo, acá se ve.
+      - name: Variables CSS al día con los tokens
+        run: npm run tokens:css:check

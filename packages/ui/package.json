@@ -2,6 +2,7 @@
   "name": "@saldai/ui",
   "version": "1.0.0",
   "description": "Shared design tokens and UI primitives",
+  "type": "module",
   "main": "tokens.js",
   "exports": {
     "./tokens": "./tokens.js"
