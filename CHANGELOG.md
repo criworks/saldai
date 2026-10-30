@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
+- **`api/server.js` queda en 13 líneas**: era un archivo de 213 que mezclaba el arranque del proceso, el CORS, las cuatro rutas de gastos, los dos health checks, la validación de cada parámetro y las consultas a Supabase. Ahora `server.js` solo carga la config y abre el puerto; la app se arma en `src/app.js`, las rutas quedan en `src/rutas/{gastos,salud}.js`, las consultas en `src/gastos/repositorio.js` (que es donde se traduce entre el contrato HTTP y los nombres de la tabla) y la validación de parámetros en `src/gastos/validacion.js`, como funciones puras. Separar la app del `listen()` es lo que permite montarla en un test y pegarle a una ruta de verdad: la API pasó de 8 tests a 18, incluidos los que verifican que `/gastos/parsear` parsea sin sesión, que un input que el parser rechaza responde 422 y no 400, y que las tres rutas protegidas responden 401 antes de tocar la base.
 - **Los mocks de mobile viven en `services/mocks/`** y no dentro de `services/api.ts`. Cada función de red empezaba con treinta líneas de respuestas simuladas antes de llegar al `fetch`, así que costaba ver qué hace la app de verdad; ahora `api.ts` tiene solo las llamadas reales y una línea que delega al mock cuando corresponde. Al tipar las respuestas con el contrato del core apareció que el mock de `POST /gastos` no devolvía `categoriaSrc` ni `fechaFormateada`, que la API sí manda.
 
 ### Added
