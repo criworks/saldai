@@ -6,13 +6,8 @@ const { requireAuth } = require('./src/middleware/auth.js')
 const express = require('express')
 const cors = require('cors')
 const { createSupabaseClient, createAnonClient } = require('./src/supabase')
-const {
-  parsearGasto,
-  hoyCivil,
-  rangoDelMes,
-  rangoDelAnio,
-  mesDeIso,
-} = require('@saldai/core')
+const { parsearGasto, hoyCivil, rangoDelMes } = require('@saldai/core')
+const { arregloDeTotales } = require('./src/totales')
 
 const { puerto: PORT, origenesPermitidos, zona: ZONA } = cargarConfig()
 
@@ -169,14 +164,10 @@ app.get('/gastos/anuales', requireAuth, async (req, res) => {
   }
 
   const anioNum = parseInt(anio, 10)
-  const { desde, hasta } = rangoDelAnio(anioNum)
 
-  const { data, error } = await supabase
-    .from('gastos')
-    .select('monto, fecha')
-    .eq('user_id', req.userId)
-    .gte('fecha', desde)
-    .lt('fecha', hasta)
+  // La suma la hace la base (`public.totales_por_mes`), no esta ruta: antes
+  // traía todas las filas del año para sumar doce números.
+  const { data, error } = await supabase.rpc('totales_por_mes', { anio: anioNum })
 
   if (error) {
     console.error('Supabase error:', error)
@@ -187,14 +178,7 @@ app.get('/gastos/anuales', requireAuth, async (req, res) => {
     })
   }
 
-  const totales = Array(12).fill(0)
-  for (const gasto of data) {
-    // La columna es date, así que Supabase la devuelve como AAAA-MM-DD.
-    const mes = mesDeIso(gasto.fecha)
-    if (mes !== null) {
-      totales[mes - 1] += gasto.monto
-    }
-  }
+  const totales = arregloDeTotales(data)
 
   return res.status(200).json({
     ok: true,
