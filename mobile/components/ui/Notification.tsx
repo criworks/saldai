@@ -2,6 +2,7 @@ import { Check, Info, Warning, XCircle } from 'phosphor-react-native';
 import React from 'react';
 import { Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { colors, withAlpha } from '../../constants/theme';
 
 export type NotificationType = 'success' | 'warning' | 'error' | 'info';
 
@@ -22,14 +23,14 @@ export function Notification({ visible, message, type = 'success', monto, descri
   const getIcon = () => {
     switch (type) {
       case 'warning':
-        return <Warning size={16} color="#ffffff" weight="bold" />;
+        return <Warning size={16} color={colors.text} weight="bold" />;
       case 'error':
-        return <XCircle size={16} color="#ffffff" weight="bold" />;
+        return <XCircle size={16} color={colors.text} weight="bold" />;
       case 'info':
-        return <Info size={16} color="#ffffff" weight="bold" />;
+        return <Info size={16} color={colors.text} weight="bold" />;
       case 'success':
       default:
-        return <Check size={16} color="#ffffff" weight="bold" />;
+        return <Check size={16} color={colors.text} weight="bold" />;
     }
   };
 
@@ -42,8 +43,8 @@ export function Notification({ visible, message, type = 'success', monto, descri
       pointerEvents="none"
     >
       <View
-        className="px-[16px] py-[8px] flex-row justify-center items-center gap-[8px] rounded-full border-2 border-[#353A47]"
-        style={{ backgroundColor: 'rgba(38, 42, 53, 0.40)' }}
+        className="px-lg py-sm flex-row justify-center items-center gap-sm rounded-full border-2 border-border-active"
+        style={{ backgroundColor: withAlpha(colors.bgElevated, 0.4) }}
       >
         {getIcon()}
         <Text

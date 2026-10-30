@@ -11,7 +11,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ExpenseItem } from '../../components/ui/ExpenseItem'
 import { formatearMonto } from '@saldai/core'
-import { MESES } from '../../constants/theme'
+import { colors, MESES } from '../../constants/theme'
 import { useGastos, Gasto } from '../../hooks/useGastos'
 import { Alert } from '../../components/ui/Alert'
 
@@ -126,7 +126,7 @@ export default function DashboardScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => fetchGastos(true)}
-            tintColor="#262A35" // color secondary
+            tintColor={colors.bgElevated}
           />
         }
         showsVerticalScrollIndicator={false}
@@ -138,12 +138,12 @@ export default function DashboardScreen() {
             {loading ? (
               <View className="flex-col gap-sm w-full items-start">
                 <View className="h-[28px] w-[120px] bg-secondary rounded-full" />
-                <View className="h-[16px] w-[80px] bg-secondary rounded-full mt-1" />
+                <View className="h-lg w-[80px] bg-secondary rounded-full mt-1" />
               </View>
             ) : (
               <View className="flex-col gap-sm w-full items-start">
                 <Pressable 
-                  className="flex-row items-center justify-start gap-xs active:opacity-80 py-2 -ml-2 px-2 rounded-lg"
+                  className="flex-row items-center justify-start gap-xs active:opacity-80 py-2 -ml-2 px-2 rounded-md"
                   onPress={() => router.navigate('/meses')}
                 >
                   <Text className="text-muted-foreground text-title font-normal leading-[normal]">

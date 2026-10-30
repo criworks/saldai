@@ -30,6 +30,10 @@ export const colors = {
   // Estados
   success:  "#4a7c59",
   error:    "#a65b5b",
+  // Rojo fuerte, solo para acciones destructivas de verdad (borrar la cuenta).
+  errorStrong: "#FF4343",
+  // Fondo de la variante destructiva de los componentes.
+  destructive: "#7F1D1D",
   warning:  "#E98B00",
   warningBorder: "#5B3600",
 
@@ -104,6 +108,8 @@ export const fontSize = {
   xl:   20,
   xxl:  24,
   "3xl": 28,
+  // La cifra grande de la pantalla de captura.
+  display: 40,
   "4xl": 36,
   "5xl": 48,
 };
@@ -122,3 +128,89 @@ export const radius = {
   lg:   16,
   full: 9999,
 };
+
+/**
+ * Capa semántica: el nombre que usa la UI ("card", "muted-foreground") y el
+ * color del catálogo que le toca. De acá salen las dos cosas que antes se
+ * mantenían a mano y por separado: las clases de NativeWind
+ * (`mobile/tailwind.config.js`) y las variables CSS de `mobile/global.css`,
+ * que se generan con `npm run tokens:css`.
+ */
+export const semantic = {
+  background: colors.bg,
+  foreground: colors.text,
+
+  card: colors.bgElevated,
+  "card-foreground": colors.text,
+
+  popover: colors.bgElevated,
+  "popover-foreground": colors.text,
+
+  primary: colors.text,
+  "primary-foreground": colors.bg,
+
+  secondary: colors.bgElevated,
+  "secondary-foreground": colors.text,
+
+  muted: colors.bgElevated,
+  "muted-foreground": colors.textMuted,
+
+  accent: colors.bgElevated,
+  "accent-foreground": colors.text,
+
+  destructive: colors.destructive,
+  "destructive-foreground": colors.text,
+
+  warning: colors.warning,
+  "warning-foreground": colors.text,
+  "warning-border": colors.warningBorder,
+
+  border: colors.bgElevated,
+  "border-active": colors.borderActive,
+  input: colors.bgElevated,
+  ring: colors.textMuted,
+};
+
+/**
+ * El mismo color del catálogo pero translúcido, para degradados y overlays.
+ * Existe para no tener que escribir el `rgba(17,18,23,0)` a mano en una
+ * pantalla, que es justo la clase de valor suelto que se desincroniza.
+ */
+export const withAlpha = (hex, alpha) => {
+  const [r, g, b] = hexARgb(hex);
+  return `rgba(${r},${g},${b},${alpha})`;
+};
+
+/** `#112233` -> `[17, 34, 51]`. Acepta también la forma corta `#123`. */
+export const hexARgb = (hex) => {
+  const limpio = hex.replace("#", "");
+  const completo =
+    limpio.length === 3
+      ? limpio.split("").map((c) => c + c).join("")
+      : limpio;
+  return [0, 2, 4].map((i) => parseInt(completo.slice(i, i + 2), 16));
+};
+
+/**
+ * `#112233` -> `"210 50% 13%"`, el formato que espera `hsl(var(--x))`.
+ * Lo usa el generador de `mobile/global.css`.
+ */
+export const hexAHsl = (hex) => {
+  const [r, g, b] = hexARgb(hex).map((v) => v / 255);
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  const d = max - min;
+  if (d === 0) return `0 0% ${redondear(l * 100)}%`;
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  const h =
+    max === r
+      ? ((g - b) / d + (g < b ? 6 : 0)) * 60
+      : max === g
+        ? ((b - r) / d + 2) * 60
+        : ((r - g) / d + 4) * 60;
+  return `${redondear(h)} ${redondear(s * 100)}% ${redondear(l * 100)}%`;
+};
+
+// Un decimal, y sin el `.0` cuando es redondo.
+const redondear = (n) => String(Math.round(n * 10) / 10);

@@ -4,7 +4,7 @@ import { View, Text, Pressable, ScrollView, RefreshControl } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { formatearMonto } from '@saldai/core';
-import { MESES } from '../../constants/theme';
+import { colors, MESES } from '../../constants/theme';
 import { useGastos } from '../../hooks/useGastos';
 import { fetchGastosAnuales } from '../../services/api';
 import { Alert } from '../../components/ui/Alert';
@@ -72,7 +72,7 @@ export default function MesesScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => loadData(true)}
-            tintColor="#262A35"
+            tintColor={colors.bgElevated}
           />
         }
         showsVerticalScrollIndicator={false}

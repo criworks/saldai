@@ -196,7 +196,7 @@ export default function LoginScreen() {
                   <Pressable
                     onPress={handleSendOtp}
                     disabled={loading}
-                    className={`w-full h-[56px] px-xl justify-center items-center rounded-[16px] bg-primary active:opacity-80 ${loading ? 'opacity-50' : ''}`}
+                    className={`w-full h-[56px] px-xl justify-center items-center rounded-lg bg-primary active:opacity-80 ${loading ? 'opacity-50' : ''}`}
                   >
                     <Text className="text-primary-foreground font-['Inter'] text-body font-semibold leading-[normal]">
                       {loading ? 'Enviando...' : 'Enviar código de 6 dígitos'}

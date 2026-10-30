@@ -19,7 +19,9 @@
     "cli": "npm run cli --prefix api",
     "test": "npm test --prefix packages/core && npm test --prefix api",
     "lint": "npm run lint --prefix web",
-    "typecheck": "npm run typecheck --prefix mobile"
+    "typecheck": "npm run typecheck --prefix mobile",
+    "tokens:css": "npm run tokens:css --prefix mobile",
+    "tokens:css:check": "npm run tokens:css:check --prefix mobile"
   },
   "devDependencies": {
     "@types/react": "~19.1.10",

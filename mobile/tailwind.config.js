@@ -1,15 +1,36 @@
 const { hairlineWidth } = require("nativewind/theme");
 const tokens = require("../packages/ui/tokens.js");
 
-// Estandarizar Spacing: { xs: '4px', ... }
-const spacingPx = Object.fromEntries(
-  Object.entries(tokens.spacing).map(([k, v]) => [k, `${v}px`])
-);
+// Spacing y tipografía salen de los tokens con la unidad puesta:
+// { xs: '4px', … } y { base: '14px', … }.
+const conPx = (escala) =>
+  Object.fromEntries(Object.entries(escala).map(([k, v]) => [k, `${v}px`]));
 
-// Estandarizar Tipografía: { xs: '11px', ... }
-const fontSizePx = Object.fromEntries(
-  Object.entries(tokens.fontSize).map(([k, v]) => [k, `${v}px`])
-);
+const spacingPx = conPx(tokens.spacing);
+const fontSizePx = conPx(tokens.fontSize);
+const radiusPx = conPx(tokens.radius);
+
+/**
+ * Los colores son los nombres de la capa semántica de los tokens, resueltos vía
+ * las variables CSS que genera `npm run tokens:css`. La lista no se escribe a
+ * mano: un nombre nuevo en los tokens aparece acá solo.
+ *
+ * Un nombre compuesto se anida cuando su prefijo también es un color, así
+ * `card-foreground` queda como `card.foreground` y la clase sigue siendo
+ * `text-card-foreground`.
+ */
+const colors = Object.keys(tokens.semantic).reduce((acc, nombre) => {
+  const valor = `hsl(var(--${nombre}))`;
+  const corte = nombre.indexOf("-");
+  const base = corte === -1 ? null : nombre.slice(0, corte);
+  if (base && base in tokens.semantic) {
+    const sufijo = nombre.slice(corte + 1);
+    acc[base] = { ...acc[base], [sufijo]: valor };
+    return acc;
+  }
+  acc[nombre] = { ...acc[nombre], DEFAULT: valor };
+  return acc;
+}, {});
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -30,63 +51,23 @@ module.exports = {
         bold: ['Inter_700Bold', 'sans-serif'],
       },
       spacing: spacingPx,
+      // Nombres por uso, no por tamaño: la pantalla dice `text-body`, no 14px.
       fontSize: {
-        'detail': fontSizePx.sm,     // 12px
-        'body': fontSizePx.base,     // 14px
-        'menu': fontSizePx.md,       // 16px
-        'subtitle': fontSizePx.lg,   // 18px
-        'title': fontSizePx.xxl,     // 24px
-        'hero': fontSizePx['3xl'],   // 28px
+        'detail': fontSizePx.sm,       // 12px
+        'body': fontSizePx.base,       // 14px
+        'menu': fontSizePx.md,         // 16px
+        'subtitle': fontSizePx.lg,     // 18px
+        'title': fontSizePx.xxl,       // 24px
+        'hero': fontSizePx['3xl'],     // 28px
+        'display': fontSizePx.display, // 40px, la cifra de la captura
       },
-      colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
-        primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
-        },
-        secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
-        },
-        destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
-        },
-        warning: {
-          DEFAULT: "hsl(var(--warning))",
-          foreground: "hsl(var(--warning-foreground))",
-          border: "hsl(var(--warning-border))",
-        },
-        muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
-        },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
-        },
-        popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
-        },
-        card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
-        },
-        "border-active": "hsl(var(--border-active))",
-      },
+      colors,
       borderWidth: {
         hairline: hairlineWidth(),
       },
-      radius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-      },
+      // Los radios de los tokens: rounded-md = 8px, rounded-lg = 16px.
+      // `extend` deja en pie el resto de la escala de Tailwind.
+      borderRadius: radiusPx,
     },
   },
   plugins: [],

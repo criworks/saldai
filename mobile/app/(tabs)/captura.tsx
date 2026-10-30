@@ -22,6 +22,7 @@ import { CategorySelector } from '../../components/ui/CategorySelector'
 import { PaymentMethodSelector } from '../../components/ui/PaymentMethodSelector'
 import { Notification } from '../../components/ui/Notification'
 import { Alert } from '../../components/ui/Alert'
+import { colors } from '../../constants/theme'
 
 export default function CapturaScreen() {
   const { fetchGastos } = useGastos()
@@ -171,7 +172,7 @@ export default function CapturaScreen() {
       >
         <View className="flex-col items-start gap-lg w-full">
           <View className="flex-row justify-end items-center w-full mb-sm">
-            <Text className="text-muted-foreground text-[40px] font-light mr-xs">$</Text>
+            <Text className="text-muted-foreground text-display font-light mr-xs">$</Text>
             <TextInput
               ref={montoRef}
               value={formattedAmount}
@@ -181,7 +182,7 @@ export default function CapturaScreen() {
               returnKeyType="next"
               onSubmitEditing={() => descripcionRef.current?.focus()}
               editable={estado !== 'loading'}
-              className={`text-[40px] font-light p-0 m-0 min-w-[30px] text-right placeholder:text-muted-foreground caret-foreground ${valores.monto ? 'text-foreground' : 'text-muted-foreground'} ${estado === 'loading' ? 'opacity-50' : ''}`}
+              className={`text-display font-light p-0 m-0 min-w-[30px] text-right placeholder:text-muted-foreground caret-foreground ${valores.monto ? 'text-foreground' : 'text-muted-foreground'} ${estado === 'loading' ? 'opacity-50' : ''}`}
             />
           </View>
 
@@ -200,7 +201,7 @@ export default function CapturaScreen() {
           </View>
 
           <View className="flex-row justify-end items-center gap-sm w-full">
-            {estado === 'loading' && <ActivityIndicator size="small" color="#E98B00" className="mr-2" />}
+            {estado === 'loading' && <ActivityIndicator size="small" color={colors.warning} className="mr-2" />}
             <Pressable 
               className={`flex-row px-md py-sm justify-center items-center gap-sm rounded-full bg-secondary ${estado === 'loading' ? 'opacity-50' : ''}`}
               disabled={estado === 'loading'}

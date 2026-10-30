@@ -1,6 +1,7 @@
 import { CaretRight } from 'phosphor-react-native';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
+import { colors } from '../../constants/theme';
 
 interface MenuItemProps {
   title: string;
@@ -24,7 +25,7 @@ export function MenuItem({ title, value, onPress, hideChevron = false }: MenuIte
             {value}
           </Text>
         ) : null}
-        {!hideChevron && <CaretRight size={18} color="#60677D" weight="regular" />}
+        {!hideChevron && <CaretRight size={18} color={colors.textMuted} weight="regular" />}
       </View>
     </Pressable>
   );

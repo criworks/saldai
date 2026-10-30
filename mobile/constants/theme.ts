@@ -5,7 +5,14 @@ import { KeyboardTypeOptions } from 'react-native'
 // import. El color y el emoji de cada categoría son diseño y vienen de los
 // tokens.
 export { MESES, NOMBRES_CATEGORIAS, SIN_CATEGORIA } from '@saldai/core'
-export { categoryColor, categoryEmoji, COLORES_CAT, EMOJIS_CAT } from '@saldai/ui/tokens'
+export {
+  categoryColor,
+  categoryEmoji,
+  colors,
+  COLORES_CAT,
+  EMOJIS_CAT,
+  withAlpha,
+} from '@saldai/ui/tokens'
 
 export type CampoClave = 'monto' | 'item' | 'categoria' | 'fecha'
 
