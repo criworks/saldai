@@ -15,13 +15,14 @@ const { arregloDeTotales } = require('../gastos/totales')
 /**
  * Las rutas de gastos. `zona` es la zona horaria con la que se resuelve el
  * "hoy": la resuelve `cargarConfig()` y se inyecta acá, así el router no lee
- * variables de entorno por su cuenta.
+ * variables de entorno por su cuenta. `limites` son los limitadores de pedidos:
+ * el flojo para las rutas con sesión y el estricto para la que no la pide.
  */
-function rutasDeGastos({ zona }) {
+function rutasDeGastos({ zona, limites }) {
   const router = express.Router()
 
   // ── POST /gastos/parsear ─ Sin auth: solo lee el input ────────────────────
-  router.post('/parsear', (req, res) => {
+  router.post('/parsear', limites.sinSesion, (req, res) => {
     const entrada = validarInput(req.body?.input)
     if (!entrada.ok) return errorDeEntrada(res, entrada.errores, { advertencias: [] })
 
@@ -30,7 +31,7 @@ function rutasDeGastos({ zona }) {
   })
 
   // ── POST /gastos ─────────────────────────────────────────────────────────
-  router.post('/', requireAuth, async (req, res) => {
+  router.post('/', limites.conSesion, requireAuth, async (req, res) => {
     const entrada = validarInput(req.body?.input)
     if (!entrada.ok) return errorDeEntrada(res, entrada.errores, { advertencias: [] })
 
@@ -57,7 +58,7 @@ function rutasDeGastos({ zona }) {
   })
 
   // ── GET /gastos ──────────────────────────────────────────────────────────
-  router.get('/', requireAuth, async (req, res) => {
+  router.get('/', limites.conSesion, requireAuth, async (req, res) => {
     const { mes, anio, categoria } = req.query
     let rango
 
@@ -93,7 +94,7 @@ function rutasDeGastos({ zona }) {
   })
 
   // ── GET /gastos/anuales ──────────────────────────────────────────────────
-  router.get('/anuales', requireAuth, async (req, res) => {
+  router.get('/anuales', limites.conSesion, requireAuth, async (req, res) => {
     const anioValido = validarAnioRequerido(req.query.anio)
     if (!anioValido.ok) return errorDeEntrada(res, anioValido.errores)
 

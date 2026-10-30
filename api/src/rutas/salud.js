@@ -7,8 +7,12 @@ const { createAnonClient } = require('../supabase')
  * UptimeRobot pinguea `/health` cada 5 minutos para que Render no duerma el
  * servicio tras 15 minutos sin tráfico, y `/health/db` golpea la base para que
  * Supabase no pause el proyecto tras 7 días sin actividad.
+ *
+ * `/health` no se limita, porque estrangular el keep-alive de Render es dejar
+ * que el servicio se duerma. `/health/db` sí: no pide sesión y consulta la
+ * base, así que sin límite es una puerta para golpear Supabase desde afuera.
  */
-function rutasDeSalud() {
+function rutasDeSalud({ limites }) {
   const router = express.Router()
 
   router.get('/', (req, res) => {
@@ -17,7 +21,7 @@ function rutasDeSalud() {
 
   // Con RLS activo no devuelve filas: basta con que la consulta llegue y
   // vuelva sin error.
-  router.get('/db', async (req, res) => {
+  router.get('/db', limites.salud, async (req, res) => {
     try {
       const supabase = createAnonClient()
       const { error } = await supabase.from('gastos').select('id').limit(1)
