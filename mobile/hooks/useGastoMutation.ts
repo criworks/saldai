@@ -1,7 +1,7 @@
 import { anioDeIso, mesDeIso, METODO_DEFAULT, parsearGasto } from '@saldai/core'
 import type { Gasto, GastosDelMes } from '@saldai/core'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { CampoClave } from '../constants/theme'
 import { llaves } from '../lib/consultas'
 import { crearGasto } from '../services/api'
@@ -57,6 +57,12 @@ export function useGastoMutation() {
   const [metodo, setMetodo] = useState(METODO_DEFAULT)
   const [mensaje, setMensaje] = useState('')
   const [lastSaved, setLastSaved] = useState<{ monto: string, descripcion: string } | null>(null)
+
+  // Si la pantalla se va antes de que el temporizador corra, no queda un
+  // setState pendiente sobre algo que ya no está montado.
+  useEffect(() => () => {
+    if (temporizador.current) clearTimeout(temporizador.current)
+  }, [])
 
   const handleChange = (key: CampoClave, val: string) => {
     setValores(prev => ({ ...prev, [key]: val }))
