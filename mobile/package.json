@@ -5,6 +5,7 @@
   "scripts": {
     "start": "expo start --dev-client",
     "typecheck": "tsc --noEmit",
+    "test": "jest",
     "tokens:css": "node scripts/generar-global-css.mjs",
     "tokens:css:check": "node scripts/generar-global-css.mjs --check",
     "build:dev:android": "npx eas-cli@latest build --profile development --platform android",
@@ -59,9 +60,14 @@
   "private": true,
   "devDependencies": {
     "@react-native-reusables/cli": "^0.6.3",
+    "@testing-library/react-native": "^13.3.3",
+    "@types/jest": "^29.5.14",
     "@types/node": "^25.6.0",
     "@types/react": "~19.1.10",
     "babel-preset-expo": "^54.0.10",
+    "jest": "^29.7.0",
+    "jest-expo": "~54.0.0",
+    "react-test-renderer": "^19.1.0",
     "typescript": "~5.9.3"
   }
 }
