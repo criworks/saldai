@@ -17,7 +17,6 @@ import { Calendar, CaretDown } from 'phosphor-react-native'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useGastoMutation } from '../../hooks/useGastoMutation'
-import { useGastos } from '../../hooks/useGastos'
 import { CategorySelector } from '../../components/ui/CategorySelector'
 import { PaymentMethodSelector } from '../../components/ui/PaymentMethodSelector'
 import { Notification } from '../../components/ui/Notification'
@@ -25,7 +24,6 @@ import { Alert } from '../../components/ui/Alert'
 import { colors } from '../../constants/theme'
 
 export default function CapturaScreen() {
-  const { fetchGastos } = useGastos()
   const {
     valores,
     metodo,
@@ -64,8 +62,9 @@ export default function CapturaScreen() {
   }
 
   const handleGuardar = () => {
+    // La lista no se recarga desde acá: el gasto entra en la caché del mes al
+    // guardarlo y la mutación invalida ese mes sola (ver useGastoMutation).
     guardarGasto(() => {
-      fetchGastos(true)
       setTimeout(() => montoRef.current?.focus(), 100)
     })
   }

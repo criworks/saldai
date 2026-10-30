@@ -125,7 +125,7 @@ export default function DashboardScreen() {
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={() => fetchGastos(true)}
+            onRefresh={() => fetchGastos()}
             tintColor={colors.bgElevated}
           />
         }
@@ -186,7 +186,7 @@ export default function DashboardScreen() {
             // ============================================================================
             <View className="w-full flex-col pt-xl pb-24 items-center">
                <Text className="text-destructive text-body font-medium text-center">Error al cargar datos</Text>
-               <Pressable onPress={() => fetchGastos(true)} className="mt-4 px-6 py-3 bg-secondary rounded-full active:opacity-80">
+               <Pressable onPress={() => fetchGastos()} className="mt-4 px-6 py-3 bg-secondary rounded-full active:opacity-80">
                   <Text className="text-foreground font-medium">Reintentar</Text>
                </Pressable>
             </View>
