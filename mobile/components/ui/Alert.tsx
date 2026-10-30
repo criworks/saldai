@@ -2,7 +2,7 @@ import { Check, Clock, Info, Warning, XCircle } from 'phosphor-react-native';
 import React from 'react';
 import { Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, withAlpha } from '../../constants/theme';
+import { colors, withAlpha } from '@/constants/theme';
 
 export type AlertType = 'success' | 'warning' | 'error' | 'info' | 'pending';
 

@@ -2,7 +2,7 @@ import { METODOS_VALIDOS, type Metodo } from '@saldai/core';
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { Plus } from 'phosphor-react-native';
-import { colors } from '../../constants/theme';
+import { colors } from '@/constants/theme';
 
 interface PaymentMethodSelectorProps {
   method: Metodo;

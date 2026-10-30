@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable, ScrollView } from 'react-native';
 import { Plus } from 'phosphor-react-native';
-import { categoryEmoji, colors, NOMBRES_CATEGORIAS, SIN_CATEGORIA } from '../../constants/theme';
+import { categoryEmoji, colors, NOMBRES_CATEGORIAS, SIN_CATEGORIA } from '@/constants/theme';
 
 interface CategorySelectorProps {
   selectedCategory: string;

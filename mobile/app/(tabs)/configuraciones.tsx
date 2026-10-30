@@ -3,15 +3,15 @@ import { SignOut, Trash } from 'phosphor-react-native';
 import React, { useState } from 'react';
 import { ActivityIndicator, Alert as RNAlert, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Alert } from '../../components/ui/Alert';
-import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
-import { MenuItem } from '../../components/ui/MenuItem';
-import { Notification } from '../../components/ui/Notification';
-import { SectionHeader } from '../../components/ui/SectionHeader';
-import { Button } from '../../components/ui/button';
-import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../services/supabase';
-import { colors } from '../../constants/theme';
+import { Alert } from '@/components/ui/Alert';
+import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
+import { MenuItem } from '@/components/ui/MenuItem';
+import { Notification } from '@/components/ui/Notification';
+import { SectionHeader } from '@/components/ui/SectionHeader';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/features/auth';
+import { supabase } from '@/services/supabase';
+import { colors } from '@/constants/theme';
 
 export default function ConfigurationsScreen() {
   const { signOut, session } = useAuth();

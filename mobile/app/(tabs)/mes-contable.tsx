@@ -3,7 +3,7 @@ import React from 'react';
 import { Pressable, ScrollView, Text, View, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Rect, Path, Mask, LinearGradient, Stop, G, Defs } from 'react-native-svg';
-import { colors } from '../../constants/theme';
+import { colors } from '@/constants/theme';
 
 // Custom Illustration Component based on provided SVG for Mes Contable
 function MesContableIllustration() {

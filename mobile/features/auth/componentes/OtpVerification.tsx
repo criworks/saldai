@@ -1,6 +1,6 @@
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { Alert } from './Alert';
+import { Alert } from '@/components/ui/Alert';
 import { OtpInput } from './OtpInput';
 
 export interface OtpVerificationProps {

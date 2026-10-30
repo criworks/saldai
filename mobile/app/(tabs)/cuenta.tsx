@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Alert } from '../../components/ui/Alert';
-import { EmailVerificationInput } from '../../components/ui/EmailVerificationInput';
-import { Notification } from '../../components/ui/Notification';
-import { OtpVerification } from '../../components/ui/OtpVerification';
-import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../services/supabase';
-import { isValidEmail } from '../../lib/utils';
+import { Alert } from '@/components/ui/Alert';
+import { EmailVerificationInput } from '@/features/auth';
+import { Notification } from '@/components/ui/Notification';
+import { OtpVerification } from '@/features/auth';
+import { useAuth } from '@/features/auth';
+import { supabase } from '@/services/supabase';
+import { isValidEmail } from '@/lib/utils';
 
 export default function CuentaScreen() {
   // --- STATES ---

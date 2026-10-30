@@ -1,7 +1,7 @@
 import { CaretRight } from 'phosphor-react-native';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { colors } from '../../constants/theme';
+import { colors } from '@/constants/theme';
 
 interface MenuItemProps {
   title: string;

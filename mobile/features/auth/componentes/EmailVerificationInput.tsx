@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
-import { Input } from './Input';
+import { Input } from '@/components/ui/Input';
 import { Clock, PencilSimple } from 'phosphor-react-native';
-import { colors } from '../../constants/theme';
+import { colors } from '@/constants/theme';
 
 export interface EmailVerificationInputProps {
   value: string;

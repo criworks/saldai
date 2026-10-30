@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
+- **Mobile se agrupa por feature y no por tipo de archivo**: `features/gastos/` y `features/auth/` juntan el estado, los componentes y las llamadas de cada parte del producto, en vez de repartirlos entre `contexts/`, `hooks/`, `services/` y `components/ui/`. En `components/ui/` quedan solo los primitivos sin dominio: cuatro de los que estaban ahí (`ExpenseItem`, `CategorySelector`, `PaymentMethodSelector`, `GradientFooter`) no eran reutilizables, y `GradientFooter` directamente leía los contextos de gastos y de filtro. Cada feature expone su superficie en un `index.ts` y las pantallas importan solo eso, así reacomodar una feature por dentro no toca las rutas. De paso se fue `hooks/useGastos.ts`, que era una línea reexportando el contexto.
+- **Los imports de mobile pasan al alias `@/`**: 79 imports relativos (`'../../components/ui/Alert'`) quedaron como absolutos, que es lo que hacía legible mover archivos. El alias ya estaba en `tsconfig.json` pero casi no se usaba, y faltaba en Jest: se agregó el `moduleNameMapper` porque Jest no lee `tsconfig.json`. El bundle se verificó con un `expo export` de verdad, no solo con `tsc`.
 - **Los mocks de mobile viven en `services/mocks/`** y no dentro de `services/api.ts`. Cada función de red empezaba con treinta líneas de respuestas simuladas antes de llegar al `fetch`, así que costaba ver qué hace la app de verdad; ahora `api.ts` tiene solo las llamadas reales y una línea que delega al mock cuando corresponde. Al tipar las respuestas con el contrato del core apareció que el mock de `POST /gastos` no devolvía `categoriaSrc` ni `fechaFormateada`, que la API sí manda.
 
 ### Added
