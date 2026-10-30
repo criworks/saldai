@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+### Changed
+- **Los mocks de mobile viven en `services/mocks/`** y no dentro de `services/api.ts`. Cada función de red empezaba con treinta líneas de respuestas simuladas antes de llegar al `fetch`, así que costaba ver qué hace la app de verdad; ahora `api.ts` tiene solo las llamadas reales y una línea que delega al mock cuando corresponde. Al tipar las respuestas con el contrato del core apareció que el mock de `POST /gastos` no devolvía `categoriaSrc` ni `fechaFormateada`, que la API sí manda.
+
 ### Added
 - **El parser vive en `@saldai/core`**: `parsearGasto` y el parseo de fechas humanas ("ayer", "lunes", "15/02") salieron de `api/` y ahora son parte del dominio compartido, así que mobile puede parsear sin pasar por la red. La zona horaria se le pasa como argumento en vez de leerse de `APP_TIMEZONE` dentro del dominio: la API la resuelve en `src/config.js` y el CLI con la variable de entorno, y el core asume Chile si nadie la pasa.
 - **Tipos compartidos del contrato de la API** en `packages/core/index.d.ts`: `Gasto`, `GastoParseado`, `Metodo`, `Categoria`, `FechaISO` y las respuestas de cada endpoint. Mobile los declaraba por su cuenta, con `fecha` y `categoria` como `string` suelto, y de ahí venían errores como leer `error` en singular cuando la API responde `errores[]`. Al tiparlo de verdad aparecieron dos lugares donde el método de pago era un `string` cualquiera.
