@@ -66,28 +66,70 @@ test('carga el mes en curso al montar', async () => {
   expect(result.current.totalMes).toBe(mesEnCurso * 1000)
 })
 
-test('volver a un mes ya visto no vuelve a pedirlo a la API', async () => {
-  const mesEnCurso = new Date().getMonth() + 1
-  const otroMes = mesEnCurso === 1 ? 12 : mesEnCurso - 1
+/** Cuántas veces se le pidió a la API ese mes. */
+const pedidosDe = (mes: number) => fetchMock.mock.calls.filter(([m]) => m === mes).length
 
+// Los tests usan mayo y abril y cuentan los pedidos por mes, no el total, así
+// el adelanto que se dispara al montar (el mes anterior al de hoy) no cambia
+// el resultado según el mes en que corran.
+test('volver a un mes ya visto no vuelve a pedirlo a la API', async () => {
   const { result } = montar()
   await waitFor(() => expect(result.current.loading).toBe(false))
 
   await act(async () => {
-    result.current.setMes(otroMes)
+    result.current.setMes(5)
   })
-  await waitFor(() => expect(result.current.totalMes).toBe(otroMes * 1000))
-  expect(fetchMock).toHaveBeenCalledTimes(2)
+  await waitFor(() => expect(result.current.totalMes).toBe(5000))
+  expect(pedidosDe(5)).toBe(1)
 
-  // Y de vuelta al primero: ya está en caché y todavía es fresco.
   await act(async () => {
-    result.current.setMes(mesEnCurso)
+    result.current.setMes(4)
   })
-  await waitFor(() => expect(result.current.totalMes).toBe(mesEnCurso * 1000))
+  await waitFor(() => expect(result.current.totalMes).toBe(4000))
 
-  expect(fetchMock).toHaveBeenCalledTimes(2)
+  // Y de vuelta a mayo: ya está en caché y todavía es fresco.
+  await act(async () => {
+    result.current.setMes(5)
+  })
+  await waitFor(() => expect(result.current.totalMes).toBe(5000))
+
+  expect(pedidosDe(5)).toBe(1)
   // Y no muestra el esqueleto para algo que ya tenía.
   expect(result.current.loading).toBe(false)
+})
+
+test('pide por adelantado el mes anterior, así abrirlo no muestra el esqueleto', async () => {
+  const { result } = montar()
+  await waitFor(() => expect(result.current.loading).toBe(false))
+
+  await act(async () => {
+    result.current.setMes(5)
+  })
+  await waitFor(() => expect(result.current.totalMes).toBe(5000))
+  // Abril se pidió sin que nadie lo abriera.
+  await waitFor(() => expect(pedidosDe(4)).toBe(1))
+
+  await act(async () => {
+    result.current.setMes(4)
+  })
+
+  // Ya estaba: se muestra al toque, sin esqueleto y sin otro pedido.
+  expect(result.current.loading).toBe(false)
+  expect(result.current.totalMes).toBe(4000)
+  expect(pedidosDe(4)).toBe(1)
+})
+
+test('enero no adelanta diciembre, porque la app todavía no cruza de año', async () => {
+  const { result } = montar()
+  await waitFor(() => expect(result.current.loading).toBe(false))
+
+  await act(async () => {
+    result.current.setMes(1)
+  })
+  await waitFor(() => expect(result.current.totalMes).toBe(1000))
+
+  const anio = new Date().getFullYear()
+  expect(fetchMock).not.toHaveBeenCalledWith(12, anio - 1)
 })
 
 test('agrupa por categoría, de mayor a menor', async () => {
