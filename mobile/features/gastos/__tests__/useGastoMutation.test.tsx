@@ -148,3 +148,35 @@ test('no llama a la API sin monto ni item', async () => {
   expect(crearGastoMock).not.toHaveBeenCalled()
   expect(result.current.estado).toBe('idle')
 })
+
+test('la categoría se infiere de la descripción mientras se escribe', async () => {
+  const { result } = montar()
+  expect(result.current.categoriaInferida).toBe('Sin categoría')
+
+  await act(async () => {
+    result.current.handleChange('item', 'jumbo')
+  })
+  expect(result.current.categoriaInferida).toBe('Mercado')
+
+  await act(async () => {
+    result.current.handleChange('item', 'uber')
+  })
+  expect(result.current.categoriaInferida).toBe('Transporte')
+})
+
+test('la categoría confirmada es la que viaja a la API, aunque la inferida sea otra', async () => {
+  crearGastoMock.mockReturnValue(new Promise(() => {}))
+  const { result } = montar()
+
+  await act(async () => {
+    result.current.handleChange('monto', '5000')
+    result.current.handleChange('item', 'uber')
+    result.current.handleChange('categoria', 'Ocio')
+  })
+  act(() => {
+    result.current.guardarGasto()
+  })
+
+  await waitFor(() => expect(crearGastoMock).toHaveBeenCalled())
+  expect(crearGastoMock.mock.calls[0][0]).toBe('5000, uber, Ocio, , TC')
+})

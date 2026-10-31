@@ -5,6 +5,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Pressable, ScrollView, Text, View, Keyboard, Platform, DeviceEventEmitter } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { categoryEmoji, colors, withAlpha } from '@/constants/theme';
+import { CATEGORIAS_VISIBLES } from '@/lib/funciones';
 import { useFilter } from '../FilterContext';
 import { useGastos } from '../GastosContext';
 
@@ -70,7 +71,7 @@ export function GradientFooter(props: BottomTabBarProps) {
   const content = (
     <View className="flex-col gap-sm px-xl">
       {/* Categories Row (Emojis) */}
-      {isGastosActive && !isMesesViewActive && availableCategories.length > 0 && (
+      {CATEGORIAS_VISIBLES && isGastosActive && !isMesesViewActive && availableCategories.length > 0 && (
         <View className="mb-lg -mx-xl">
           <ScrollView
             horizontal

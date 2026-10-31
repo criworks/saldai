@@ -1,7 +1,7 @@
-import { anioDeIso, mesDeIso, METODO_DEFAULT, parsearGasto } from '@saldai/core'
+import { anioDeIso, categorizar, mesDeIso, METODO_DEFAULT, parsearGasto } from '@saldai/core'
 import type { Gasto, GastosDelMes } from '@saldai/core'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { CampoClave } from '@/constants/theme'
 import { llaves } from '@/lib/consultas'
 import { crearGasto } from './api'
@@ -159,6 +159,11 @@ export function useGastoMutation() {
 
   const listo = Boolean(valores.monto && valores.item)
 
+  // La categoría que el parser deduciría de la descripción si el usuario no
+  // elige ninguna. Es la misma regla que aplica la API con el campo vacío, así
+  // que lo que se muestra como sugerencia es lo que se guardaría.
+  const categoriaInferida = useMemo(() => categorizar(valores.item), [valores.item])
+
   // Las pantallas hablan de 'idle' | 'loading' | 'ok' | 'error', no de los
   // nombres de react-query.
   const estado = mutacion.isPending
@@ -178,6 +183,7 @@ export function useGastoMutation() {
     handleChange,
     guardarGasto,
     listo,
-    lastSaved
+    lastSaved,
+    categoriaInferida,
   }
 }

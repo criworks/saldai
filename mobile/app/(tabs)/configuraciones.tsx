@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth';
 import { supabase } from '@/services/supabase';
 import { colors } from '@/constants/theme';
+import { CATEGORIAS_VISIBLES } from '@/lib/funciones';
 
 export default function ConfigurationsScreen() {
   const { signOut, session } = useAuth();
@@ -146,10 +147,12 @@ export default function ConfigurationsScreen() {
           {/* Funcionamiento Section */}
           <View className="w-full flex-col">
             <SectionHeader title="Funcionamiento" />
-            <MenuItem 
-              title="Categorías" 
-              onPress={() => router.push('/categorias')} 
-            />
+            {CATEGORIAS_VISIBLES && (
+              <MenuItem
+                title="Categorías"
+                onPress={() => router.push('/categorias')}
+              />
+            )}
             <MenuItem
               title="Mes contable"
               onPress={() => router.push('/mes-contable')}
