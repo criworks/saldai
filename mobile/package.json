@@ -8,6 +8,7 @@
     "test": "jest",
     "tokens:css": "node scripts/generar-global-css.mjs",
     "tokens:css:check": "node scripts/generar-global-css.mjs --check",
+    "tailwind:content:check": "node scripts/verificar-content-tailwind.mjs",
     "build:dev:android": "npx eas-cli@latest build --profile development --platform android",
     "build:dev:ios": "npx eas-cli@latest build --profile development --platform ios",
     "build:preview:android": "npx eas-cli@latest build --profile preview --platform android",

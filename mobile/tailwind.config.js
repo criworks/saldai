@@ -35,9 +35,14 @@ const colors = Object.keys(tokens.semantic).reduce((acc, nombre) => {
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: "class",
+  // Tailwind solo genera las clases que encuentra escritas en estos archivos.
+  // Una carpeta que no esté acá no da error: sus clases simplemente no existen
+  // y el componente se ve sin estilos. Si aparece una carpeta nueva con
+  // `className`, va acá — y `npm run tailwind:content:check` lo verifica.
   content: [
     "./app/**/*.{js,jsx,ts,tsx}",
     "./components/**/*.{js,jsx,ts,tsx}",
+    "./features/**/*.{js,jsx,ts,tsx}",
     "./lib/**/*.{js,jsx,ts,tsx}",
   ],
   presets: [require("nativewind/preset")],
