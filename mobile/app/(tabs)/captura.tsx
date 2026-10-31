@@ -20,7 +20,7 @@ import { CategorySelector, PaymentMethodSelector, useGastoMutation } from '@/fea
 import { Notification } from '@/components/ui/Notification'
 import { Alert } from '@/components/ui/Alert'
 import { colors } from '@/constants/theme'
-import { CATEGORIAS_VISIBLES } from '@/lib/funciones'
+import { CATEGORIAS_VISIBLES, METODOS_VISIBLES } from '@/lib/funciones'
 
 export default function CapturaScreen() {
   const {
@@ -228,10 +228,12 @@ export default function CapturaScreen() {
                 onSelectCategory={(cat) => handleChange('categoria', cat)}
               />
             )}
-            <PaymentMethodSelector
-              method={metodo}
-              onSelectMethod={setMetodo}
-            />
+            {METODOS_VISIBLES && (
+              <PaymentMethodSelector
+                method={metodo}
+                onSelectMethod={setMetodo}
+              />
+            )}
           </View>
         </View>
       </View>

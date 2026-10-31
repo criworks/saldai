@@ -16,3 +16,11 @@
  * prenderlo los gastos de la v1 ya aparecen categorizados.
  */
 export const CATEGORIAS_VISIBLES = false
+
+/**
+ * El selector de método de pago (EF/TC) de la captura también queda fuera de
+ * la v1 (crim, 2026-10-31). Con `false` cada gasto se guarda con el método por
+ * defecto de `@saldai/core` (TC), que es lo que pasaba mientras el selector
+ * estuvo escondido.
+ */
+export const METODOS_VISIBLES = false
