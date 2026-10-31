@@ -1,17 +1,22 @@
-# Verificación de cada PR hacia development.
+# Verificación de cada PR hacia development y hacia main.
 #
 # Corre lo mismo que se corre en local (`npm test`, `npm run lint`,
 # `npm run typecheck`) para que un PR no pueda romper la rama sin que se vea.
 # Todo en un solo job: son pasos de segundos y comparten el `npm ci`, así que
 # separarlos solo haría instalar las dependencias tres veces.
+#
+# `main` está acá porque un release es un PR de development hacia main, y sin
+# este trigger ese PR no traía ningún check propio: heredaba el run verde del
+# tip de development, que es el mismo commit pero no es lo mismo que haberlo
+# verificado contra main. Pasó en el release #59.
 
 name: CI
 
 on:
   pull_request:
-    branches: [development]
+    branches: [development, main]
   push:
-    branches: [development]
+    branches: [development, main]
 
 # Un PR que recibe varios pushes seguidos cancela sus corridas anteriores.
 concurrency:
