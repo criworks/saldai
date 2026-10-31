@@ -21,7 +21,8 @@
     "lint": "npm run lint --prefix web",
     "typecheck": "npm run typecheck --prefix mobile",
     "tokens:css": "npm run tokens:css --prefix mobile",
-    "tokens:css:check": "npm run tokens:css:check --prefix mobile"
+    "tokens:css:check": "npm run tokens:css:check --prefix mobile",
+    "tailwind:content:check": "npm run tailwind:content:check --prefix mobile"
   },
   "devDependencies": {
     "@types/react": "~19.1.10",
