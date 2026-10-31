@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
 import { View, Text, Pressable, ScrollView, RefreshControl } from 'react-native';
@@ -6,9 +6,8 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useFocusEffect } from '@react-navigation/native';
 import { formatearMonto } from '@saldai/core';
 import { colors, MESES } from '@/constants/theme';
-import { useGastos } from '@/features/gastos';
+import { consultaDelMes, fetchGastosAnuales, useGastos } from '@/features/gastos';
 import { llaves } from '@/lib/consultas';
-import { fetchGastosAnuales } from '@/features/gastos';
 import { Alert } from '@/components/ui/Alert';
 
 export default function MesesScreen() {
@@ -36,6 +35,15 @@ export default function MesesScreen() {
       if (isStale) refetch();
     }, [isStale, refetch])
   );
+
+  const cliente = useQueryClient();
+
+  // El pedido del mes sale apenas se apoya el dedo, no cuando se suelta: esos
+  // cien y tantos milisegundos más la navegación suelen alcanzar para que el
+  // mes llegue sin esqueleto. Si ya está en caché y fresco, no va a la red.
+  const adelantarMes = (mesIndex: number) => {
+    cliente.prefetchQuery(consultaDelMes(mesIndex + 1, currentYear));
+  };
 
   const handleSelectMes = (mesIndex: number) => {
     setMes(mesIndex + 1); // 1-based month
@@ -92,6 +100,7 @@ export default function MesesScreen() {
                   
                   {/* Month 1 */}
                   <Pressable 
+                    onPressIn={() => adelantarMes(idx1)}
                     onPress={() => handleSelectMes(idx1)} 
                     className="flex-1 flex-col gap-sm items-start active:opacity-80"
                     disabled={loading}
@@ -115,6 +124,7 @@ export default function MesesScreen() {
 
                   {/* Month 2 */}
                   <Pressable 
+                    onPressIn={() => adelantarMes(idx2)}
                     onPress={() => handleSelectMes(idx2)} 
                     className="flex-1 flex-col gap-sm items-start active:opacity-80"
                     disabled={loading}

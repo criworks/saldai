@@ -1,8 +1,7 @@
-import { useQuery } from '@tanstack/react-query';
-import React, { createContext, useContext, useState, ReactNode, useMemo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import React, { createContext, useContext, useEffect, useState, ReactNode, useMemo } from 'react';
 import type { Gasto, GastosDelMes } from '@saldai/core';
-import { llaves } from '@/lib/consultas';
-import { fetchGastosPorMes } from './api';
+import { consultaDelMes } from './consultaDelMes';
 
 // El contrato de la API vive en @saldai/core, para que mobile y la API no se
 // desincronicen. Antes estaba declarado acá a mano y por eso `fecha` y
@@ -44,10 +43,18 @@ export function GastosProvider({ children }: { children: ReactNode }) {
   const [mes, setMes] = useState(new Date().getMonth() + 1);
   const [anio] = useState(new Date().getFullYear());
 
-  const consulta = useQuery({
-    queryKey: llaves.gastosDelMes(mes, anio),
-    queryFn: () => fetchGastosPorMes(mes, anio),
-  });
+  const cliente = useQueryClient();
+  const consulta = useQuery(consultaDelMes(mes, anio));
+
+  // Cuando el mes que se mira ya llegó, se pide por detrás el anterior, que es
+  // a donde se va casi siempre al revisar gastos: así abrirlo no muestra el
+  // esqueleto. Si ya está en caché y fresco, `prefetchQuery` no va a la red.
+  // Enero no adelanta diciembre porque la app todavía no cruza de año.
+  const mesListo = consulta.isSuccess;
+  useEffect(() => {
+    if (!mesListo || mes === 1) return;
+    cliente.prefetchQuery(consultaDelMes(mes - 1, anio));
+  }, [mesListo, mes, anio, cliente]);
 
   const datos = consulta.data ?? null;
 
