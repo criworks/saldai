@@ -20,6 +20,7 @@ import { CategorySelector, PaymentMethodSelector, useGastoMutation } from '@/fea
 import { Notification } from '@/components/ui/Notification'
 import { Alert } from '@/components/ui/Alert'
 import { colors } from '@/constants/theme'
+import { CATEGORIAS_VISIBLES } from '@/lib/funciones'
 
 export default function CapturaScreen() {
   const {
@@ -217,13 +218,16 @@ export default function CapturaScreen() {
           </View>
 
           {/* La categoría se va deduciendo de la descripción mientras se escribe:
-              aparece atenuada hasta que un tap la confirma. */}
+              aparece atenuada hasta que un tap la confirma. Apagado en la v1,
+              ver CATEGORIAS_VISIBLES. */}
           <View className={`w-full ${estado === 'loading' ? 'opacity-50' : ''}`} pointerEvents={estado === 'loading' ? 'none' : 'auto'}>
-            <CategorySelector
-              selectedCategory={valores.categoria}
-              inferredCategory={categoriaInferida}
-              onSelectCategory={(cat) => handleChange('categoria', cat)}
-            />
+            {CATEGORIAS_VISIBLES && (
+              <CategorySelector
+                selectedCategory={valores.categoria}
+                inferredCategory={categoriaInferida}
+                onSelectCategory={(cat) => handleChange('categoria', cat)}
+              />
+            )}
             <PaymentMethodSelector
               method={metodo}
               onSelectMethod={setMetodo}
