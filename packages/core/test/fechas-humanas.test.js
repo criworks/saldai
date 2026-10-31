@@ -1,7 +1,7 @@
 const test = require('node:test')
 const assert = require('node:assert/strict')
 
-const { parsearFecha, ZONA_HORARIA } = require('../src/dateParser')
+const { parsearFecha, hoyCivil, ZONA_DEFECTO } = require('../fechas-humanas')
 
 // Jueves 15 de octubre de 2026. Todos los casos relativos se miden desde aquí,
 // así los tests no cambian de resultado según el día en que se corran.
@@ -10,7 +10,20 @@ const HOY = new Date(Date.UTC(2026, 9, 15))
 const fechaDe = (input) => parsearFecha(input, HOY).fechaStr
 
 test('la zona horaria por defecto es la de Chile', () => {
-  assert.equal(ZONA_HORARIA, 'America/Santiago')
+  assert.equal(ZONA_DEFECTO, 'America/Santiago')
+})
+
+test('la zona se puede inyectar, que es para lo que la recibe', () => {
+  // Kiritimati va 14 horas adelante de UTC y Niue 11 atrás, así que nunca están
+  // en el mismo día civil. Sirve para ver que el argumento llega y se usa, sin
+  // depender de qué día es hoy.
+  const adelante = hoyCivil('Pacific/Kiritimati')
+  const atras = hoyCivil('Pacific/Niue')
+  assert.ok(adelante.getTime() > atras.getTime())
+})
+
+test('sin zona, el hoy es el de Chile', () => {
+  assert.deepEqual(hoyCivil(), hoyCivil(ZONA_DEFECTO))
 })
 
 test('sin input o con "hoy" devuelve el día de referencia', () => {

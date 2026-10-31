@@ -31,7 +31,7 @@ Método default: TC.
 
 Monorepo con npm workspaces (`api`, `web`, `mobile`, `packages/core`, `packages/ui`). Node 22.
 
-`packages/core` es el dominio compartido: categorías, métodos de pago, formato de montos y fechas. No depende de ningún framework ni toca la red, y lo consumen la API y mobile para que un gasto signifique lo mismo en las dos. `packages/ui` son los tokens de diseño, y le pone color y emoji a las categorías que define el core.
+`packages/core` es el dominio compartido: el parser, las categorías, los métodos de pago, el formato de montos y las fechas, más los tipos del contrato de la API en `index.d.ts`. No depende de ningún framework ni toca la red, y lo consumen la API y mobile para que un gasto signifique lo mismo en las dos. `packages/ui` son los tokens de diseño, y le pone color y emoji a las categorías que define el core.
 
 ```
 npm install        # instala todos los workspaces

@@ -3,10 +3,15 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "scripts": {
-    "start": "expo start",
+    "start": "expo start --dev-client",
     "typecheck": "tsc --noEmit",
+    "test": "jest",
+    "tokens:css": "node scripts/generar-global-css.mjs",
+    "tokens:css:check": "node scripts/generar-global-css.mjs --check",
+    "tailwind:content:check": "node scripts/verificar-content-tailwind.mjs",
     "build:dev:android": "npx eas-cli@latest build --profile development --platform android",
     "build:dev:ios": "npx eas-cli@latest build --profile development --platform ios",
+    "build:preview:android": "npx eas-cli@latest build --profile preview --platform android",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web"
@@ -24,6 +29,7 @@
     "@saldai/core": "*",
     "@saldai/ui": "*",
     "@supabase/supabase-js": "^2.39.0",
+    "@tanstack/react-query": "^5.105.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "expo": "~54.0.33",
@@ -55,9 +61,14 @@
   "private": true,
   "devDependencies": {
     "@react-native-reusables/cli": "^0.6.3",
+    "@testing-library/react-native": "^13.3.3",
+    "@types/jest": "^29.5.14",
     "@types/node": "^25.6.0",
     "@types/react": "~19.1.10",
     "babel-preset-expo": "^54.0.10",
+    "jest": "^29.7.0",
+    "jest-expo": "~54.0.0",
+    "react-test-renderer": "^19.1.0",
     "typescript": "~5.9.3"
   }
 }

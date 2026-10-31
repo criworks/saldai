@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
-import { GradientFooter } from '../../components/ui/GradientFooter';
-import { FilterProvider } from '../../contexts/FilterContext';
-import { GastosProvider } from '../../contexts/GastosContext';
+import { GradientFooter } from '@/features/gastos';
+import { FilterProvider } from '@/features/gastos';
+import { GastosProvider } from '@/features/gastos';
 
 export default function TabLayout() {
   return (

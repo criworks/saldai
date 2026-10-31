@@ -4,8 +4,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState, useRef } from 'react';
 import { Pressable, ScrollView, Text, View, Keyboard, Platform, DeviceEventEmitter } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useFilter } from '../../contexts/FilterContext';
-import { useGastos } from '../../hooks/useGastos';
+import { categoryEmoji, colors, withAlpha } from '@/constants/theme';
+import { useFilter } from '../FilterContext';
+import { useGastos } from '../GastosContext';
 
 export function GradientFooter(props: BottomTabBarProps) {
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
@@ -77,7 +78,7 @@ export function GradientFooter(props: BottomTabBarProps) {
             contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, gap: 12 }}
           >
             {availableCategories.map((category) => {
-              const emoji = require('../../../packages/ui/tokens').EMOJIS_CAT[category] || require('../../../packages/ui/tokens').EMOJIS_CAT["Sin categoría"];
+              const emoji = categoryEmoji(category);
               const isBgActive = selectedCategory === null || selectedCategory === category;
               const bgClass = isBgActive ? 'bg-secondary' : 'bg-transparent';
 
@@ -166,7 +167,9 @@ export function GradientFooter(props: BottomTabBarProps) {
     <View className="absolute bottom-0 left-0 right-0 pointer-events-box-none">
       {hasSubmenus ? (
         <LinearGradient
-          colors={['rgba(17,18,23,0)', 'rgba(17,18,23,0.95)', '#111217', '#111217']}
+          // El fondo de la app, de transparente a opaco, para que el footer
+          // se funda con la pantalla en vez de cortarla.
+          colors={[withAlpha(colors.bg, 0), withAlpha(colors.bg, 0.95), colors.bg, colors.bg]}
           locations={[0, 0.2, 0.7, 1]}
           className="justify-end w-full"
           style={{

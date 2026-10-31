@@ -60,7 +60,7 @@ export function OtpInput({ value, onChangeText, error }: OtpInputProps) {
   return (
     <View className="w-full relative justify-center">
       <Pressable 
-        className={`w-full h-[56px] px-xl flex-row justify-center items-center gap-lg rounded-[16px] bg-secondary border-2 ${borderClass}`}
+        className={`w-full h-[56px] px-xl flex-row justify-center items-center gap-lg rounded-lg bg-secondary border-2 ${borderClass}`}
         onPress={() => inputRef.current?.focus()}
       >
         {renderDots()}

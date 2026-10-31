@@ -6,13 +6,15 @@ import {
   useFonts,
 } from '@expo-google-fonts/inter'
 import { PortalHost } from "@rn-primitives/portal"
+import { QueryClientProvider } from '@tanstack/react-query'
 import { Stack, useRouter, useSegments } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
 import { StatusBar } from 'expo-status-bar'
 import { useEffect } from 'react'
 import { LogBox } from 'react-native'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
-import { AuthProvider, useAuth } from '../contexts/AuthContext'
+import { AuthProvider, useAuth } from '@/features/auth'
+import { clienteDeConsultas } from '@/lib/consultas'
 import '../global.css'
 import '../lib/icons'
 
@@ -78,12 +80,14 @@ export default function RootLayout() {
   }
 
   return (
-    <SafeAreaProvider>
-      <StatusBar style="light" />
-      <AuthProvider>
-        <InitialLayout />
-      </AuthProvider>
-      <PortalHost />
-    </SafeAreaProvider>
+    <QueryClientProvider client={clienteDeConsultas}>
+      <SafeAreaProvider>
+        <StatusBar style="light" />
+        <AuthProvider>
+          <InitialLayout />
+        </AuthProvider>
+        <PortalHost />
+      </SafeAreaProvider>
+    </QueryClientProvider>
   )
 }

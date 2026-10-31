@@ -1,46 +1,40 @@
+import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { View, Text, Pressable, ScrollView, RefreshControl } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { formatearMonto } from '@saldai/core';
-import { MESES } from '../../constants/theme';
-import { useGastos } from '../../hooks/useGastos';
-import { fetchGastosAnuales } from '../../services/api';
-import { Alert } from '../../components/ui/Alert';
+import { colors, MESES } from '@/constants/theme';
+import { useGastos } from '@/features/gastos';
+import { llaves } from '@/lib/consultas';
+import { fetchGastosAnuales } from '@/features/gastos';
+import { Alert } from '@/components/ui/Alert';
 
 export default function MesesScreen() {
   const router = useRouter();
-  const { mes, setMes } = useGastos();
-  const [totalesAnuales, setTotalesAnuales] = useState<number[]>(Array(12).fill(0));
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { mes, setMes, anio: currentYear } = useGastos();
   const insets = useSafeAreaInsets();
-  
-  const currentYear = new Date().getFullYear();
 
-  const loadData = useCallback(async (isRefresh = false) => {
-    isRefresh ? setRefreshing(true) : setLoading(true);
-    setError(null);
-    try {
-      const data = await fetchGastosAnuales(currentYear);
-      if (data.ok && data.totales) {
-        setTotalesAnuales(data.totales);
-      }
-    } catch (e) {
-      console.error(e);
-      setError(e instanceof Error ? e.message : 'Error al cargar los gastos anuales');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [currentYear]);
+  // Los totales del año salen de la caché: volver a esta pantalla los muestra
+  // al toque y los revalida detrás, y el alta de un gasto los invalida sola.
+  const consulta = useQuery({
+    queryKey: llaves.totalesAnuales(currentYear),
+    queryFn: () => fetchGastosAnuales(currentYear),
+  });
 
+  const { refetch, isStale } = consulta;
+  const totalesAnuales = consulta.data?.totales ?? Array(12).fill(0);
+  const loading = consulta.isPending;
+  const refreshing = consulta.isFetching && !consulta.isPending;
+  const error = consulta.error instanceof Error ? consulta.error.message : null;
+
+  // Al volver a la pantalla se revalida solo si quedó vieja; si no, lo que ya
+  // está en caché se muestra tal cual.
   useFocusEffect(
     useCallback(() => {
-      loadData();
-    }, [loadData])
+      if (isStale) refetch();
+    }, [isStale, refetch])
   );
 
   const handleSelectMes = (mesIndex: number) => {
@@ -71,8 +65,8 @@ export default function MesesScreen() {
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={() => loadData(true)}
-            tintColor="#262A35"
+            onRefresh={() => refetch()}
+            tintColor={colors.bgElevated}
           />
         }
         showsVerticalScrollIndicator={false}
@@ -87,7 +81,7 @@ export default function MesesScreen() {
           {error ? (
             <View className="w-full flex-col pt-xl pb-24 items-center">
                <Text className="text-destructive text-body font-medium text-center">No se pudo cargar el historial anual</Text>
-               <Pressable onPress={() => loadData(true)} className="mt-4 px-6 py-3 bg-secondary rounded-full active:opacity-80">
+               <Pressable onPress={() => refetch()} className="mt-4 px-6 py-3 bg-secondary rounded-full active:opacity-80">
                   <Text className="text-foreground font-medium">Reintentar</Text>
                </Pressable>
             </View>
