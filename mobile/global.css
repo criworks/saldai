@@ -1,78 +1,67 @@
+/* ARCHIVO GENERADO — no editar a mano.
+ *
+ * Se genera desde packages/ui/tokens.js con `npm run tokens:css`.
+ * Para cambiar un color, cambialo en los tokens y volvé a generar.
+ */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 230 15% 8%; /* #111217 */
-    --foreground: 0 0% 100%;
+    --background: 230 15% 7.8%; /* #111217 */
+    --foreground: 0 0% 100%; /* #ffffff */
+    --card: 224 16.5% 17.8%; /* #262A35 */
+    --card-foreground: 0 0% 100%; /* #ffffff */
+    --popover: 224 16.5% 17.8%; /* #262A35 */
+    --popover-foreground: 0 0% 100%; /* #ffffff */
+    --primary: 0 0% 100%; /* #ffffff */
+    --primary-foreground: 230 15% 7.8%; /* #111217 */
+    --secondary: 224 16.5% 17.8%; /* #262A35 */
+    --secondary-foreground: 0 0% 100%; /* #ffffff */
+    --muted: 224 16.5% 17.8%; /* #262A35 */
+    --muted-foreground: 225.5 13.1% 43.3%; /* #60677D */
+    --accent: 224 16.5% 17.8%; /* #262A35 */
+    --accent-foreground: 0 0% 100%; /* #ffffff */
+    --destructive: 0 62.8% 30.6%; /* #7F1D1D */
+    --destructive-foreground: 0 0% 100%; /* #ffffff */
+    --warning: 35.8 100% 45.7%; /* #E98B00 */
+    --warning-foreground: 0 0% 100%; /* #ffffff */
+    --warning-border: 35.6 100% 17.8%; /* #5B3600 */
+    --border: 224 16.5% 17.8%; /* #262A35 */
+    --border-active: 223.3 14.5% 24.3%; /* #353A47 */
+    --input: 224 16.5% 17.8%; /* #262A35 */
+    --ring: 225.5 13.1% 43.3%; /* #60677D */
 
-    --card: 224 16% 18%; /* #262A35 */
-    --card-foreground: 0 0% 100%;
-
-    --popover: 224 16% 18%;
-    --popover-foreground: 0 0% 100%;
-
-    --primary: 0 0% 100%;
-    --primary-foreground: 230 15% 8%;
-
-    --secondary: 224 16% 18%;
-    --secondary-foreground: 0 0% 100%;
-
-    --muted: 224 16% 18%;
-    --muted-foreground: 226 13% 43%; /* #60677D */
-
-    --accent: 224 16% 18%;
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 100%;
-
-    --warning: 36 100% 46%; /* #E98B00 */
-    --warning-foreground: 0 0% 100%;
-    --warning-border: 36 100% 18%; /* #5B3600 */
-
-    --border: 224 16% 18%;
-    --border-active: 223 14% 24%; /* #353A47 */
-    --input: 224 16% 18%;
-    --ring: 226 13% 43%;
-    
     --radius: 0.5rem;
   }
+
   .dark {
-    --background: 230 15% 8%;
-    --foreground: 0 0% 100%;
+    --background: 230 15% 7.8%; /* #111217 */
+    --foreground: 0 0% 100%; /* #ffffff */
+    --card: 224 16.5% 17.8%; /* #262A35 */
+    --card-foreground: 0 0% 100%; /* #ffffff */
+    --popover: 224 16.5% 17.8%; /* #262A35 */
+    --popover-foreground: 0 0% 100%; /* #ffffff */
+    --primary: 0 0% 100%; /* #ffffff */
+    --primary-foreground: 230 15% 7.8%; /* #111217 */
+    --secondary: 224 16.5% 17.8%; /* #262A35 */
+    --secondary-foreground: 0 0% 100%; /* #ffffff */
+    --muted: 224 16.5% 17.8%; /* #262A35 */
+    --muted-foreground: 225.5 13.1% 43.3%; /* #60677D */
+    --accent: 224 16.5% 17.8%; /* #262A35 */
+    --accent-foreground: 0 0% 100%; /* #ffffff */
+    --destructive: 0 62.8% 30.6%; /* #7F1D1D */
+    --destructive-foreground: 0 0% 100%; /* #ffffff */
+    --warning: 35.8 100% 45.7%; /* #E98B00 */
+    --warning-foreground: 0 0% 100%; /* #ffffff */
+    --warning-border: 35.6 100% 17.8%; /* #5B3600 */
+    --border: 224 16.5% 17.8%; /* #262A35 */
+    --border-active: 223.3 14.5% 24.3%; /* #353A47 */
+    --input: 224 16.5% 17.8%; /* #262A35 */
+    --ring: 225.5 13.1% 43.3%; /* #60677D */
 
-    --card: 224 16% 18%;
-    --card-foreground: 0 0% 100%;
-
-    --popover: 224 16% 18%;
-    --popover-foreground: 0 0% 100%;
-
-    --primary: 0 0% 100%;
-    --primary-foreground: 230 15% 8%;
-
-    --secondary: 224 16% 18%;
-    --secondary-foreground: 0 0% 100%;
-
-    --muted: 224 16% 18%;
-    --muted-foreground: 226 13% 43%;
-
-    --accent: 224 16% 18%;
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 100%;
-
-    --warning: 36 100% 46%;
-    --warning-foreground: 0 0% 100%;
-    --warning-border: 36 100% 18%;
-
-    --border: 224 16% 18%;
-    --border-active: 223 14% 24%;
-    --input: 224 16% 18%;
-    --ring: 226 13% 43%;
-    
     --radius: 0.5rem;
   }
 }

@@ -8,9 +8,12 @@
     "./categorias": "./categorias.js",
     "./metodos": "./metodos.js",
     "./dinero": "./dinero.js",
-    "./fechas": "./fechas.js"
+    "./fechas": "./fechas.js",
+    "./fechas-humanas": "./fechas-humanas.js",
+    "./parser": "./parser.js"
   },
   "scripts": {
     "test": "node --test"
-  }
+  },
+  "types": "index.d.ts"
 }

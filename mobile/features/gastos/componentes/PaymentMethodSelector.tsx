@@ -1,11 +1,12 @@
-import { METODOS_VALIDOS } from '@saldai/core';
+import { METODOS_VALIDOS, type Metodo } from '@saldai/core';
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { Plus } from 'phosphor-react-native';
+import { colors } from '@/constants/theme';
 
 interface PaymentMethodSelectorProps {
-  method: string;
-  onSelectMethod: (method: string) => void;
+  method: Metodo;
+  onSelectMethod: (method: Metodo) => void;
 }
 
 export function PaymentMethodSelector({ method, onSelectMethod }: PaymentMethodSelectorProps) {
@@ -15,7 +16,7 @@ export function PaymentMethodSelector({ method, onSelectMethod }: PaymentMethodS
         className="bg-secondary rounded-full items-center justify-center w-xxl h-xxl mr-lg active:opacity-80"
         onPress={() => {}}
       >
-        <Plus size={16} color="#60677D" />
+        <Plus size={16} color={colors.textMuted} />
       </Pressable>
       
       {METODOS_VALIDOS.map((m, index) => (

@@ -9,7 +9,11 @@
  */
 
 const readline = require('readline')
-const { parsearGasto } = require('./src/parser')
+const { parsearGasto } = require('@saldai/core')
+
+// La zona no la lee el core: se la pasa quien lo usa. Sin APP_TIMEZONE el core
+// asume Chile.
+const OPCIONES = { zona: process.env.APP_TIMEZONE }
 
 const RESET = '\x1b[0m'
 const BOLD = '\x1b[1m'
@@ -100,7 +104,7 @@ function runTests() {
   let fail = 0
 
   casos.forEach(({ input, desc }) => {
-    const resultado = parsearGasto(input)
+    const resultado = parsearGasto(input, OPCIONES)
     const tieneAdvertencias = resultado.advertencias.length > 0
     const icono = !resultado.ok
       ? `${RED}✗${RESET}`
@@ -154,7 +158,7 @@ function modoInteractivo() {
       return
     }
 
-    printResultado(input, parsearGasto(input))
+    printResultado(input, parsearGasto(input, OPCIONES))
     rl.prompt()
   })
 
@@ -163,5 +167,5 @@ function modoInteractivo() {
 
 const args = process.argv.slice(2)
 if (args[0] === '--test') runTests()
-else if (args.length > 0) printResultado(args.join(' '), parsearGasto(args.join(' ')))
+else if (args.length > 0) printResultado(args.join(' '), parsearGasto(args.join(' '), OPCIONES))
 else modoInteractivo()

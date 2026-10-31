@@ -20,20 +20,44 @@ Aplicación móvil desarrollada en **React Native** con **Expo** para la gestió
 
 El proyecto sigue una arquitectura limpia de separación de responsabilidades:
 
+El código se agrupa **por feature**, no por tipo de archivo: el estado, los
+componentes y las llamadas de una misma parte del producto viven juntos.
+
 ```text
 mobile/
-├── app/                  # Rutas de Expo Router (Pantallas UI)
-│   ├── (tabs)/           # Navegación inferior (Captura e Index)
-│   └── _layout.tsx       # Layout principal y carga de fuentes globales
-├── components/           # Componentes visuales puros
-│   └── ui/               # Componentes base (ej. GradientFooter)
-├── constants/            # Tokens de diseño y variables globales (theme.ts)
-├── contexts/             # Estado compartido (AuthContext, GastosContext, FilterContext)
-├── hooks/                # Lógica de negocio y manejo de estado (useGastos, useGastoMutation)
-├── lib/                  # Íconos (phosphor), helpers de tema y `cn`
-├── services/             # Capa de red, Supabase y mocks (api.ts, supabase.ts, mockConfig.ts)
+├── app/                  # Rutas de Expo Router: solo pantallas y layouts
+│   ├── (auth)/           # Login
+│   ├── (tabs)/           # Navegación inferior
+│   └── _layout.tsx       # Layout raíz, fuentes y providers
+├── features/
+│   ├── gastos/           # El dominio de la app
+│   │   ├── index.ts      # Lo único que importan las pantallas
+│   │   ├── api.ts        # Las tres llamadas de gastos
+│   │   ├── GastosContext.tsx, FilterContext.tsx, useGastoMutation.ts
+│   │   ├── componentes/  # Componentes que solo tienen sentido con gastos
+│   │   └── __tests__/
+│   └── auth/             # Sesión: contexto y los pasos de verificación
+│       ├── index.ts
+│       ├── AuthContext.tsx
+│       └── componentes/
+├── components/ui/        # Primitivos sin dominio (Button, Input, Alert, Text…)
+├── constants/            # Reexport de tokens y constantes de pantalla (theme.ts)
+├── lib/                  # Cliente de react-query, íconos, helpers de tema y `cn`
+├── services/             # Infraestructura compartida: Supabase y mocks
 └── tailwind.config.js    # Configuración del motor de estilos y tokens
 ```
+
+Cada feature expone su superficie en un `index.ts`. Las pantallas importan
+`@/features/gastos`, nunca un archivo de adentro: así reacomodar la feature no
+toca las rutas. Dentro de una feature los vecinos se importan relativo (`./api`),
+porque importar el propio barril sería circular.
+
+### El alias `@/`
+
+`@/` apunta a la raíz de `mobile/`. Está declarado en tres lugares y los tres
+hacen falta: `tsconfig.json` (para el editor y `tsc`), Metro lo lee de ahí solo
+para el bundle, y `jest.config.js` lo repite en `moduleNameMapper` porque Jest no
+lee `tsconfig.json`.
 
 ---
 
@@ -55,8 +79,9 @@ Esta aplicación opera bajo un conjunto **muy estricto** de reglas de diseño. L
 
 ### Requisitos Previos
 *   [Node.js](https://nodejs.org/) 22 (la versión fijada del monorepo, ver `.node-version`)
-*   [Expo CLI](https://docs.expo.dev/get-started/installation/)
-*   App **Expo Go** instalada en tu dispositivo físico iOS/Android, o un emulador configurado.
+*   Un *development build* instalado en el dispositivo (ver más abajo). Expo Go
+    no sirve: queda atado a su versión de SDK y deja de abrir el proyecto.
+*   `mobile/.env` con las variables de `mobile/.env.example`.
 
 ### Instalación
 
@@ -65,9 +90,10 @@ Esta aplicación opera bajo un conjunto **muy estricto** de reglas de diseño. L
     cd mobile
     ```
 
-2.  Instala las dependencias:
+2.  Instala las dependencias **desde la raíz** del repo, que es donde viven los
+    workspaces:
     ```bash
-    npm install
+    cd .. && npm install
     ```
 
 ### Ejecución
@@ -75,13 +101,13 @@ Esta aplicación opera bajo un conjunto **muy estricto** de reglas de diseño. L
 Levanta el servidor de desarrollo de Expo:
 
 ```bash
-npx expo start
+npx expo start --dev-client
 ```
 
 Presiona las siguientes teclas en la terminal para abrir la app:
 *   `i` para abrir en el simulador de **iOS**
 *   `a` para abrir en el emulador de **Android**
-*   Escanea el código QR para abrirlo en tu dispositivo físico.
+*   Escanea el código QR para abrirlo en el development build de tu dispositivo físico.
 
 ### Probar en un dispositivo físico: development build
 
@@ -110,12 +136,39 @@ Hay que volver a buildear solo cuando cambian las dependencias nativas o la
 configuración de `app.json`; los cambios de JavaScript y de estilos entran por
 el dev server como antes.
 
+### Tener la app funcionando sin el computador: build de `preview`
+
+El development build **no trae el código adentro**: lo carga del `expo start`
+de tu máquina, así que con el computador apagado no abre. Para una app que
+funcione sola, el perfil `preview` empaqueta el JavaScript dentro del APK:
+
+```bash
+cd mobile
+npm run build:preview:android
+```
+
+Sigue siendo `distribution: internal`, o sea EAS devuelve un link de descarga y
+no pasa por la Play Store. Se instala una vez y queda. Para publicar de verdad
+está el perfil `production`, que genera un `.aab` en vez de un APK.
+
+**Antes del primer build de `preview` hay que crear las variables en EAS.** El
+bundle se arma en la nube de Expo, que no ve tu `.env`, así que
+`EXPO_PUBLIC_API_URL`, `EXPO_PUBLIC_SUPABASE_URL` y
+`EXPO_PUBLIC_SUPABASE_ANON_KEY` tienen que existir en el dashboard de Expo, en
+Environment variables, en el environment `preview`. Si faltan, el APK sale con
+las tres en `undefined` y la app abre pero no autentica ni lee gastos. Cada
+perfil de `eas.json` declara con `environment` cuál de esos sets usa.
+
+La rama en la que estás parado decide qué código queda empaquetado. Para un APK
+con lo que hay en producción, hay que buildear desde `main`. A qué API le pega
+la app no depende de la rama, depende de `EXPO_PUBLIC_API_URL`.
+
 ---
 
 ## 🤖 Contexto para Agentes de IA
 
 Si eres un agente de inteligencia artificial (Claude, Gemini, Cursor, etc.) operando en este repositorio:
 1.  **NO** modifiques la UI sin consultar los tokens estrictos en `CLAUDE.md`.
-2.  Mantén la lógica de negocio separada en `hooks/`.
+2.  La lógica de una parte del producto va en su `features/<nombre>/`, y se expone por el `index.ts` de esa feature.
 3.  Usa siempre los primitivos de React Native (NUNCA etiquetas HTML).
 4.  Cualquier cambio estructural mayor debe registrarse en el `REPORT.md`.

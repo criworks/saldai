@@ -1,7 +1,7 @@
 const test = require('node:test')
 const assert = require('node:assert/strict')
 
-const { parsearGasto } = require('../src/parser')
+const { parsearGasto } = require('../parser')
 
 /** Las fechas relativas se prueban en dateParser.test.js; aquí solo el formato. */
 const FORMATO_ISO = /^\d{4}-\d{2}-\d{2}$/

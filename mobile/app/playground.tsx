@@ -1,25 +1,25 @@
-import { METODO_DEFAULT } from '@saldai/core';
+import { METODO_DEFAULT, type Metodo } from '@saldai/core';
 import React, { useState } from 'react';
 import { View, ScrollView } from 'react-native';
-import { Text } from '../components/ui/text';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/Input';
-import { Notification } from '../components/ui/Notification';
-import { Alert } from '../components/ui/Alert';
-import { SectionHeader } from '../components/ui/SectionHeader';
-import { Separator } from '../components/ui/separator';
-import { ExpenseItem } from '../components/ui/ExpenseItem';
-import { CategorySelector } from '../components/ui/CategorySelector';
-import { PaymentMethodSelector } from '../components/ui/PaymentMethodSelector';
-import { OtpInput } from '../components/ui/OtpInput';
+import { Text } from '@/components/ui/text';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/Input';
+import { Notification } from '@/components/ui/Notification';
+import { Alert } from '@/components/ui/Alert';
+import { SectionHeader } from '@/components/ui/SectionHeader';
+import { Separator } from '@/components/ui/separator';
+import { ExpenseItem } from '@/features/gastos';
+import { CategorySelector } from '@/features/gastos';
+import { PaymentMethodSelector } from '@/features/gastos';
+import { OtpInput } from '@/features/auth';
 import { router } from 'expo-router';
-import { mockFeedConfig } from '../services/mockConfig';
+import { mockFeedConfig } from '@/services/mocks/config';
 
 export default function UIPlayground() {
   const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
   const [alert, setAlert] = useState<{ message: string, type: 'success' | 'warning' | 'error' | 'info' } | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedMethod, setSelectedMethod] = useState<string>(METODO_DEFAULT);
+  const [selectedMethod, setSelectedMethod] = useState<Metodo>(METODO_DEFAULT);
 
   if (!__DEV__) return null;
 

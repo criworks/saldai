@@ -37,28 +37,28 @@ export function ConfirmationModal({
             className="absolute inset-0" 
             onPress={onCancel}
           />
-          <View className="w-full px-[30px] pt-[30px] pb-10 flex-col items-center gap-[32px] rounded-t-[30px] bg-card">
+          <View className="w-full px-[30px] pt-[30px] pb-10 flex-col items-center gap-xxl rounded-t-[30px] bg-card">
             
-            <View className="flex-col items-center gap-[16px] w-full">
-              <View className="h-[48px] px-3 items-center justify-center rounded-full bg-muted">
-                <View className="w-[24px] h-[24px] overflow-hidden items-center justify-center">
+            <View className="flex-col items-center gap-lg w-full">
+              <View className="h-4xl px-3 items-center justify-center rounded-full bg-muted">
+                <View className="w-xl h-xl overflow-hidden items-center justify-center">
                   {icon}
                 </View>
               </View>
               
-              <Text className="text-card-foreground text-center font-['Inter'] text-[14px] font-normal leading-[19.6px]">
+              <Text className="text-card-foreground text-center font-['Inter'] text-body font-normal leading-[19.6px]">
                 {title}
               </Text>
             </View>
 
             <Pressable
               onPress={onConfirm}
-              className={`flex h-[56px] px-[24px] py-[16px] justify-center items-center rounded-2xl w-full active:opacity-80 ${
+              className={`flex h-[56px] px-xl py-lg justify-center items-center rounded-lg w-full active:opacity-80 ${
                 buttonVariant === 'destructive' ? 'bg-destructive' : 'bg-foreground'
               }`}
             >
               <Text 
-                className={`font-['Inter'] text-[14px] font-semibold leading-normal ${
+                className={`font-['Inter'] text-body font-semibold leading-normal ${
                   buttonVariant === 'destructive' ? 'text-destructive-foreground' : 'text-background'
                 }`}
               >

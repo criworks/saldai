@@ -5,7 +5,8 @@
     "skipLibCheck": true,
     "paths": {
       "@/*": ["./*"]
-    }
+    },
+    "types": ["jest", "expo/types"]
   },
   "include": ["**/*.ts", "**/*.tsx", "nativewind-env.d.ts"]
 }

@@ -3,14 +3,15 @@ import { SignOut, Trash } from 'phosphor-react-native';
 import React, { useState } from 'react';
 import { ActivityIndicator, Alert as RNAlert, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Alert } from '../../components/ui/Alert';
-import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
-import { MenuItem } from '../../components/ui/MenuItem';
-import { Notification } from '../../components/ui/Notification';
-import { SectionHeader } from '../../components/ui/SectionHeader';
-import { Button } from '../../components/ui/button';
-import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../services/supabase';
+import { Alert } from '@/components/ui/Alert';
+import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
+import { MenuItem } from '@/components/ui/MenuItem';
+import { Notification } from '@/components/ui/Notification';
+import { SectionHeader } from '@/components/ui/SectionHeader';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/features/auth';
+import { supabase } from '@/services/supabase';
+import { colors } from '@/constants/theme';
 
 export default function ConfigurationsScreen() {
   const { signOut, session } = useAuth();
@@ -90,7 +91,7 @@ export default function ConfigurationsScreen() {
       {/* Overlay de carga simple para evitar doble interacción */}
       {isProcessing && (
         <View className="absolute inset-0 z-50 flex items-center justify-center bg-background/50">
-           <ActivityIndicator size="large" color="#FFF" />
+           <ActivityIndicator size="large" color={colors.text} />
         </View>
       )}
 
@@ -98,7 +99,7 @@ export default function ConfigurationsScreen() {
       <ConfirmationModal
         visible={showLogoutModal}
         title="Confirma que vas a cerrar tu sesión"
-        icon={<SignOut size={24} color="#FFF" weight="regular" />}
+        icon={<SignOut size={24} color={colors.text} weight="regular" />}
         buttonText="Cerrar sesión"
         buttonVariant="default"
         onConfirm={handleLogoutConfirm}
@@ -109,11 +110,11 @@ export default function ConfigurationsScreen() {
       <ConfirmationModal
         visible={showDeleteModal}
         title={
-          <Text className="text-card-foreground text-center font-['Inter'] text-[14px] font-normal leading-[19.6px]">
+          <Text className="text-card-foreground text-center font-['Inter'] text-body font-normal leading-[19.6px]">
             Confirma que vas a eliminar tu cuenta.{"\n"}Se eliminará toda tu información.
           </Text>
         }
-        icon={<Trash size={24} color="#FF4343" weight="regular" />}
+        icon={<Trash size={24} color={colors.errorStrong} weight="regular" />}
         buttonText="Eliminar cuenta"
         buttonVariant="destructive"
         onConfirm={handleDeleteConfirm}

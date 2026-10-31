@@ -2,6 +2,7 @@ import { Check, Clock, Info, Warning, XCircle } from 'phosphor-react-native';
 import React from 'react';
 import { Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { colors, withAlpha } from '@/constants/theme';
 
 export type AlertType = 'success' | 'warning' | 'error' | 'info' | 'pending';
 
@@ -20,15 +21,15 @@ export function Alert({ visible, message, type = 'info', inline = false }: Alert
   const getIcon = () => {
     switch (type) {
       case 'success':
-        return <Check size={18} color="#ffffff" weight="bold" />;
+        return <Check size={18} color={colors.text} weight="bold" />;
       case 'warning':
-        return <Warning size={18} color="#ffffff" weight="fill" />;
+        return <Warning size={18} color={colors.text} weight="fill" />;
       case 'error':
-        return <XCircle size={18} color="#ffffff" weight="fill" />;
+        return <XCircle size={18} color={colors.text} weight="fill" />;
       case 'pending':
-        return <Clock size={18} color="#ffffff" weight="fill" />;
+        return <Clock size={18} color={colors.text} weight="fill" />;
       default:
-        return <Info size={18} color="#ffffff" weight="fill" />;
+        return <Info size={18} color={colors.text} weight="fill" />;
     }
   };
 
@@ -47,13 +48,13 @@ export function Alert({ visible, message, type = 'info', inline = false }: Alert
       pointerEvents="none"
     >
       <View
-        className="w-full max-w-[364px] p-[24px] flex-col justify-center items-start gap-[16px] rounded-[16px] border-2 border-[#353A47]"
-        style={{ backgroundColor: 'rgba(38, 42, 53, 0.40)' }}
+        className="w-full max-w-[364px] p-xl flex-col justify-center items-start gap-lg rounded-lg border-2 border-border-active"
+        style={{ backgroundColor: withAlpha(colors.bgElevated, 0.4) }}
       >
-        <View className="flex-row justify-start items-start rounded-[16px]">
+        <View className="flex-row justify-start items-start rounded-lg">
           {getIcon()}
         </View>
-        <Text className="text-white font-['Inter'] text-[12px] font-normal leading-[normal]">
+        <Text className="text-white font-['Inter'] text-detail font-normal leading-[normal]">
           {message}
         </Text>
       </View>
