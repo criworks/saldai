@@ -16,9 +16,7 @@ import { useFocusEffect } from 'expo-router'
 import { Calendar, CaretDown } from 'phosphor-react-native'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { useGastoMutation } from '@/features/gastos'
-import { CategorySelector } from '@/features/gastos'
-import { PaymentMethodSelector } from '@/features/gastos'
+import { CategorySelector, PaymentMethodSelector, useGastoMutation } from '@/features/gastos'
 import { Notification } from '@/components/ui/Notification'
 import { Alert } from '@/components/ui/Alert'
 import { colors } from '@/constants/theme'
@@ -33,7 +31,8 @@ export default function CapturaScreen() {
     handleChange,
     guardarGasto,
     listo,
-    lastSaved
+    lastSaved,
+    categoriaInferida,
   } = useGastoMutation()
 
   const montoRef = useRef<TextInput>(null)
@@ -216,6 +215,20 @@ export default function CapturaScreen() {
               <CaretDown size={16} className="text-muted-foreground" />
             </Pressable>
           </View>
+
+          {/* La categoría se va deduciendo de la descripción mientras se escribe:
+              aparece atenuada hasta que un tap la confirma. */}
+          <View className={`w-full ${estado === 'loading' ? 'opacity-50' : ''}`} pointerEvents={estado === 'loading' ? 'none' : 'auto'}>
+            <CategorySelector
+              selectedCategory={valores.categoria}
+              inferredCategory={categoriaInferida}
+              onSelectCategory={(cat) => handleChange('categoria', cat)}
+            />
+            <PaymentMethodSelector
+              method={metodo}
+              onSelectMethod={setMetodo}
+            />
+          </View>
         </View>
       </View>
 
@@ -227,18 +240,6 @@ export default function CapturaScreen() {
           onChange={onDateChange}
         />
       )}
-      
-      {/* Elementos Ocultos */}
-      <View className="hidden">
-        <CategorySelector 
-          selectedCategory={valores.categoria}
-          onSelectCategory={(cat) => handleChange('categoria', cat)}
-        />
-        <PaymentMethodSelector 
-          method={metodo}
-          onSelectMethod={setMetodo}
-        />
-      </View>
     </View>
   )
 }
