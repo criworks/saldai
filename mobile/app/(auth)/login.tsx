@@ -209,6 +209,7 @@ export default function LoginScreen() {
               {isVerifying && (
                 <OtpVerification
                   message="Ingresa el código de 6 dígitos que enviamos a tu email para iniciar sesión."
+                  alertType="mailbox"
                   otp={token}
                   onOtpChange={handleOtpChange}
                   error={otpError}
