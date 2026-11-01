@@ -74,6 +74,66 @@ PR #72 · noviembre 2026
   los globs de Tailwind — una configuración que enumera nombres y deja de
   encontrarlos cuando el otro lado se mueve.
 
+## El teclado tapaba el formulario porque edge-to-edge desactiva el truco de Android
+
+PR #65 · noviembre 2026
+
+- **Síntoma**: en la pantalla de captura el teclado tapaba el formulario, y el
+  menú inferior desaparecía de golpe en vez de salir con la animación.
+- **Causa**: tres cosas apiladas, y arreglar una sola deja el bug a medias.
+  Primero, `edgeToEdgeEnabled` (obligatorio en SDK 54 sobre Android 16, sin
+  opt-out) hace que la ventana **ya no se achique** al abrirse el teclado: se
+  extiende por detrás y la app tiene que consumir el inset del IME por su
+  cuenta, así que `adjustResize` dejó de hacer nada. Segundo, React Native solo
+  emite `keyboardWillShow/Hide` en iOS: en Android llega `keyboardDidShow`,
+  cuando la animación **ya terminó**, así que cualquier layout movido desde
+  estado de React por ese evento es un salto y no una transición. Tercero, el
+  menú hacía `return null` con el teclado arriba, y un componente desmontado no
+  puede animar su salida — y al ser el `tabBar` del navegador, el salto se veía
+  en toda pantalla con un campo.
+- **Por qué no se notaba**: el código medía la altura del teclado y **la
+  descartaba en Android**, así que parecía estar manejado. Nada de lo que corre
+  en CI mira esto: el typecheck no evalúa layout, los tests no miden posiciones
+  y `expo export` compila igual. Solo se ve abriendo el teclado en un teléfono
+  de verdad; el teclado del emulador viene apagado por defecto.
+- **Arreglo**: `react-native-keyboard-controller`, que sigue el
+  `WindowInsetsAnimation` de Android frame a frame y expone un shared value de
+  Reanimated. El padding del formulario y el `translateY` del menú se animan
+  contra ese valor, no contra estado de React. Descartado antes:
+  `KeyboardAvoidingView` de RN (pensado para iOS, poco fiable en Android
+  edge-to-edge) y `useAnimatedKeyboard` de Reanimated, que además de estar
+  **deprecado en Reanimated 4** expande el root view y toma los insets, justo lo
+  que choca con edge-to-edge.
+- **Regla**: cuando una plataforma cambia de modelo de ventana, los trucos que
+  dependían del modelo viejo **no fallan, dejan de aplicarse**. Y una
+  transición de teclado en Android no se puede manejar desde estado de React:
+  el evento que lo dispara llega tarde por definición.
+
+## Un `.env` gitignoreado sobrevive a la mudanza que debería haberlo cambiado
+
+Noviembre 2026
+
+- **Síntoma**: la app mostraba "Error en la respuesta del servidor al obtener
+  gastos" al abrir la lista, con la API nueva funcionando y verificada.
+- **Causa**: `mobile/.env` seguía con la URL del servicio viejo de Render, que
+  estaba suspendido. Al estar gitignoreado, **ningún cambio del repo lo pudo
+  tocar**: era el único lugar que quedó apuntando al servicio apagado, y un
+  `grep` de la URL vieja sobre todo el árbol daba exactamente esa línea.
+- **Por qué no se notaba**: el mensaje que se veía era el **texto genérico de
+  fallback**, no un error de la API. Un servicio suspendido de Render contesta
+  su propia página HTML, así que `res.json()` falla y el helper que lee
+  `errores[]` cae al texto por defecto. El síntoma apunta al backend justo
+  cuando el backend no es el que contestó.
+- **Arreglo**: la URL se corrigió a mano en la máquina donde vive el archivo, y
+  Metro se reinició limpiando caché, porque las `EXPO_PUBLIC_*` quedan horneadas
+  en el bundle y guardar el archivo no alcanza (de ahí el script
+  `npm run start:clear`).
+- **Regla**: al cambiar un dominio o un entorno, inventariar primero los
+  archivos **que git no versiona** — son los que el cambio no puede alcanzar y
+  los últimos en los que se busca. Y si el mensaje de error que se ve es
+  exactamente el fallback genérico, lo que contestó no fue la API: el problema
+  es de red, de URL o de infraestructura, no del backend.
+
 ## Los globs de `content` de Tailwind fallan callados
 
 PR #60 · octubre 2026
