@@ -24,6 +24,7 @@ module.exports = ({ config }) => {
     // Esquemas distintos para que un enlace `saldai://` no abra un selector
     // entre las dos apps instaladas.
     scheme: esDev ? 'saldai-dev' : 'saldai',
+    icon: esDev ? './assets/icon-dev.png' : './assets/icon.png',
     ios: {
       ...config.ios,
       bundleIdentifier: identificador,
@@ -31,12 +32,16 @@ module.exports = ({ config }) => {
     android: {
       ...config.android,
       package: identificador,
+      // El icono adaptativo de Android son dos piezas: la imagen de adelante,
+      // que lleva la marca sola sobre transparencia, y un color de fondo
+      // plano. Por eso no puede ser el mismo archivo que el de iOS, y por eso
+      // el fondo es un color y no el degradado del diseño.
       adaptiveIcon: {
         ...config.android.adaptiveIcon,
-        // El icono adaptativo de Android son dos piezas, la imagen de adelante
-        // y un color de fondo. Cambiar solo el fondo distingue las dos apps en
-        // la grilla sin un asset nuevo.
-        backgroundColor: esDev ? '#262A35' : '#ffffff',
+        foregroundImage: esDev
+          ? './assets/adaptive-icon-dev.png'
+          : './assets/adaptive-icon.png',
+        backgroundColor: esDev ? '#ffffff' : '#111217',
       },
     },
   };

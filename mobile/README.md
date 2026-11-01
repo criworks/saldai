@@ -236,7 +236,8 @@ desarrollo. Lee el `app.json` de siempre y le cambia cuatro cosas cuando
 | `android.package` / `ios.bundleIdentifier` | `com.crirun.saldai.dev` | `com.crirun.saldai` |
 | `name` | Saldai (Dev) | Saldai |
 | `scheme` | `saldai-dev` | `saldai` |
-| Fondo del icono adaptativo | `#262A35` | `#ffffff` |
+| `icon` (iOS y general) | `icon-dev.png` | `icon.png` |
+| Icono adaptativo de Android | `adaptive-icon-dev.png` sobre `#ffffff` | `adaptive-icon.png` sobre `#111217` |
 
 `preview` y `production` comparten identidad a propósito: el APK de preview es
 la app de verdad, solo repartida a mano.
@@ -246,10 +247,16 @@ La variante la fija `APP_VARIANT`, que declara el perfil `development` de
 tiene que calcular el mismo package que el APK instalado. Sin la variable se
 asume producción: una variable que falta no debería renombrar la app.
 
-El icono se distingue solo por el color de fondo porque en Android el icono
-adaptativo son dos piezas, la imagen de adelante y un color. No hace falta
-ningún asset nuevo. En iOS no hay icono adaptativo, así que ahí las dos
-variantes comparten `icon.png` hasta que haya uno propio.
+Los dos logos vienen del Figma y se distinguen solos: el de desarrollo lleva
+la marca oscura sobre blanco y entre chevrones, el otro la marca clara sobre
+el fondo oscuro de la marca.
+
+Cada variante necesita dos archivos y no uno, porque Android no usa una imagen
+sino dos piezas: la de adelante, que lleva la marca sola sobre transparencia, y
+un color de fondo plano. De ahí que `adaptive-icon*.png` sea la marca recortada
+y centrada en la zona segura (Android solo muestra el centro 72/108 del lienzo),
+y que el fondo sea un color y no el degradado del diseño. `icon*.png` sí es el
+cuadrado completo, que es lo que quiere iOS.
 
 Un par de consecuencias de que sean dos apps distintas:
 
