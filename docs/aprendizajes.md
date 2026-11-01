@@ -49,6 +49,31 @@ https://claude.ai/artifact/6H1LTgBbkuVTwSTDFuUR5G
 
 ---
 
+## Un check obligatorio tiene que ser un job, no un paso
+
+PR #72 · noviembre 2026
+
+- **Síntoma**: todos los PR aparecían como "bloqueados" en GitHub aunque CI
+  estuviera verde, y había que mergear pasando por encima del aviso. Pasó en el
+  #70, el #71 y el #72.
+- **Causa**: el ruleset de `development` y `main` exige el check **por nombre**,
+  "Formato de los CHANGELOG", y en `ci.yml` eso era un *paso* dentro del job
+  "Tests, lint y tipos". Un paso no reporta un check con su nombre: solo el job
+  lo hace. El check quedaba exigido y nunca llegaba, así que la condición no se
+  podía cumplir nunca.
+- **Por qué no se notaba**: CI estaba genuinamente verde y el paso corría de
+  verdad, así que el aviso de GitHub parecía un trámite de revisión. Mirar los
+  checks no alcanzaba; había que mirar el `mergeable_state` del PR, que decía
+  `blocked`.
+- **Arreglo**: el check pasó a ser un job propio con el nombre exacto que pide
+  el ruleset. No instala dependencias, porque
+  `scripts/verificar-changelogs.mjs` solo usa módulos de Node.
+- **Regla**: un check que el ruleset exige tiene que existir como job con ese
+  nombre. Al agregar uno obligatorio, la comprobación no es que CI esté verde:
+  es que un PR vuelva a `mergeable_state: clean`. Es la misma clase de falla que
+  los globs de Tailwind — una configuración que enumera nombres y deja de
+  encontrarlos cuando el otro lado se mueve.
+
 ## Los globs de `content` de Tailwind fallan callados
 
 PR #60 · octubre 2026
