@@ -9,6 +9,7 @@ const conPx = (escala) =>
 const spacingPx = conPx(tokens.spacing);
 const fontSizePx = conPx(tokens.fontSize);
 const radiusPx = conPx(tokens.radius);
+const sizesPx = conPx(tokens.sizes);
 
 /**
  * Los colores son los nombres de la capa semántica de los tokens, resueltos vía
@@ -56,6 +57,8 @@ module.exports = {
         bold: ['Inter_700Bold', 'sans-serif'],
       },
       spacing: spacingPx,
+      // `h-control`: la altura compartida de campos y botones grandes.
+      height: sizesPx,
       // Nombres por uso, no por tamaño: la pantalla dice `text-body`, no 14px.
       fontSize: {
         'detail': fontSizePx.sm,       // 12px
