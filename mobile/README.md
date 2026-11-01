@@ -219,6 +219,59 @@ Dos limitaciones que conviene tener claras:
 O sea: el emulador sirve muy bien para layout, espaciados, navegación y estados
 de pantalla. Un fix de teclado o de safe areas se firma en un dispositivo real.
 
+### Las dos apps conviven en el teléfono
+
+El development build y el de `preview` son dos cosas distintas que uno quiere
+tener a la vez: el primero hace rápida la revisión, el segundo funciona con el
+computador apagado. Android identifica una app por su `package`, así que si los
+dos builds comparten package son la misma app para el sistema y una desinstala a
+la otra.
+
+Por eso `mobile/app.config.js` le da identidad propia a la variante de
+desarrollo. Lee el `app.json` de siempre y le cambia cuatro cosas cuando
+`APP_VARIANT=development`:
+
+| | `development` | `preview` y `production` |
+| --- | --- | --- |
+| `android.package` / `ios.bundleIdentifier` | `com.crirun.saldai.dev` | `com.crirun.saldai` |
+| `name` | Saldai (Dev) | Saldai |
+| `scheme` | `saldai-dev` | `saldai` |
+| `icon` (iOS y general) | `icon-dev.png` | `icon.png` |
+| Icono adaptativo de Android | `adaptive-icon-dev.png` sobre `#ffffff` | `adaptive-icon.png` sobre `#111217` |
+
+`preview` y `production` comparten identidad a propósito: el APK de preview es
+la app de verdad, solo repartida a mano.
+
+La variante la fija `APP_VARIANT`, que declara el perfil `development` de
+`eas.json` y que los scripts de `package.json` repiten, porque el dev server
+tiene que calcular el mismo package que el APK instalado. Sin la variable se
+asume producción: una variable que falta no debería renombrar la app.
+
+Los dos logos vienen del Figma y se distinguen solos: el de desarrollo lleva
+la marca oscura sobre blanco y entre chevrones, el otro la marca clara sobre
+el fondo oscuro de la marca.
+
+Cada variante necesita dos archivos y no uno, porque Android no usa una imagen
+sino dos piezas: la de adelante, que lleva la marca sola sobre transparencia, y
+un color de fondo plano. De ahí que `adaptive-icon*.png` sea la marca recortada
+y centrada en la zona segura (Android solo muestra el centro 72/108 del lienzo),
+y que el fondo sea un color y no el degradado del diseño. `icon*.png` sí es el
+cuadrado completo, que es lo que quiere iOS.
+
+Un par de consecuencias de que sean dos apps distintas:
+
+*   Cada una guarda su sesión por separado en `expo-secure-store`, así que hay
+    que autenticarse una vez en cada una.
+*   EAS genera un keystore propio para `com.crirun.saldai.dev`. El de
+    `com.crirun.saldai`, que es el que importa si la app llega a la Play Store,
+    no se toca.
+*   El `versionCode` remoto se cuenta por identificador, así que la variante de
+    desarrollo arranca su propia numeración.
+*   El package queda horneado en la carpeta nativa que genera `prebuild`. Los
+    scripts locales fijan siempre `APP_VARIANT=development`, así que no hay de
+    qué preocuparse; si alguna vez queda una carpeta `android/` generada con el
+    otro package, `npm run prebuild:clean` la regenera.
+
 ### Tener la app funcionando sin el computador: build de `preview`
 
 El development build **no trae el código adentro**: lo carga del `expo start`

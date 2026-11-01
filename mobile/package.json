@@ -3,10 +3,11 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "scripts": {
-    "start": "expo start --dev-client",
-    "start:clear": "expo start --dev-client --clear",
-    "run:android": "expo run:android",
-    "run:ios": "expo run:ios",
+    "start": "APP_VARIANT=development expo start --dev-client",
+    "start:clear": "APP_VARIANT=development expo start --dev-client --clear",
+    "run:android": "APP_VARIANT=development expo run:android",
+    "run:ios": "APP_VARIANT=development expo run:ios",
+    "prebuild:clean": "APP_VARIANT=development expo prebuild --clean --platform android",
     "typecheck": "tsc --noEmit",
     "test": "jest",
     "tokens:css": "node scripts/generar-global-css.mjs",
@@ -16,8 +17,8 @@
     "build:dev:ios": "npx eas-cli@latest build --profile development --platform ios",
     "build:dev:ios:sim": "npx eas-cli@latest build --profile development-simulator --platform ios",
     "build:preview:android": "npx eas-cli@latest build --profile preview --platform android",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "APP_VARIANT=development expo start --android",
+    "ios": "APP_VARIANT=development expo start --ios",
     "web": "expo start --web"
   },
   "dependencies": {
