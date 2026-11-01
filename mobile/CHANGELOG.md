@@ -1,5 +1,67 @@
 # CHANGELOG
 
+Todo lo que cambia en la **app de Saldai (mobile)** se documenta acá. Este
+archivo es el que alimenta las notas de versión de las stores, así que solo
+lleva cambios de mobile: lo transversal al monorepo va en el `CHANGELOG.md` de
+la raíz.
+
+El formato es [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) y las
+versiones siguen [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+Cada versión es `## [x.y.z] - AAAA-MM-DD` y debajo solo van secciones `### Added`,
+`### Changed`, `### Deprecated`, `### Removed`, `### Fixed` o `### Security`,
+una sola vez cada una. Lo verifica `npm run changelog:check`.
+
+**Solo se agrega**: una entrada ya escrita no se modifica, no se reordena y no
+se borra. Las entradas nuevas van arriba, en `[Unreleased]`.
+
+## [Unreleased]
+### Added
+- **Captura**: el campo de texto muestra una "x" para borrar todo lo escrito mientras se escribe.
+- **Captura**: la categoría se sugiere mientras se escribe, sin esperar a guardar.
+- **Build instalable de preview**: `npm run build:preview:android` y el perfil `preview` de EAS, para probar la app sin el development client.
+- **Development build con EAS**: `mobile/eas.json` con los perfiles `development`, `preview` y `production`.
+- **El APK de desarrollo y el de preview conviven en el teléfono**: cada uno con su propio package, así que ya no se sobreescriben.
+- **Los iconos de la app son los del diseño**: `icon.png`, `adaptive-icon.png` y `splash-icon.png` reemplazan el placeholder de Expo.
+- **`mobile/.env.example`** documenta de dónde sale cada variable de entorno y qué hace falta para un build de EAS.
+- **Atajos para revisar sin esperar un build**: el development client baja el JS del Metro local, así que todo cambio de JS, TS, estilos o tokens se ve al guardar.
+
+### Changed
+- **Los campos de texto son dos variantes de un solo `Input`** (`con-fondo` para auth, `sin-fondo` para la captura): el borde ya no se pone desde la pantalla, es siempre de 2px y solo cambia de color, así que el campo de email no se mueve un pixel al entrar y salir del foco. La altura compartida de campos y botones grandes pasa al token `sizes.control`.
+- **El aviso del código de 6 dígitos usa un buzón al crear la cuenta**, en vez del mismo icono que al ingresar.
+- **Las categorías quedan apagadas en la v1**: `CATEGORIAS_VISIBLES = false` en `mobile/lib/funciones.ts`. Por dentro siguen funcionando y la API sigue guardándolas.
+- **El selector de método de pago también queda apagado en la v1**: `METODOS_VISIBLES = false`.
+- **Caché y alta optimista con react-query**: cada pantalla tenía su propio `useState` + `fetch`; ahora comparten caché y un gasto nuevo aparece en la lista antes de que responda la API.
+- **Los colores y las medidas salen de los tokens, no de las pantallas**: `mobile/global.css` se genera desde `packages/ui/tokens.js` y no se edita a mano.
+- **La app se agrupa por feature y no por tipo de archivo**: `features/gastos/` y `features/auth/`.
+- **Los imports pasan al alias `@/`**: 79 imports relativos reemplazados.
+- **Los mocks viven en `services/mocks/`** y no dentro de `services/api.ts`.
+- **Identificadores alineados con la marca**: en `app.json`, `slug` y el package de Android pasan de `expense-tracker` a Saldai.
+
+### Fixed
+- **El teclado tapaba el form de captura**: ahora el form y el footer se mueven con la misma curva y en el mismo tramo de tiempo que la animación real del sistema, vía `react-native-keyboard-controller`. Tocar fuera baja el teclado y la tecla de acción pasa al siguiente campo. **Necesita un build nativo nuevo.**
+- **El título de la pantalla de login estaba en blanco**: usaba `text-foreground` en vez del `text-muted-foreground` que usan las otras pantallas con título del mismo tamaño.
+- **El menú principal y varios botones habían perdido sus estilos**: faltaban 21 reglas de Tailwind porque `features/` quedó fuera de los globs de `content`.
+- **El mensaje de la captura dejaba un temporizador vivo** después de guardar, con un `setState` pendiente sobre una pantalla ya desmontada.
+- **El modo mock mostraba categorías y montos que no existen**: ahora se arma desde el catálogo y el formateador de `@saldai/core`, así que se ve como producción.
+- **El selector de método no marcaba nada en el playground** por una diferencia de mayúsculas en el estado inicial.
+- **Los nombres de los meses estaban escritos a mano en más de un archivo** y podían desincronizarse; ahora salen de una sola lista.
+- **El build de desarrollo pedía instalar `expo-updates`**: los tres perfiles de `eas.json` declaraban un canal que no correspondía.
+- **Los errores de la API no se mostraban**: `fetchGastosPorMes` y `fetchGastosAnuales` leían `error` en singular y la API responde `errores`.
+- **El typecheck no cubría nada**: el cliente de Supabase se exportaba como `any` por el ternario del modo mock, así que los tipos de toda la app colgaban de ahí.
+- **Eliminar cuenta fallaba en silencio**: si la llamada a `delete_user` fallaba, la app lo registraba con `console.warn` y seguía como si hubiera funcionado.
+
+---
+
+## Histórico (formato previo)
+
+Todo lo que está debajo de esta línea se escribió antes de fijar el formato.
+Hay versiones fuera de orden, secciones repetidas dentro de una misma versión y
+un encabezado duplicado más abajo. **No se corrige ni se reordena**: es el
+registro tal como quedó. `npm run changelog:check` solo mira lo que está arriba
+de esta línea.
+
+
 ## [1.5.5] - 2026-04-11
 ### Added
 - **Componentización de Autenticación**: Nuevos componentes reutilizables `EmailVerificationInput` y `OtpVerification` (integrando a su vez a `OtpInput` y `Alert`) compartidos entre `login.tsx` y `cuenta.tsx`.
