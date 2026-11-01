@@ -12,6 +12,7 @@ import * as SplashScreen from 'expo-splash-screen'
 import { StatusBar } from 'expo-status-bar'
 import { useEffect } from 'react'
 import { LogBox } from 'react-native'
+import { KeyboardProvider } from 'react-native-keyboard-controller'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { AuthProvider, useAuth } from '@/features/auth'
 import { clienteDeConsultas } from '@/lib/consultas'
@@ -81,13 +82,20 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={clienteDeConsultas}>
-      <SafeAreaProvider>
-        <StatusBar style="light" />
-        <AuthProvider>
-          <InitialLayout />
-        </AuthProvider>
-        <PortalHost />
-      </SafeAreaProvider>
+      {/* El teclado lo maneja keyboard-controller y no el sistema: en
+          edge-to-edge Android ya no achica la ventana al abrirlo, así que la
+          app tiene que leer el inset del teclado por su cuenta. Las tres
+          banderas describen esta app: barras translúcidas y edge-to-edge
+          siempre encendido (ver android.edgeToEdgeEnabled en app.json). */}
+      <KeyboardProvider statusBarTranslucent navigationBarTranslucent preserveEdgeToEdge>
+        <SafeAreaProvider>
+          <StatusBar style="light" />
+          <AuthProvider>
+            <InitialLayout />
+          </AuthProvider>
+          <PortalHost />
+        </SafeAreaProvider>
+      </KeyboardProvider>
     </QueryClientProvider>
   )
 }
