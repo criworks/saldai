@@ -136,6 +136,36 @@ nativas.
 
 ---
 
+## Cuándo hace falta un build nuevo
+
+El development build se reinstala **solo si cambió algo que vive en el binario**.
+Todo lo demás (JS, TS, estilos, tokens, `packages/core`, assets ya
+referenciados) se ve al guardar, contra el Metro local.
+
+Hace falta un build nuevo cuando:
+
+- Se agrega, se saca o se sube de versión una dependencia con código nativo.
+  Las principales hoy: `react-native-keyboard-controller`,
+  `react-native-reanimated`, `react-native-screens`, `react-native-svg`,
+  `react-native-safe-area-context`, `expo-secure-store`, `expo-font`,
+  `expo-linear-gradient`, `@react-native-community/datetimepicker`.
+- Cambia en `app.json` o `app.config.js` algo que toca el binario: `plugins`,
+  `package` / `bundleIdentifier`, `scheme`, iconos y splash,
+  `edgeToEdgeEnabled`, `newArchEnabled`, permisos.
+- Sube el SDK de Expo o la versión de React Native.
+
+No hace falta cuando cambia `mobile/.env`: eso pide `npm run start:clear`,
+porque las `EXPO_PUBLIC_*` se hornean en el bundle y Metro las cachea.
+
+Para esos rebuilds, `npx expo run:android --device` en la máquina de crim
+compila en minutos porque Gradle cachea entre builds, mientras que cada build de
+EAS arranca de cero en una máquina efímera. El proyecto no versiona
+`mobile/android` ni `mobile/ios`: `run:android` corre `prebuild` y las genera la
+primera vez, y esas carpetas no se commitean. EAS queda para el primer dev
+client de un dispositivo y para los APK de `preview`.
+
+---
+
 ## Flags de producto
 
 `lib/funciones.ts` declara qué partes del producto se muestran. Son constantes y

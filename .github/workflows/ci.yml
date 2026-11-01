@@ -2,8 +2,14 @@
 #
 # Corre lo mismo que se corre en local (`npm test`, `npm run lint`,
 # `npm run typecheck`) para que un PR no pueda romper la rama sin que se vea.
-# Todo en un solo job: son pasos de segundos y comparten el `npm ci`, así que
-# separarlos solo haría instalar las dependencias tres veces.
+# Casi todo va en un solo job: son pasos de segundos y comparten el `npm ci`,
+# así que separarlos solo haría instalar las dependencias varias veces.
+#
+# El formato de los CHANGELOG es la excepción y tiene job propio, porque el
+# ruleset de la rama exige un check llamado "Formato de los CHANGELOG" y un
+# paso dentro de otro job no reporta con su nombre: el check quedaba exigido y
+# nunca llegaba, así que todo PR se veía como bloqueado. Además no necesita
+# dependencias, así que sale sin `npm ci`.
 #
 # `main` está acá porque un release es un PR de development hacia main, y sin
 # este trigger ese PR no traía ningún check propio: heredaba el run verde del
@@ -57,8 +63,18 @@ jobs:
       - name: Tailwind escanea todas las carpetas con clases
         run: npm run tailwind:content:check
 
-      # Los CHANGELOG se degradaron durante meses sin que nada lo marcara.
-      # Verifica solo las entradas nuevas: lo que está debajo del separador
-      # `## Histórico (formato previo)` no se toca ni se valida.
+  # Los CHANGELOG se degradaron durante meses sin que nada lo marcara.
+  # Verifica solo las entradas nuevas: lo que está debajo del separador
+  # `## Histórico (formato previo)` no se toca ni se valida.
+  changelogs:
+    name: Formato de los CHANGELOG
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
       - name: Formato de los CHANGELOG
         run: npm run changelog:check
