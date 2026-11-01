@@ -50,7 +50,14 @@ export default function MesesScreen() {
     router.navigate('/'); // go to index
   };
 
-  const currentMonthZeroBased = mes - 1; // context mes is 1-based
+  // El punto marca el mes del calendario, no el que se está mirando: es un
+  // "hoy estás acá" que no se mueve al navegar. El mes elegido se distingue
+  // porque su nombre va en blanco en vez de atenuado, el mismo contraste con
+  // que el resto de la app marca lo activo.
+  const hoy = new Date();
+  const mesRealZeroBased =
+    hoy.getFullYear() === currentYear ? hoy.getMonth() : null;
+  const mesSeleccionadoZeroBased = mes - 1; // el mes del contexto es 1-based
 
   // Convert array to grid of 2 columns
   const rowPairs: [number, number][] = [];
@@ -98,54 +105,18 @@ export default function MesesScreen() {
               {rowPairs.map(([idx1, idx2]) => (
                 <View key={idx1} className="flex-row w-full gap-lg items-start">
                   
-                  {/* Month 1 */}
-                  <Pressable 
-                    onPressIn={() => adelantarMes(idx1)}
-                    onPress={() => handleSelectMes(idx1)} 
-                    className="flex-1 flex-col gap-sm items-start active:opacity-80"
-                    disabled={loading}
-                  >
-                    <View className="flex-row items-center gap-sm">
-                      <Text className="text-menu text-muted-foreground">
-                        {MESES[idx1]}
-                      </Text>
-                      {currentMonthZeroBased === idx1 && (
-                        <View className="w-sm h-sm bg-foreground rounded-full" />
-                      )}
-                    </View>
-                    {loading ? (
-                      <View className="h-[22px] w-[80px] bg-secondary rounded-full" />
-                    ) : (
-                      <Text className="text-body text-foreground font-medium text-right">
-                        {formatearMonto(totalesAnuales[idx1] || 0)}
-                      </Text>
-                    )}
-                  </Pressable>
-
-                  {/* Month 2 */}
-                  <Pressable 
-                    onPressIn={() => adelantarMes(idx2)}
-                    onPress={() => handleSelectMes(idx2)} 
-                    className="flex-1 flex-col gap-sm items-start active:opacity-80"
-                    disabled={loading}
-                  >
-                    <View className="flex-row items-center gap-sm">
-                      <Text className="text-menu text-muted-foreground">
-                        {MESES[idx2]}
-                      </Text>
-                      {currentMonthZeroBased === idx2 && (
-                        <View className="w-sm h-sm bg-foreground rounded-full" />
-                      )}
-                    </View>
-                    {loading ? (
-                      <View className="h-[22px] w-[80px] bg-secondary rounded-full" />
-                    ) : (
-                      <Text className="text-body text-foreground font-medium text-right">
-                        {formatearMonto(totalesAnuales[idx2] || 0)}
-                      </Text>
-                    )}
-                  </Pressable>
-
+                  {[idx1, idx2].map((idx) => (
+                    <MesCelda
+                      key={idx}
+                      nombre={MESES[idx]}
+                      total={totalesAnuales[idx] || 0}
+                      esMesReal={mesRealZeroBased === idx}
+                      esSeleccionado={mesSeleccionadoZeroBased === idx}
+                      cargando={loading}
+                      onPressIn={() => adelantarMes(idx)}
+                      onPress={() => handleSelectMes(idx)}
+                    />
+                  ))}
                 </View>
               ))}
             </View>
@@ -154,4 +125,51 @@ export default function MesesScreen() {
       </ScrollView>
     </SafeAreaView>
   );
+}
+
+type MesCeldaProps = {
+  nombre: string
+  total: number
+  /** El mes del calendario: lleva el punto. */
+  esMesReal: boolean
+  /** El mes que se está mirando: el nombre va en blanco en vez de atenuado. */
+  esSeleccionado: boolean
+  cargando: boolean
+  onPressIn: () => void
+  onPress: () => void
+}
+
+function MesCelda({
+  nombre,
+  total,
+  esMesReal,
+  esSeleccionado,
+  cargando,
+  onPressIn,
+  onPress,
+}: MesCeldaProps) {
+  return (
+    <Pressable
+      onPressIn={onPressIn}
+      onPress={onPress}
+      className="flex-1 flex-col gap-sm items-start active:opacity-80"
+      disabled={cargando}
+    >
+      <View className="flex-row items-center gap-sm">
+        <Text
+          className={`text-menu ${esSeleccionado ? 'text-foreground' : 'text-muted-foreground'}`}
+        >
+          {nombre}
+        </Text>
+        {esMesReal && <View className="w-sm h-sm bg-foreground rounded-full" />}
+      </View>
+      {cargando ? (
+        <View className="h-[22px] w-[80px] bg-secondary rounded-full" />
+      ) : (
+        <Text className="text-body text-foreground font-medium text-right">
+          {formatearMonto(total)}
+        </Text>
+      )}
+    </Pressable>
+  )
 }
