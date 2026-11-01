@@ -1,8 +1,10 @@
 import { BellSimple, CardsThree, Nut, Plus, Check } from 'phosphor-react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useEffect, useState, useRef } from 'react';
-import { Pressable, ScrollView, Text, View, Keyboard, Platform, DeviceEventEmitter } from 'react-native';
+import React from 'react';
+import { LayoutChangeEvent, Pressable, ScrollView, Text, View, DeviceEventEmitter } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { categoryEmoji, colors, withAlpha } from '@/constants/theme';
 import { CATEGORIAS_VISIBLES } from '@/lib/funciones';
@@ -10,34 +12,24 @@ import { useFilter } from '../FilterContext';
 import { useGastos } from '../GastosContext';
 
 export function GradientFooter(props: BottomTabBarProps) {
-  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
-  const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-
-    const showSub = Keyboard.addListener(showEvent, () => {
-      if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
-      setKeyboardVisible(true);
-    });
-    const hideSub = Keyboard.addListener(hideEvent, () => {
-      hideTimeoutRef.current = setTimeout(() => {
-        setKeyboardVisible(false);
-      }, 50);
-    });
-
-    return () => {
-      if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
-      showSub.remove();
-      hideSub.remove();
-    };
-  }, []);
-
   const insets = useSafeAreaInsets();
   const safePaddingBottom = 24 + insets.bottom;
 
   const { mes, setMes } = useGastos();
+  const { selectedCategory, setSelectedCategory, availableCategories } = useFilter();
+
+  // El footer no se desmonta cuando sube el teclado: se va animado contra la
+  // misma curva del sistema que mueve el form en captura. Un `return null`
+  // no puede animar su salida, y ahí estaba el salto que se veía.
+  const { progress } = useReanimatedKeyboardAnimation();
+  const alto = useSharedValue(0);
+  const medirAlto = (e: LayoutChangeEvent) => {
+    alto.value = e.nativeEvent.layout.height;
+  };
+  const estiloSalida = useAnimatedStyle(() => ({
+    transform: [{ translateY: progress.value * alto.value }],
+    opacity: 1 - progress.value,
+  }));
   const currentCalendarMonth = new Date().getMonth() + 1;
 
   const routeName = props.state.routeNames[props.state.index];
@@ -48,12 +40,6 @@ export function GradientFooter(props: BottomTabBarProps) {
   const isConfiguracionesActive = routeName === 'configuraciones';
   const isCuentaActive = routeName === 'cuenta';
   const isEnCursoActive = routeName === 'index' && mes === currentCalendarMonth;
-
-  if (isKeyboardVisible) {
-    return null;
-  }
-
-  const { selectedCategory, setSelectedCategory, availableCategories } = useFilter();
 
   const handleCategoryPress = (category: string) => {
     if (selectedCategory === category) {
@@ -165,7 +151,11 @@ export function GradientFooter(props: BottomTabBarProps) {
   );
 
   return (
-    <View className="absolute bottom-0 left-0 right-0 pointer-events-box-none">
+    <Animated.View
+      onLayout={medirAlto}
+      style={estiloSalida}
+      className="absolute bottom-0 left-0 right-0 pointer-events-box-none"
+    >
       {hasSubmenus ? (
         <LinearGradient
           // El fondo de la app, de transparente a opaco, para que el footer
@@ -191,6 +181,6 @@ export function GradientFooter(props: BottomTabBarProps) {
           {content}
         </View>
       )}
-    </View>
+    </Animated.View>
   );
 }

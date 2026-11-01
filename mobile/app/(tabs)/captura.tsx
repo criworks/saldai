@@ -2,10 +2,7 @@ import { formatearNumero } from '@saldai/core'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import {
   ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
-  ScrollView,
   Text,
   TextInput,
   View,
@@ -15,6 +12,8 @@ import {
 import { useFocusEffect } from 'expo-router'
 import { Calendar, CaretDown } from 'phosphor-react-native'
 import DateTimePicker from '@react-native-community/datetimepicker'
+import Animated, { useAnimatedStyle } from 'react-native-reanimated'
+import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { CategorySelector, PaymentMethodSelector, useGastoMutation } from '@/features/gastos'
 import { Notification } from '@/components/ui/Notification'
@@ -38,12 +37,14 @@ export default function CapturaScreen() {
 
   const montoRef = useRef<TextInput>(null)
   const descripcionRef = useRef<TextInput>(null)
-  const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [date, setDate] = useState(new Date())
-  const [isKeyboardVisible, setKeyboardVisible] = useState(false)
-  const [keyboardHeight, setKeyboardHeight] = useState(0)
   const insets = useSafeAreaInsets()
+
+  // Altura del teclado como shared value, actualizada en el hilo de UI
+  // siguiendo la animación real del sistema cuadro a cuadro. Es lo que hace
+  // que el form acompañe al teclado en vez de saltar cuando ya terminó.
+  const { height: alturaTeclado } = useReanimatedKeyboardAnimation()
   
   // Custom Alert para manejar los mensajes de error devueltos por la mutation
   const [alertConfig, setAlertConfig] = useState<{ visible: boolean; message: string; type: 'error' | 'warning' | 'info' }>({ visible: false, message: '', type: 'error' })
@@ -75,29 +76,6 @@ export default function CapturaScreen() {
       subscription.remove()
     }
   }, [handleGuardar])
-
-  useEffect(() => {
-    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-
-    const showSub = Keyboard.addListener(showEvent, (e) => {
-      if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
-      setKeyboardHeight(e.endCoordinates.height);
-      setKeyboardVisible(true);
-    });
-    const hideSub = Keyboard.addListener(hideEvent, () => {
-      hideTimeoutRef.current = setTimeout(() => {
-        setKeyboardHeight(0);
-        setKeyboardVisible(false);
-      }, 50);
-    });
-
-    return () => {
-      if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
-      showSub.remove();
-      hideSub.remove();
-    };
-  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -143,15 +121,24 @@ export default function CapturaScreen() {
   // Formato con separadores de miles para Chile
   const formattedAmount = valores.monto ? formatearNumero(parseInt(valores.monto, 10)) : ''
 
-  const outerPaddingBottom = isKeyboardVisible ? 0 : 96 + insets.bottom;
-  const innerPaddingBottom = isKeyboardVisible 
-    ? (Platform.OS === 'ios' ? keyboardHeight + 24 : 24) 
-    : 24;
+  // El form está anclado abajo en los dos estados del diseño; lo único que
+  // cambia es qué ocupa el espacio debajo: el footer, o el teclado. Un solo
+  // valor cubre los dos, así que la transición entre ellos es continua y no
+  // hay booleano de "teclado visible" del que salgan saltos.
+  const espacioFooter = 96 + insets.bottom
+  const estiloEspacio = useAnimatedStyle(() => ({
+    // `height` llega negativa (el signo sirve para un translateY directo);
+    // acá hace falta la magnitud.
+    paddingBottom: Math.max(Math.abs(alturaTeclado.value), espacioFooter),
+  }))
 
   return (
-    <View 
+    <Pressable
+      // Tocar fuera de los campos baja el teclado. Los taps sobre un input o
+      // sobre el chip de fecha los atiende ese elemento y no llegan acá.
+      accessible={false}
+      onPress={() => Keyboard.dismiss()}
       className="flex-1 bg-background justify-end items-center"
-      style={{ paddingBottom: outerPaddingBottom }}
     >
       <Alert 
         visible={alertConfig.visible} 
@@ -165,10 +152,8 @@ export default function CapturaScreen() {
         type="success"
       />
 
-      <View 
-        className="w-full flex-col items-center px-xl pt-3xl"
-        style={{ paddingBottom: innerPaddingBottom }}
-      >
+      <Animated.View style={[{ width: '100%' }, estiloEspacio]}>
+        <View className="w-full flex-col items-center px-xl pt-3xl pb-lg">
         <View className="flex-col items-start gap-lg w-full">
           <View className="flex-row justify-end items-center w-full mb-sm">
             <Text className="text-muted-foreground text-display font-light mr-xs">$</Text>
@@ -192,8 +177,14 @@ export default function CapturaScreen() {
               onChangeText={(val) => handleChange('item', val)}
               placeholder="Descripción..."
               maxLength={40}
-              returnKeyType="done"
-              onSubmitEditing={() => Keyboard.dismiss()}
+              returnKeyType="next"
+              onSubmitEditing={() => {
+                // La tecla de acción del teclado pasa al siguiente campo, que
+                // es la fecha. Abrir el picker baja el teclado solo, así que
+                // el footer con el check vuelve justo cuando toca guardar.
+                Keyboard.dismiss()
+                setShowDatePicker(true)
+              }}
               editable={estado !== 'loading'}
               className={`flex-1 text-body text-right p-0 m-0 w-full placeholder:text-muted-foreground caret-foreground ${valores.item ? 'text-foreground' : 'text-muted-foreground'} ${estado === 'loading' ? 'opacity-50' : ''}`}
             />
@@ -236,7 +227,8 @@ export default function CapturaScreen() {
             )}
           </View>
         </View>
-      </View>
+        </View>
+      </Animated.View>
 
       {showDatePicker && (
         <DateTimePicker
@@ -246,6 +238,6 @@ export default function CapturaScreen() {
           onChange={onDateChange}
         />
       )}
-    </View>
+    </Pressable>
   )
 }
