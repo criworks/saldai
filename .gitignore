@@ -35,10 +35,11 @@ tmp/
 .qodo/
 
 # ─── Guías y configuración de agentes IA ─────────────────────────────────────
-# Se comparten por fuera del repo a propósito: son notas de trabajo, no
-# documentación del producto.
+# Los CLAUDE.md sí se versionan: describen la estructura del repo, el stack y
+# las convenciones, o sea lo que se verifica leyendo el código, y una sesión
+# que corre fuera de esta máquina también los necesita. Lo que queda afuera son
+# las notas de trabajo y la configuración local de cada uno.
 .claude/
-CLAUDE.md
 .gemini/
 GEMINI.md
 AGENTS.md
