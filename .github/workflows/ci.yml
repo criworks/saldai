@@ -56,3 +56,9 @@ jobs:
 
       - name: Tailwind escanea todas las carpetas con clases
         run: npm run tailwind:content:check
+
+      # Los CHANGELOG se degradaron durante meses sin que nada lo marcara.
+      # Verifica solo las entradas nuevas: lo que está debajo del separador
+      # `## Histórico (formato previo)` no se toca ni se valida.
+      - name: Formato de los CHANGELOG
+        run: npm run changelog:check
