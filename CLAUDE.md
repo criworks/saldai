@@ -202,11 +202,13 @@ la más nueva a la más vieja, y lo que no se liberó todavía va arriba de todo
 Lo verifica `npm run changelog:check` en CI
 (`scripts/verificar-changelogs.mjs`).
 
-**El pasado no se corrige.** `mobile/CHANGELOG.md` tiene, debajo del separador
-`## Histórico (formato previo)`, meses escritos antes de fijar esto: versiones
-fuera de orden, secciones repetidas, `\n` literales. Queda como está —
-arreglarlo sería modificar entradas y adivinar fechas, que es justo lo que la
-regla prohíbe. El check mira solo de ese separador para arriba.
+`mobile/CHANGELOG.md` se había escrito meses sin este formato: versiones fuera
+de orden, siete secciones repetidas dentro de una misma versión, `\n` literales
+y un segundo encabezado en medio del archivo. Se reordenó una vez, en el PR #71
+y por pedido explícito, usando las fechas que ya estaban escritas (coinciden con
+el historial de git, no se inventó ninguna) y sin reescribir el texto de ninguna
+entrada. **Esa fue la excepción, no el precedente**: de ahí en adelante vale la
+regla de siempre, una entrada ya escrita no se toca.
 
 ---
 

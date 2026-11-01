@@ -8,10 +8,9 @@
  * `# Changelog` en medio del archivo. Un archivo de texto que nadie valida se
  * degrada solo.
  *
- * Qué NO hace: tocar el pasado. La regla del repo es que una entrada ya escrita
- * no se modifica ni se borra, así que lo que está debajo del separador
- * `## Histórico (formato previo)` queda fuera de la verificación. El check mira
- * solo de ahí para arriba, que es donde van las entradas nuevas.
+ * Verifica el archivo entero. El desorden de abril de 2026 se reordenó una vez,
+ * por pedido explícito, así que no hay nada exento: de acá en adelante la regla
+ * vuelve a ser que una entrada ya escrita no se modifica ni se borra.
  */
 
 import { readFileSync, existsSync } from 'node:fs'
@@ -20,8 +19,6 @@ import path from 'node:path'
 const raiz = path.resolve(import.meta.dirname, '..')
 
 const ARCHIVOS = ['CHANGELOG.md', 'mobile/CHANGELOG.md', 'web/CHANGELOG.md']
-
-const SEPARADOR_HISTORICO = '## Histórico (formato previo)'
 
 // Las seis secciones de Keep a Changelog. No se aceptan otras: una sección
 // inventada es una entrada que nadie va a encontrar después.
@@ -48,11 +45,7 @@ for (const archivo of ARCHIVOS) {
     continue
   }
 
-  const todas = readFileSync(ruta, 'utf8').split('\n')
-
-  // Solo lo que está arriba del separador: el histórico no se verifica.
-  const corte = todas.findIndex((l) => l.trim() === SEPARADOR_HISTORICO)
-  const lineas = corte === -1 ? todas : todas.slice(0, corte)
+  const lineas = readFileSync(ruta, 'utf8').split('\n')
 
   const reportar = (i, mensaje) => problemas.push([archivo, i + 1, mensaje])
 
@@ -62,8 +55,12 @@ for (const archivo of ARCHIVOS) {
   let vioNoLiberado = false
 
   for (const [i, linea] of lineas.entries()) {
-    if (linea.includes('\\n')) {
-      reportar(i, 'tiene un `\\n` literal en vez de un salto de línea de verdad')
+    // Un `\\n` escrito como texto dentro de un encabezado es la corrupción que
+    // dejó el generador: una sección entera colapsada en una sola línea. En el
+    // cuerpo de una entrada puede ser legítimo (describir justamente esto), así
+    // que solo se mira en los encabezados.
+    if (linea.startsWith('#') && linea.includes('\\n')) {
+      reportar(i, 'el encabezado tiene un `\\n` literal: la sección quedó colapsada en una línea')
     }
 
     if (linea.startsWith('# ') && i > 0) {
@@ -156,6 +153,6 @@ for (const [archivo, linea, mensaje] of problemas) {
 console.error(
   '\nFormato: `## [x.y.z] - AAAA-MM-DD`, y debajo solo `### Added`, `### Changed`,\n' +
     '`### Deprecated`, `### Removed`, `### Fixed` o `### Security`, una vez cada una.\n' +
-    'Lo que está debajo de `## Histórico (formato previo)` no se verifica y no se corrige.',
+    'Una entrada ya escrita no se modifica ni se borra: la nueva se suma a su sección.',
 )
 process.exit(1)
