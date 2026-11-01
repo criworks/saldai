@@ -166,7 +166,7 @@ export default function LoginScreen() {
         >
           <View className="w-full max-w-[350px] flex-col items-start gap-xl">
             <View className="w-full flex-col items-start gap-sm">
-              <Text className="text-foreground font-['Inter'] text-title font-semibold leading-[normal]">
+              <Text className="text-muted-foreground font-['Inter'] text-title font-semibold leading-[normal]">
                 {isVerifying ? 'Verificar email' : 'Ingresar'}
               </Text>
             </View>
@@ -209,6 +209,7 @@ export default function LoginScreen() {
               {isVerifying && (
                 <OtpVerification
                   message="Ingresa el código de 6 dígitos que enviamos a tu email para iniciar sesión."
+                  alertType="mailbox"
                   otp={token}
                   onOtpChange={handleOtpChange}
                   error={otpError}
