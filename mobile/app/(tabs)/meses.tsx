@@ -12,7 +12,7 @@ import { Alert } from '@/components/ui/Alert';
 
 export default function MesesScreen() {
   const router = useRouter();
-  const { mes, setMes, anio: currentYear } = useGastos();
+  const { setMes, anio: currentYear } = useGastos();
   const insets = useSafeAreaInsets();
 
   // Los totales del año salen de la caché: volver a esta pantalla los muestra
@@ -50,14 +50,13 @@ export default function MesesScreen() {
     router.navigate('/'); // go to index
   };
 
-  // El punto marca el mes del calendario, no el que se está mirando: es un
-  // "hoy estás acá" que no se mueve al navegar. El mes elegido se distingue
-  // porque su nombre va en blanco en vez de atenuado, el mismo contraste con
-  // que el resto de la app marca lo activo.
+  // El punto marca el mes del calendario, un "hoy estás acá" que no se mueve
+  // al navegar. El mes que se está mirando no se marca acá: se entra a su
+  // lista y se vuelve con el nombre del mes o con el tab "En curso", así que
+  // esta pantalla no necesita recordar cuál se eligió.
   const hoy = new Date();
   const mesRealZeroBased =
     hoy.getFullYear() === currentYear ? hoy.getMonth() : null;
-  const mesSeleccionadoZeroBased = mes - 1; // el mes del contexto es 1-based
 
   // Convert array to grid of 2 columns
   const rowPairs: [number, number][] = [];
@@ -111,7 +110,6 @@ export default function MesesScreen() {
                       nombre={MESES[idx]}
                       total={totalesAnuales[idx] || 0}
                       esMesReal={mesRealZeroBased === idx}
-                      esSeleccionado={mesSeleccionadoZeroBased === idx}
                       cargando={loading}
                       onPressIn={() => adelantarMes(idx)}
                       onPress={() => handleSelectMes(idx)}
@@ -132,8 +130,6 @@ type MesCeldaProps = {
   total: number
   /** El mes del calendario: lleva el punto. */
   esMesReal: boolean
-  /** El mes que se está mirando: el nombre va en blanco en vez de atenuado. */
-  esSeleccionado: boolean
   cargando: boolean
   onPressIn: () => void
   onPress: () => void
@@ -143,7 +139,6 @@ function MesCelda({
   nombre,
   total,
   esMesReal,
-  esSeleccionado,
   cargando,
   onPressIn,
   onPress,
@@ -156,11 +151,7 @@ function MesCelda({
       disabled={cargando}
     >
       <View className="flex-row items-center gap-sm">
-        <Text
-          className={`text-menu ${esSeleccionado ? 'text-foreground' : 'text-muted-foreground'}`}
-        >
-          {nombre}
-        </Text>
+        <Text className="text-menu text-muted-foreground">{nombre}</Text>
         {esMesReal && <View className="w-sm h-sm bg-foreground rounded-full" />}
       </View>
       {cargando ? (
