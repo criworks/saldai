@@ -133,7 +133,6 @@ export default function UIPlayground() {
             <Input placeholder="Con fondo, vacío" />
             <Input placeholder="Con fondo, con valor" value="Valor ingresado" />
             <Input placeholder="Con fondo, resaltado" value="Editando" resaltado />
-            <Input placeholder="Con fondo, con error" value="Mal" error />
             <Input placeholder="Con fondo, atenuado" value="confirmado@email.com" atenuado />
             <Input placeholder="Con fondo, deshabilitado" editable={false} className="opacity-50" />
             {/* La variante de la captura: sin caja y sin icono. Va sobre una

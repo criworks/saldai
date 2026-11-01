@@ -19,7 +19,11 @@ export type VarianteInput = 'con-fondo' | 'sin-fondo';
 export interface EstadoCaja {
   /** El campo está en foco, o el que lo usa quiere mostrarlo como activo. */
   activo?: boolean;
-  /** Marca el borde en rojo. */
+  /**
+   * Marca el borde en rojo. Hoy el único error diseñado es el del código de 6
+   * dígitos incorrecto, así que lo usa `OtpInput` y nadie más: `Input` no
+   * expone un prop de error porque no hay ninguna pantalla que lo mostraría.
+   */
   error?: boolean;
 }
 
@@ -46,8 +50,6 @@ export const cajaConFondo = ({ activo, error }: EstadoCaja = {}) =>
 
 export interface InputProps extends TextInputProps {
   variante?: VarianteInput;
-  /** Borde rojo. Solo la variante con fondo tiene dónde mostrarlo. */
-  error?: boolean;
   /**
    * Muestra el borde activo aunque el campo no esté en foco. Lo usa el campo de
    * email, que queda resaltado mientras lo escrito no coincide con lo confirmado.
@@ -66,7 +68,6 @@ export interface InputProps extends TextInputProps {
 export const Input = forwardRef<TextInput, InputProps>(function Input(
   {
     variante = 'con-fondo',
-    error,
     resaltado,
     atenuado,
     iconoDerecha,
@@ -106,7 +107,7 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
       className={
         variante === 'sin-fondo'
           ? `p-0 m-0 ${base} ${className || ''}`
-          : `w-full ${cajaConFondo({ activo: enFoco || resaltado, error })} text-body font-normal ${iconoDerecha ? 'pr-4xl' : ''} ${base} ${className || ''}`
+          : `w-full ${cajaConFondo({ activo: enFoco || resaltado })} text-body font-normal ${iconoDerecha ? 'pr-4xl' : ''} ${base} ${className || ''}`
       }
     />
   );
