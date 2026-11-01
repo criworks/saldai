@@ -5,3 +5,9 @@ jest.mock('./features/gastos/api')
 // `services/supabase` crea el cliente al importarse y pide las variables de
 // entorno, que en los tests no existen.
 jest.mock('./services/supabase', () => ({ supabase: {} }))
+
+// `react-native-keyboard-controller` tiene código nativo: fuera del celular
+// hay que usar el mock que trae la propia librería.
+jest.mock('react-native-keyboard-controller', () =>
+  require('react-native-keyboard-controller/jest')
+)
