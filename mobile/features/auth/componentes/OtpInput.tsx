@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, Pressable, TextInput } from 'react-native';
+import { cajaConFondo } from '@/components/ui/Input';
 
 export interface OtpInputProps {
   value: string;
@@ -51,16 +52,13 @@ export function OtpInput({ value, onChangeText, error }: OtpInputProps) {
     return dots;
   };
 
-  const borderClass = error 
-    ? 'border-destructive' 
-    : isFocused 
-      ? 'border-muted-foreground' 
-      : 'border-transparent';
-
   return (
     <View className="w-full relative justify-center">
       <Pressable 
-        className={`w-full h-[56px] px-xl flex-row justify-center items-center gap-lg rounded-lg bg-secondary border-2 ${borderClass}`}
+        // La caja sale de `Input`: este campo comparte el contorno con el de
+        // email pero no es un TextInput, así que las clases se traen de ahí
+        // para que los dos no se separen cuando se ajuste uno.
+        className={`w-full flex-row justify-center items-center gap-lg ${cajaConFondo({ activo: isFocused, error })}`}
         onPress={() => inputRef.current?.focus()}
       >
         {renderDots()}

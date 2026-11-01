@@ -130,9 +130,16 @@ export default function UIPlayground() {
         <View className="mb-8">
           <SectionHeader title="Inputs & Form" />
           <View className="mt-4 gap-4">
-            <Input placeholder="Input default" />
-            <Input placeholder="Input con valor" defaultValue="Valor ingresado" />
-            <Input placeholder="Input deshabilitado" editable={false} className="opacity-50" />
+            <Input placeholder="Con fondo, vacío" />
+            <Input placeholder="Con fondo, con valor" value="Valor ingresado" />
+            <Input placeholder="Con fondo, resaltado" value="Editando" resaltado />
+            <Input placeholder="Con fondo, atenuado" value="confirmado@email.com" atenuado />
+            <Input placeholder="Con fondo, deshabilitado" editable={false} className="opacity-50" />
+            {/* La variante de la captura: sin caja y sin icono. Va sobre una
+                fila propia porque no tiene contorno que la delimite. */}
+            <View className="flex-row justify-end items-center w-full">
+              <Input variante="sin-fondo" placeholder="Sin fondo" className="text-body text-right" />
+            </View>
           </View>
         </View>
 

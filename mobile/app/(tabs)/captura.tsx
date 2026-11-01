@@ -16,6 +16,7 @@ import Animated, { useAnimatedStyle } from 'react-native-reanimated'
 import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { CategorySelector, PaymentMethodSelector, useGastoMutation } from '@/features/gastos'
+import { Input } from '@/components/ui/Input'
 import { Notification } from '@/components/ui/Notification'
 import { Alert } from '@/components/ui/Alert'
 import { colors } from '@/constants/theme'
@@ -157,7 +158,8 @@ export default function CapturaScreen() {
         <View className="flex-col items-start gap-lg w-full">
           <View className="flex-row justify-end items-center w-full mb-sm">
             <Text className="text-muted-foreground text-display font-light mr-xs">$</Text>
-            <TextInput
+            <Input
+              variante="sin-fondo"
               ref={montoRef}
               value={formattedAmount}
               onChangeText={handleAmountChange}
@@ -166,12 +168,13 @@ export default function CapturaScreen() {
               returnKeyType="next"
               onSubmitEditing={() => descripcionRef.current?.focus()}
               editable={estado !== 'loading'}
-              className={`text-display font-light p-0 m-0 min-w-[30px] text-right placeholder:text-muted-foreground caret-foreground ${valores.monto ? 'text-foreground' : 'text-muted-foreground'} ${estado === 'loading' ? 'opacity-50' : ''}`}
+              className={`text-display font-light min-w-[30px] text-right ${estado === 'loading' ? 'opacity-50' : ''}`}
             />
           </View>
 
           <View className="flex-row py-lg justify-between items-center w-full">
-            <TextInput
+            <Input
+              variante="sin-fondo"
               ref={descripcionRef}
               value={valores.item}
               onChangeText={(val) => handleChange('item', val)}
@@ -186,7 +189,7 @@ export default function CapturaScreen() {
                 setShowDatePicker(true)
               }}
               editable={estado !== 'loading'}
-              className={`flex-1 text-body text-right p-0 m-0 w-full placeholder:text-muted-foreground caret-foreground ${valores.item ? 'text-foreground' : 'text-muted-foreground'} ${estado === 'loading' ? 'opacity-50' : ''}`}
+              className={`flex-1 text-body text-right w-full ${estado === 'loading' ? 'opacity-50' : ''}`}
             />
           </View>
 

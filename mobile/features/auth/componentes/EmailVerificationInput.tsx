@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { TextInput, View } from 'react-native';
+import { TextInput } from 'react-native';
 import { Input } from '@/components/ui/Input';
 import { BotonLimpiar } from '@/components/ui/BotonLimpiar';
 import { Clock, PencilSimple } from 'phosphor-react-native';
@@ -51,31 +51,30 @@ export function EmailVerificationInput({ value, onChangeText, isVerifying, isEdi
     inputRef.current?.focus();
   };
 
+  const iconos = {
+    reloj: <Clock size={18} color={colors.text} weight="fill" />,
+    lapiz: <PencilSimple size={18} className="text-muted-foreground" weight="fill" />,
+    limpiar: <BotonLimpiar onPress={limpiar} accessibilityLabel="Borrar el email" />,
+  };
+
   return (
-    <View className="w-full relative justify-center">
-      <Input
-        ref={inputRef}
-        value={value}
-        onChangeText={onChangeText}
-        onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoCorrect={false}
-        placeholder="tu@email.com"
-        editable={true}
-        className={`w-full pr-4xl ${(isEditing || isFocused) ? 'border-2 border-muted-foreground' : 'border border-transparent'} ${(isVerifying && !isFocused) ? 'text-muted-foreground' : ''}`}
-      />
-      {/*
-        `pointer-events-none` solo mientras el icono es decorativo: si queda
-        puesto, la capa se come el tap sobre la "x", y si se saca siempre, se
-        come los taps sobre el borde derecho del input.
-      */}
-      <View className={`absolute right-lg ${icono === 'limpiar' ? '' : 'pointer-events-none'}`}>
-        {icono === 'reloj' && <Clock size={18} color={colors.text} weight="fill" />}
-        {icono === 'lapiz' && <PencilSimple size={18} className="text-muted-foreground" weight="fill" />}
-        {icono === 'limpiar' && <BotonLimpiar onPress={limpiar} accessibilityLabel="Borrar el email" />}
-      </View>
-    </View>
+    <Input
+      ref={inputRef}
+      value={value}
+      onChangeText={onChangeText}
+      onFocus={() => setIsFocused(true)}
+      onBlur={() => setIsFocused(false)}
+      keyboardType="email-address"
+      autoCapitalize="none"
+      autoCorrect={false}
+      placeholder="tu@email.com"
+      editable={true}
+      // El borde queda activo mientras se edita, aunque el foco se haya ido:
+      // es lo que indica que lo escrito todavía no se confirmó.
+      resaltado={isEditing}
+      // Una vez enviado el código el email confirmado se muestra apagado.
+      atenuado={isVerifying && !isFocused}
+      iconoDerecha={iconos[icono]}
+    />
   );
 }
