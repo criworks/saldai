@@ -3,7 +3,10 @@ import React, { useState } from 'react';
 import { View, ScrollView } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
+import { BotonNuevo } from '@/components/ui/BotonNuevo';
+import { Buscador } from '@/components/ui/Buscador';
 import { Input } from '@/components/ui/Input';
+import { Switch } from '@/components/ui/Switch';
 import { Notification } from '@/components/ui/Notification';
 import { Alert } from '@/components/ui/Alert';
 import { SectionHeader } from '@/components/ui/SectionHeader';
@@ -12,6 +15,7 @@ import { ExpenseItem } from '@/features/gastos';
 import { CategorySelector } from '@/features/gastos';
 import { PaymentMethodSelector } from '@/features/gastos';
 import { OtpInput } from '@/features/auth';
+import { CampoDeCategoria } from '@/features/gastos';
 import { router } from 'expo-router';
 import { mockFeedConfig } from '@/services/mocks/config';
 
@@ -140,6 +144,68 @@ export default function UIPlayground() {
             <View className="flex-row justify-end items-center w-full">
               <Input variante="sin-fondo" placeholder="Sin fondo" className="text-body text-right" />
             </View>
+            {/* La variante chip: mide lo que escribe, para ocupar el lugar de
+                la burbuja que va a ser. */}
+            <Input variante="chip" placeholder="Chip, vacío" />
+            <Input variante="chip" value="Mascotas" />
+          </View>
+        </View>
+
+        <Separator className="mb-8" />
+
+        {/* SWITCH */}
+        <View className="mb-8">
+          <SectionHeader title="Switch (preferencias)" />
+          <View className="mt-4 gap-4">
+            <View className="flex-row items-center gap-4">
+              <Switch value={false} onValueChange={() => {}} accessibilityLabel="Apagado" />
+              <Switch value onValueChange={() => {}} accessibilityLabel="Prendido" />
+              <Switch value disabled onValueChange={() => {}} accessibilityLabel="Guardando" />
+            </View>
+          </View>
+        </View>
+
+        <Separator className="mb-8" />
+
+        {/* BOTÓN NUEVO Y CAMPO DE CATEGORÍA */}
+        <View className="mb-8">
+          <SectionHeader title="Crear una categoría" />
+          <View className="mt-4 gap-4">
+            {/* Con etiqueta mientras la lista está vacía; sin ella una vez que
+                hay elementos y el `+` se entiende solo. */}
+            <View className="flex-row justify-end w-full">
+              <BotonNuevo etiqueta="Nueva categoría" onPress={() => {}} />
+            </View>
+            <View className="flex-row justify-end w-full">
+              <BotonNuevo etiqueta="Nueva categoría" conEtiqueta={false} onPress={() => {}} />
+            </View>
+            <CampoDeCategoria
+              emoji=""
+              nombre=""
+              onEmoji={() => {}}
+              onNombre={() => {}}
+              onConfirmar={() => {}}
+              onCancelar={() => {}}
+            />
+            <CampoDeCategoria
+              emoji="🐈"
+              nombre="Mascotas"
+              onEmoji={() => {}}
+              onNombre={() => {}}
+              onConfirmar={() => {}}
+              onCancelar={() => {}}
+            />
+          </View>
+        </View>
+
+        <Separator className="mb-8" />
+
+        {/* BUSCADOR */}
+        <View className="mb-8">
+          <SectionHeader title="Buscador (cabecera de pantalla)" />
+          {/* Trae su propio padding, porque en una pantalla es la cabecera. */}
+          <View className="-mx-xl">
+            <Buscador titulo="Zona horaria" texto="" onTexto={() => {}} placeholder="Busca una ciudad o un país" />
           </View>
         </View>
 

@@ -20,9 +20,14 @@ import { Input } from '@/components/ui/Input'
 import { Notification } from '@/components/ui/Notification'
 import { Alert } from '@/components/ui/Alert'
 import { colors } from '@/constants/theme'
-import { CATEGORIAS_VISIBLES, METODOS_VISIBLES } from '@/lib/funciones'
+import { usePreferencias } from '@/features/perfil'
 
 export default function CapturaScreen() {
+  // Las dos funciones conmutables salen de las preferencias del perfil, no de
+  // una constante de compilación: el usuario las prende y las apaga en
+  // configuraciones.
+  const { categoriasVisibles, metodosVisibles } = usePreferencias()
+
   const {
     valores,
     metodo,
@@ -213,16 +218,16 @@ export default function CapturaScreen() {
 
           {/* La categoría se va deduciendo de la descripción mientras se escribe:
               aparece atenuada hasta que un tap la confirma. Apagado en la v1,
-              ver CATEGORIAS_VISIBLES. */}
+              se prende y se apaga en configuraciones. */}
           <View className={`w-full ${estado === 'loading' ? 'opacity-50' : ''}`} pointerEvents={estado === 'loading' ? 'none' : 'auto'}>
-            {CATEGORIAS_VISIBLES && (
+            {categoriasVisibles && (
               <CategorySelector
                 selectedCategory={valores.categoria}
                 inferredCategory={categoriaInferida}
                 onSelectCategory={(cat) => handleChange('categoria', cat)}
               />
             )}
-            {METODOS_VISIBLES && (
+            {metodosVisibles && (
               <PaymentMethodSelector
                 method={metodo}
                 onSelectMethod={setMetodo}

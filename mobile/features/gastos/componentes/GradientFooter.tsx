@@ -1,4 +1,4 @@
-import { BellSimple, CardsThree, Nut, Plus, Check } from 'phosphor-react-native';
+import { ArrowLeft, BellSimple, CardsThree, Nut, Plus, Check } from 'phosphor-react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
@@ -7,7 +7,7 @@ import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanima
 import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { categoryEmoji, colors, withAlpha } from '@/constants/theme';
-import { CATEGORIAS_VISIBLES } from '@/lib/funciones';
+import { usePreferencias } from '@/features/perfil';
 import { useFilter } from '../FilterContext';
 import { useGastos } from '../GastosContext';
 
@@ -16,6 +16,7 @@ export function GradientFooter(props: BottomTabBarProps) {
   const safePaddingBottom = 24 + insets.bottom;
 
   const { mes, setMes } = useGastos();
+  const { categoriasVisibles } = usePreferencias();
   const { selectedCategory, setSelectedCategory, availableCategories } = useFilter();
 
   // El footer no se desmonta cuando sube el teclado: se va animado contra la
@@ -39,6 +40,10 @@ export function GradientFooter(props: BottomTabBarProps) {
   const isCategoriasActive = routeName === 'categorias';
   const isConfiguracionesActive = routeName === 'configuraciones';
   const isCuentaActive = routeName === 'cuenta';
+  // Las pantallas a las que solo se entra desde configuraciones: el footer les
+  // cambia los tres iconos por una flecha de volver, porque desde ahí la única
+  // navegación que tiene sentido es salir.
+  const esPantallaDeAjuste = routeName === 'zona-horaria';
   const isEnCursoActive = routeName === 'index' && mes === currentCalendarMonth;
 
   const handleCategoryPress = (category: string) => {
@@ -57,7 +62,7 @@ export function GradientFooter(props: BottomTabBarProps) {
   const content = (
     <View className="flex-col gap-sm px-xl">
       {/* Categories Row (Emojis) */}
-      {CATEGORIAS_VISIBLES && isGastosActive && !isMesesViewActive && availableCategories.length > 0 && (
+      {categoriasVisibles && isGastosActive && !isMesesViewActive && availableCategories.length > 0 && (
         <View className="mb-lg -mx-xl">
           <ScrollView
             horizontal
@@ -84,7 +89,7 @@ export function GradientFooter(props: BottomTabBarProps) {
       )}
 
       {/* Filters Row (Centrado) */}
-      {!isConfiguracionesActive && !isCapturaActive && !isCuentaActive && (
+      {!isConfiguracionesActive && !isCapturaActive && !isCuentaActive && !esPantallaDeAjuste && (
         <View className="flex-row justify-center items-center w-full mb-sm">
           <Pressable
             className={`rounded-full px-md py-sm active:opacity-80 ${isEnCursoActive ? 'bg-secondary' : 'bg-transparent'}`}
@@ -104,6 +109,16 @@ export function GradientFooter(props: BottomTabBarProps) {
       <View className="flex-row justify-between items-center w-full">
         
         {/* Nav Group (Izquierda) */}
+        {esPantallaDeAjuste ? (
+          <Pressable
+            className="w-4xl h-4xl items-center justify-center rounded-full active:opacity-80"
+            accessibilityRole="button"
+            accessibilityLabel="Volver a configuraciones"
+            onPress={() => props.navigation.navigate('configuraciones')}
+          >
+            <ArrowLeft size={24} className="text-muted-foreground" weight="regular" />
+          </Pressable>
+        ) : (
         <View className="flex-row items-center gap-sm">
           
           {/* Bell (Idle only for now) */}
@@ -128,6 +143,7 @@ export function GradientFooter(props: BottomTabBarProps) {
           </Pressable>
 
         </View>
+        )}
 
         {/* FAB Item (Derecha) */}
         {isCapturaActive ? (

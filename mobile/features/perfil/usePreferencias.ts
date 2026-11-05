@@ -27,10 +27,10 @@ export const PREFERENCIAS_POR_DEFECTO: Datos = {
  * ve cuando el perfil **puede** y el usuario **quiere**. Esa cuenta se hace una
  * vez acá y no en cada pantalla, que es como terminarían difiriendo.
  *
- * Reemplaza a las constantes `CATEGORIAS_VISIBLES` y `METODOS_VISIBLES` de
- * `lib/funciones.ts`, que son de compilación e iguales para todos. Las cuatro
- * pantallas que las usan se cambian junto con el diseño nuevo de los toggles,
- * para no tocar dos veces los mismos archivos.
+ * Reemplaza a las constantes `CATEGORIAS_VISIBLES` y `METODOS_VISIBLES` que
+ * estaban en `lib/funciones.ts`: eran de compilación e iguales para todos, así
+ * que para prender una función había que publicar una versión nueva en las
+ * stores. El archivo se borró con este cambio.
  *
  * No se cachea con `staleTime` corto: una preferencia cambia cuando el usuario
  * la cambia, y en ese momento la mutación deja la respuesta en la caché.
