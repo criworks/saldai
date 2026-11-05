@@ -56,9 +56,16 @@ export default function ZonaHorariaScreen() {
     return texto.trim() ? grupos : [{ title: '', data: [filaAutomatica] }, ...grupos];
   }, [texto, catalogo, filaAutomatica]);
 
+  // Con la lectura fallada no se sabe qué está guardado, así que no se marca
+  // nada. El hook cae a los defaults, donde la zona es nula, y eso haría que la
+  // pantalla mostrara "Automática" como elegida: una afirmación sobre lo que el
+  // usuario configuró, hecha justo cuando no se pudo averiguar.
+  const laElegida = error ? undefined : (zonaElegida ?? null);
+
   const elegir = (fila: Fila) => {
-    // Lo mismo dos veces es un viaje al servidor que no cambia nada.
-    if ((zonaElegida ?? null) === fila.zona) return;
+    // Lo mismo dos veces es un viaje al servidor que no cambia nada. Con la
+    // lectura fallada no hay nada que repetir, así que cualquier tap guarda.
+    if (laElegida !== undefined && laElegida === fila.zona) return;
     guardar({ zona: fila.zona });
   };
 
@@ -104,7 +111,7 @@ export default function ZonaHorariaScreen() {
             ) : null
           }
           renderItem={({ item }) => {
-            const elegida = (zonaElegida ?? null) === item.zona;
+            const elegida = laElegida !== undefined && laElegida === item.zona;
             return (
               <Pressable
                 onPress={() => elegir(item)}

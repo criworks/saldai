@@ -116,7 +116,15 @@ export function GradientFooter(props: BottomTabBarProps) {
             accessibilityLabel="Volver a configuraciones"
             onPress={() => props.navigation.navigate('configuraciones')}
           >
-            <ArrowLeft size={24} className="text-muted-foreground" weight="regular" />
+            {/*
+              El color va por prop y no por `className` como los otros iconos
+              del footer: los demás son `weight="fill"` y NativeWind les llega
+              por el color del texto, pero un icono `regular` de phosphor es un
+              trazo con `fill="none"`, así que la clase no lo pinta y la flecha
+              salía negra sobre el fondo oscuro. Con `bold` además pesa lo mismo
+              que los iconos rellenos de al lado.
+            */}
+            <ArrowLeft size={24} color={colors.textMuted} weight="bold" />
           </Pressable>
         ) : (
         <View className="flex-row items-center gap-sm">
@@ -145,8 +153,12 @@ export function GradientFooter(props: BottomTabBarProps) {
         </View>
         )}
 
-        {/* FAB Item (Derecha) */}
-        {isCapturaActive ? (
+        {/*
+          FAB Item (Derecha). No va en una pantalla de ajuste: ahí la única
+          acción es volver, y un `+` que salta a la captura deja a medias lo
+          que el usuario estaba configurando.
+        */}
+        {esPantallaDeAjuste ? null : isCapturaActive ? (
           <Pressable
             className="bg-primary rounded-full items-center justify-center active:opacity-80 px-8 py-3"
             onPress={() => DeviceEventEmitter.emit('submitCaptura')}

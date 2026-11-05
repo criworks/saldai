@@ -322,3 +322,64 @@ PR de la UI de preferencias · noviembre 2026
   default. Validar "tira o no tira" solo sirve para los valores presentes, así
   que el caso ausente se comprueba aparte. Y cuando una función devuelve un
   número, "no sé" no puede ser un número que también signifique algo.
+
+---
+
+## Una feature mergeada a `development` no existe para el teléfono
+
+PR de los switches de preferencias · noviembre 2026
+
+- **Síntoma**: en el teléfono, con el dev build y `npm start`, los switches de
+  configuraciones no se prendían, la pantalla de zona horaria mostraba "No se
+  pudo leer tu zona horaria" y no se podía elegir ninguna zona. Tres síntomas
+  en dos pantallas distintas.
+- **Causa**: una sola, y afuera de la app. `GET` y `PATCH
+  /perfil/preferencias` estaban en `development`, y **Render despliega la API
+  solo desde `main`**. El dev build toma `EXPO_PUBLIC_API_URL` del `.env` de la
+  máquina, que apunta al servicio de Render, así que la app le pedía las
+  preferencias a una API que todavía no tiene esas rutas: 404, la lectura tira,
+  y el hook cae a sus defaults, que son todo apagado y zona nula. Los tres
+  síntomas son ese mismo default visto desde tres lugares.
+- **Por qué no se notaba**: nada de esto puede fallar antes. CI corre los tests
+  de los tres paquetes contra el código del PR, donde la ruta existe; el
+  typecheck no sabe qué contesta un servidor; y el dev build sirve el JavaScript
+  más nuevo desde el Metro de la máquina, lo que hace parecer que **todo** es
+  nuevo. La app estaba al día y la API no, que es justamente lo que la
+  verificación visual no distingue: el aviso de error decía "no se pudo leer",
+  no "esa ruta no existe".
+- **Arreglo**: ninguno en el código de la app. Para revisar antes del release,
+  `EXPO_PUBLIC_API_URL` apunta a la API corriendo en la máquina (`npm run api`,
+  puerto 3000) en vez de a Render. Lo que sí se arregló es que la pantalla ya no
+  marca "Automática" como elegida cuando la lectura falló: mostrar una elección
+  que no se pudo leer es afirmar algo que no se sabe.
+- **Regla**: una feature que cruza la app y la API no se puede verificar en el
+  teléfono hasta que la API esté en `main`, y el dev build no lo delata porque
+  el JavaScript sí viaja. Antes de pedir una revisión visual de algo que habla
+  con la API, decir contra qué API va a hablar. Y un hook que cae a defaults
+  cuando falla la lectura tiene que distinguir "apagado" de "no sé": el default
+  sirve para no mostrar basura, no para afirmar lo que el usuario configuró.
+
+---
+
+## Un icono `regular` de phosphor no se pinta con `className`
+
+PR de los switches de preferencias · noviembre 2026
+
+- **Síntoma**: la flecha de volver del footer salía negra sobre el fondo
+  oscuro, o sea invisible, mientras los otros tres iconos de la misma fila se
+  veían bien.
+- **Causa**: los otros son `weight="fill"`, que pinta el cuerpo del glifo, y
+  ahí NativeWind les llega por el color del texto. La flecha era
+  `weight="regular"`, que en phosphor es un trazo con `fill="none"`: la clase
+  `text-muted-foreground` no tiene por dónde pintarla.
+- **Por qué no se notaba**: la clase es la misma que usan los iconos que sí
+  funcionan, así que copiarla parece lo correcto. No hay error de tipos ni de
+  estilo, y un icono negro sobre fondo oscuro no se ve como un icono mal
+  pintado: se ve como un icono que no está.
+- **Arreglo**: el color va por el prop `color={colors.textMuted}`, que es lo que
+  ya hacen `MenuItem` y los modales, y la flecha pasa a `weight="bold"` para
+  pesar como los rellenos de al lado.
+- **Regla**: en phosphor, el color por `className` solo es confiable con
+  `weight="fill"`. Para cualquier otro peso va por prop, desde los tokens. Es la
+  misma clase de falla que los globs de Tailwind: algo que parece configurado
+  igual que lo de al lado y no lo está.
