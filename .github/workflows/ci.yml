@@ -46,7 +46,7 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
-      - name: Tests de la API
+      - name: Tests del core, de la API y de mobile
         run: npm test
 
       - name: Lint de web
