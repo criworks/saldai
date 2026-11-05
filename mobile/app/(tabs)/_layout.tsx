@@ -20,6 +20,7 @@ export default function TabLayout() {
           <Tabs.Screen name="index" />
           <Tabs.Screen name="meses" options={{ href: null }} />
           <Tabs.Screen name="categorias" />
+          <Tabs.Screen name="por-categoria" options={{ href: null }} />
           <Tabs.Screen name="configuraciones" />
           <Tabs.Screen name="captura" />
           <Tabs.Screen name="cuenta" options={{ href: null }} />
