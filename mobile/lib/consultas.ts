@@ -39,4 +39,5 @@ export const clienteDeConsultas = new QueryClient({
 export const llaves = {
   gastosDelMes: (mes: number, anio: number) => ['gastos', anio, mes] as const,
   totalesAnuales: (anio: number) => ['gastos-anuales', anio] as const,
+  preferencias: () => ['preferencias'] as const,
 }

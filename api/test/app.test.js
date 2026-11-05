@@ -81,6 +81,8 @@ test('las rutas protegidas responden 401 sin token, antes de tocar la base', asy
     () => request(app).get('/gastos/anuales?anio=2026'),
     () => request(app).post('/gastos').send({ input: '1000, pan' }),
     () => request(app).delete('/perfil'),
+    () => request(app).get('/perfil/preferencias'),
+    () => request(app).patch('/perfil/preferencias').send({ categoriasActivo: true }),
   ]) {
     const res = await pedir()
     assert.strictEqual(res.status, 401)
@@ -148,4 +150,14 @@ test('/perfil solo acepta DELETE', async () => {
     assert.strictEqual(res.status, 404)
     assert.strictEqual(res.body.ok, false)
   }
+})
+
+test('PATCH /perfil/preferencias pide sesión antes de validar el cuerpo', async () => {
+  // El orden importa: `requireAuth` va antes que la validación, así un cuerpo
+  // inválido sin token responde 401 y no 400. Si fuera al revés, la ruta
+  // contaría qué campos existen a quien no está autenticado.
+  const res = await request(app).patch('/perfil/preferencias').send({ campoInventado: 1 })
+
+  assert.strictEqual(res.status, 401)
+  assert.strictEqual(res.body.error, 'Token requerido')
 })

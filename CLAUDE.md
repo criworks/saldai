@@ -86,12 +86,20 @@ Endpoints:
 | `GET /gastos?mes=&anio=` | sí |
 | `GET /gastos/anuales?anio=` | sí |
 | `DELETE /perfil` | sí |
+| `GET /perfil/preferencias` | sí |
+| `PATCH /perfil/preferencias` | sí |
 | `GET /health` | no (keep-alive de Render) |
 | `GET /health/db` | no |
 
 `DELETE /perfil` borra los movimientos del usuario y su cuenta, llamando a
 `delete_user()`. **Es el único camino**: mobile no le habla a Supabase
 directamente para escribir.
+
+Las preferencias del perfil (`public.preferencias`) llevan **dos campos por
+flag**: `habilitado` es el entitlement, que decide el plan, y `activo` la
+preferencia, que decide el usuario. El `PATCH` solo acepta `activo` y `zona`.
+Hasta el primer guardado no hay fila y el `GET` devuelve los defaults, que están
+en `api/src/perfil/preferencias.js` y en el schema.
 
 Las dos rutas de `POST` aceptan `zona` (IANA) en el cuerpo y caen a
 `APP_TIMEZONE` si no viene. El contexto que se usó se guarda en la fila pero
