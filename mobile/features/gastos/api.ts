@@ -83,13 +83,17 @@ export async function fetchGastosAnuales(anio: number | string): Promise<Totales
   return res.json()
 }
 
-export async function crearGasto(inputStr: string): Promise<GastoCreado> {
+/**
+ * `zona` va en el cuerpo para que el "hoy" del servidor sea el del usuario y no
+ * el de Chile. Si no se manda, la API cae a su `APP_TIMEZONE`.
+ */
+export async function crearGasto(inputStr: string, zona?: string): Promise<GastoCreado> {
   if (enModoMock) return mocks.crearGasto(inputStr)
 
   const res = await fetch(`${API_URL}/gastos`, {
     method: 'POST',
     headers: await getAuthHeaders(),
-    body: JSON.stringify({ input: inputStr }),
+    body: JSON.stringify(zona ? { input: inputStr, zona } : { input: inputStr }),
   })
 
   const json = await res.json().catch(() => null)

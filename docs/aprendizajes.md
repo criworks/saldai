@@ -265,3 +265,34 @@ Abril 2026
   tiene token, la decisión es agregar el token o usar el vecino, nunca escribir
   el número en la pantalla. Corolario de la regla del repo: un fix visual va al
   componente o al token.
+
+## Una fecha mal guardada no se nota si no cruza el límite del mes
+
+**Síntoma.** Ninguno. Nadie lo reportó. Salió de re-correr el parser sobre los
+73 `input_original` de producción y comparar el resultado con lo guardado: una
+fila, "arriendo abril" de 525.457, tenía `fecha` 2026-04-03 cuando su input
+decía "Ayer" y debía ser 04-02.
+
+**Causa.** Se creó el 2026-04-04T02:48Z. En Chile eran todavía las 22:48 del
+día 3, así que "ayer" era el 2; el "hoy" de referencia se resolvió con el día
+**UTC** y quedó corrido un día. Render corre en UTC y el parser usaba la fecha
+del servidor. `hoyCivil(zona)` entró recién el 2026-10-29 (`5516fd4`): las filas
+creadas después en esa misma ventana (00:00–04:00 UTC) están correctas.
+
+**Por qué no se notaba.** Mover la fila del 3 al 2 de abril **no cambia ningún
+total mensual**, porque sigue cayendo en abril. La app solo muestra listas y
+sumas por mes, así que no hay una sola vista donde el error aparezca. Los tests
+del parser pasan `hoy` fijo, que es justamente lo que evita el bug, y ninguno
+cubría el caso de que el `hoy` real viniera de otra zona.
+
+**Arreglo.** `registrarMovimiento()` en `@saldai/core` resuelve el "hoy" una sola
+vez y devuelve el contexto que usó; la API y mobile pasan por ahí, mobile manda
+la zona del dispositivo, y la fila guarda `zona` y `hoy_resuelto`. Con eso la
+fecha se puede volver a derivar desde el texto original en vez de inferirla de
+`creado_en`.
+
+**Regla.** Un error de un día solo se ve si cruza el límite del periodo que la
+vista agrupa, así que las sumas por mes no sirven para detectarlo. Lo que lo
+detecta es **re-derivar el dato desde su origen y comparar**, y eso solo es
+posible si el origen guarda el contexto con el que se decidió: una fecha
+relativa sin la zona y el día de referencia no es reproducible.
