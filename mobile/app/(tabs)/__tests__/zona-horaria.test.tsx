@@ -144,3 +144,27 @@ test('una búsqueda sin resultados lo dice, en vez de mostrar una lista vacía',
 
   await waitFor(() => getByText('No hay ninguna zona que coincida.'))
 })
+
+test('si la lectura falla no se marca ninguna zona como elegida', async () => {
+  // El hook cae a los defaults, donde la zona es nula, así que sin este cuidado
+  // la pantalla mostraría "Automática" elegida: una afirmación sobre lo que el
+  // usuario configuró, hecha justo cuando no se pudo averiguar. Es lo que se
+  // vio en el teléfono, con el aviso de error y la zona marcada a la vez.
+  fetchMock.mockRejectedValue(new Error('404'))
+  const { getByTestId } = montar()
+
+  await waitFor(() => getByTestId('zona-__automatica__'))
+  expect(getByTestId('zona-__automatica__').props.accessibilityState.selected).toBe(false)
+})
+
+test('con la lectura fallada un tap igual intenta guardar', async () => {
+  // Si se comparara contra los defaults, tocar "Automática" no haría nada y el
+  // usuario no tendría forma de reintentar.
+  fetchMock.mockRejectedValue(new Error('404'))
+  const { getByTestId } = montar()
+
+  await waitFor(() => getByTestId('zona-__automatica__'))
+  fireEvent.press(getByTestId('zona-__automatica__'))
+
+  await waitFor(() => expect(guardarMock).toHaveBeenCalledWith({ zona: null }))
+})
