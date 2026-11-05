@@ -68,6 +68,18 @@ export default function UIPlayground() {
               monto="$4,500.00"
               titulo="Café Starbucks"
             />
+            {/* Con las dos funciones prendidas: la pantalla le pasa categoría y
+                método, y la fila dibuja las dos burbujas. */}
+            <ExpenseItem
+              id="3"
+              monto="$4,500.00"
+              titulo="Café Starbucks"
+              categoria="Ocio"
+              metodo="TC"
+            />
+            {/* Solo una prendida. */}
+            <ExpenseItem id="4" monto="$420.000" titulo="Arriendo del mes" categoria="Básicos" />
+            <ExpenseItem id="5" monto="$1" titulo="Sin categoría" metodo="EF" />
           </View>
 
           <Text className="mb-2 text-foreground font-semibold mt-6">Category Selector:</Text>

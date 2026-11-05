@@ -13,6 +13,7 @@ import { ExpenseItem } from '@/features/gastos'
 import { formatearMonto } from '@saldai/core'
 import { colors, MESES } from '@/constants/theme'
 import { useGastos, Gasto } from '@/features/gastos'
+import { usePreferencias } from '@/features/perfil'
 import { Alert } from '@/components/ui/Alert'
 
 /**
@@ -61,6 +62,10 @@ export default function DashboardScreen() {
     fetchGastos,
     totalMes,
   } = useGastos()
+
+  // Las dos funciones conmutables del perfil: deciden si la fila del listado
+  // muestra la burbuja de categoría y la de método.
+  const { categoriasVisibles, metodosVisibles } = usePreferencias()
 
   const insets = useSafeAreaInsets()
   const listPaddingBottom = 220 + insets.bottom;
@@ -202,7 +207,16 @@ export default function DashboardScreen() {
         )}
         ItemSeparatorComponent={() => <View className="h-xl" />}
         renderItem={({ item }) => (
-          <ExpenseItem monto={formatearMonto(item.monto)} titulo={item.item} />
+          // La categoría y el método se pasan solo si el perfil los tiene
+          // prendidos. Es la misma cuenta que hace la captura para mostrar sus
+          // selectores: lo que se registra se ve, y lo que no se registra no
+          // aparece a medias en el listado.
+          <ExpenseItem
+            monto={formatearMonto(item.monto)}
+            titulo={item.item}
+            categoria={categoriasVisibles ? item.categoria : undefined}
+            metodo={metodosVisibles ? item.metodo : undefined}
+          />
         )}
       />
     </SafeAreaView>
