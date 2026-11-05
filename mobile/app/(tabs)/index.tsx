@@ -1,18 +1,15 @@
-import { useRouter } from 'expo-router'
-import { CaretRight } from 'phosphor-react-native'
+import { formatearMonto } from '@saldai/core'
 import React, { useMemo } from 'react'
 import {
-  Pressable,
   RefreshControl,
   SectionList,
   Text,
+  Pressable,
   View,
 } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
-import { ExpenseItem } from '@/features/gastos'
-import { formatearMonto } from '@saldai/core'
-import { colors, MESES } from '@/constants/theme'
-import { useGastos, Gasto } from '@/features/gastos'
+import { colors, SIN_CATEGORIA } from '@/constants/theme'
+import { EncabezadoDelMes, ExpenseItem, useFilter, useGastos, Gasto } from '@/features/gastos'
 import { usePreferencias } from '@/features/perfil'
 import { Alert } from '@/components/ui/Alert'
 
@@ -52,7 +49,6 @@ function tituloDelDia(dia: Date): string {
 }
 
 export default function DashboardScreen() {
-  const router = useRouter()
   const {
     mes,
     datos,
@@ -67,13 +63,27 @@ export default function DashboardScreen() {
   // muestra la burbuja de categoría y la de método.
   const { categoriasVisibles, metodosVisibles } = usePreferencias()
 
+  // La categoría elegida en el footer. Si la función está apagada el filtro no
+  // se aplica: el footer no muestra las burbujas para soltarlo, así que una
+  // selección vieja dejaría el listado recortado sin forma de volver atrás.
+  const { selectedCategory } = useFilter()
+  const filtro = categoriasVisibles ? selectedCategory : null
+
   const insets = useSafeAreaInsets()
   const listPaddingBottom = 220 + insets.bottom;
+
+  const gastosVisibles = useMemo(() => {
+    const delMes = datos?.datos ?? []
+    if (!filtro) return delMes
+    // `|| SIN_CATEGORIA` como en el desglose: un gasto sin categoría cae en el
+    // mismo grupo por el que se puede filtrar.
+    return delMes.filter((g) => (g.categoria || SIN_CATEGORIA) === filtro)
+  }, [datos?.datos, filtro])
 
   // Los gastos agrupados por día, en el orden en que se muestran: el día más
   // nuevo primero. Es lo que SectionList espera como `sections`.
   const secciones = useMemo(() => {
-    const conFecha = (datos?.datos ?? []).map((g) => ({
+    const conFecha = gastosVisibles.map((g) => ({
       ...g,
       diaDelGasto: fechaDelDia(g.fecha),
     }))
@@ -90,37 +100,21 @@ export default function DashboardScreen() {
     }
 
     return Array.from(porDia, ([titulo, data]) => ({ titulo, data }))
-  }, [datos?.datos])
+  }, [gastosVisibles])
 
-  const sinGastos = !loading && !error && (!datos || datos.cantidad === 0)
-
-  // El bloque de arriba (mes y total) va como encabezado de la lista y no
-  // afuera, así se desplaza con los gastos como estaba antes.
-  const encabezado = (
-    <View className="w-full flex-col pt-xl pb-lg">
-      {loading ? (
-        <View className="flex-col gap-sm w-full items-start">
-          <View className="h-[28px] w-[120px] bg-secondary rounded-full" />
-          <View className="h-lg w-[80px] bg-secondary rounded-full mt-1" />
-        </View>
-      ) : (
-        <View className="flex-col gap-sm w-full items-start">
-          <Pressable
-            className="flex-row items-center justify-start gap-xs active:opacity-80 py-2 -ml-2 px-2 rounded-md"
-            onPress={() => router.navigate('/meses')}
-          >
-            <Text className="text-muted-foreground text-title font-normal leading-[normal]">
-              {MESES[mes - 1]}
-            </Text>
-            <CaretRight size={20} className="text-muted-foreground" weight="bold" />
-          </Pressable>
-          <Text className="text-foreground text-body font-medium leading-[normal] text-right">
-            {formatearMonto(totalMes)}
-          </Text>
-        </View>
-      )}
-    </View>
+  // Con filtro, el total es el de lo que se ve. El total del mes arriba de una
+  // lista recortada es un número que no corresponde a ninguna de sus filas.
+  const totalMostrado = useMemo(
+    () => (filtro ? gastosVisibles.reduce((suma, g) => suma + g.monto, 0) : totalMes),
+    [filtro, gastosVisibles, totalMes],
   )
+
+  const hayGastosEnElMes = !loading && !error && !!datos && datos.cantidad > 0
+  const sinGastos = !loading && !error && (!datos || datos.cantidad === 0)
+  // El mes tiene gastos pero ninguno de la categoría elegida: es distinto de un
+  // mes vacío y se dice distinto, porque lo que hay que hacer es soltar el
+  // filtro y no registrar un gasto.
+  const sinResultados = hayGastosEnElMes && secciones.length === 0
 
   // Esqueleto de la primera carga de un mes que no se había visto. Con caché,
   // volver a un mes ya visto no pasa por acá.
@@ -156,6 +150,12 @@ export default function DashboardScreen() {
         <Text className="text-foreground font-medium">Reintentar</Text>
       </Pressable>
     </View>
+  ) : sinResultados ? (
+    <View className="w-full flex-col pt-xl items-start">
+      <Text className="text-muted-foreground text-body font-medium">
+        No hay gastos de {filtro} este mes
+      </Text>
+    </View>
   ) : sinGastos ? (
     <View className="w-full flex-col pt-xl items-start">
       <Text className="text-muted-foreground text-body font-medium">No hay gastos este mes</Text>
@@ -189,7 +189,7 @@ export default function DashboardScreen() {
           />
         }
         showsVerticalScrollIndicator={false}
-        ListHeaderComponent={encabezado}
+        ListHeaderComponent={<EncabezadoDelMes mes={mes} total={totalMostrado} loading={loading} />}
         ListEmptyComponent={vacio}
         renderSectionHeader={({ section }) => (
           // El primer día va más arriba que los siguientes: entre dos grupos
