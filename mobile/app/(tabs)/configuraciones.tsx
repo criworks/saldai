@@ -10,7 +10,7 @@ import { Notification } from '@/components/ui/Notification';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth';
-import { supabase } from '@/services/supabase';
+import { eliminarPerfil } from '@/features/perfil';
 import { colors } from '@/constants/theme';
 import { CATEGORIAS_VISIBLES } from '@/lib/funciones';
 
@@ -64,14 +64,10 @@ export default function ConfigurationsScreen() {
         await new Promise(res => setTimeout(res, 1500));
         await signOut(); // Simulamos que se borra y cerramos sesión
       } else {
-        // Borrar un usuario de auth.users no es algo que el rol de la sesión
-        // pueda hacer, así que va por la función delete_user() de Supabase
-        // (ver supabase/migrations/), que borra los gastos y la cuenta.
-        const { error: rpcError } = await supabase.rpc('delete_user');
-
-        // Si falla, la cuenta sigue viva: no se puede cerrar sesión y decir
-        // que se eliminó.
-        if (rpcError) throw new Error(rpcError.message);
+        // Va por la API, que es el único camino de escritura de la app. Si
+        // falla, tira: la cuenta sigue viva y no se puede cerrar sesión
+        // diciendo que se eliminó.
+        await eliminarPerfil();
 
         await signOut();
       }
