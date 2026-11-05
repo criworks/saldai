@@ -34,6 +34,29 @@ test('POST /gastos/parsear parsea sin pedir sesión', async () => {
   assert.strictEqual(res.body.datos.fecha, '2026-02-15')
 })
 
+test('POST /gastos/parsear acepta la zona del cliente y no filtra el contexto', async () => {
+  const res = await request(app)
+    .post('/gastos/parsear')
+    .send({ input: '45000, uber, transporte, 15/02/2026, ef', zona: 'Europe/Madrid' })
+
+  assert.strictEqual(res.status, 200)
+  assert.strictEqual(res.body.ok, true)
+  // El contexto se guarda en la fila, no se devuelve: la respuesta de la API es
+  // un contrato que mobile tipa en `index.d.ts`.
+  assert.strictEqual(res.body.contexto, undefined)
+})
+
+test('POST /gastos/parsear con una zona inexistente advierte y no rechaza', async () => {
+  const res = await request(app)
+    .post('/gastos/parsear')
+    .send({ input: '45000, uber, transporte, 15/02/2026, ef', zona: 'Marte/Olympus' })
+
+  assert.strictEqual(res.status, 200)
+  assert.strictEqual(res.body.ok, true)
+  assert.strictEqual(res.body.datos.fecha, '2026-02-15')
+  assert.ok(res.body.advertencias.some(a => a.includes('Marte/Olympus')))
+})
+
 test('POST /gastos/parsear sin input responde 400 con el detalle', async () => {
   const res = await request(app).post('/gastos/parsear').send({})
 

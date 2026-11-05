@@ -40,8 +40,15 @@ propósito, porque `npm ci` de CI y de los deploys sale del de arriba.
 
 Sin framework, sin red y **sin `process.env`**: por eso puede correr dentro del
 bundle de mobile. Lo que depende del entorno entra como argumento — la zona
-horaria se le pasa, no la lee (`api/src/config.js` la resuelve del lado de la
-API). CommonJS, con submódulos importables suelto
+horaria se le pasa, no la lee: la API la resuelve en `api/src/config.js` y
+mobile la lee del dispositivo en `mobile/lib/zona.ts`.
+
+`registrarMovimiento()` (`movimientos.js`) es el **único punto de entrada de
+escritura**: resuelve el "hoy" una sola vez y devuelve, junto al resultado del
+parser, el contexto que usó (`zona` y `hoyResuelto`). Eso es lo que se guarda en
+la fila para que la fecha se pueda volver a derivar desde `input_original`; sin
+el contexto, re-correr el parser cambia la fecha de todo lo que se escribió como
+"hoy" o "ayer". CommonJS, con submódulos importables suelto
 (`require('@saldai/core/parser')`) y los tipos del contrato de la API en
 `index.d.ts`. Tests con `node --test`.
 
@@ -76,10 +83,16 @@ Endpoints:
 |------|--------|
 | `POST /gastos/parsear` | no |
 | `POST /gastos` | sí |
+
 | `GET /gastos?mes=&anio=` | sí |
 | `GET /gastos/anuales?anio=` | sí |
 | `GET /health` | no (keep-alive de Render) |
 | `GET /health/db` | no |
+
+Las dos rutas de `POST` aceptan `zona` (IANA) en el cuerpo y caen a
+`APP_TIMEZONE` si no viene. El contexto que se usó se guarda en la fila pero
+**no** se devuelve: la respuesta es un contrato que mobile tipa en
+`packages/core/index.d.ts`.
 
 Las respuestas son `{ ok, errores: string[], ... }`. El detalle del error va en
 `errores` (plural); `error` en singular aparece solo en los 401. Un cliente que

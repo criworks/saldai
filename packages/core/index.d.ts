@@ -119,6 +119,32 @@ export declare function parsearGasto(
   opciones?: { zona?: string; hoy?: Date }
 ): ResultadoParseo
 
+// ── Registro de un movimiento ───────────────────────────────────────────────
+
+/** La zona y el día de referencia con los que se resolvió la fecha. */
+export interface ContextoDeRegistro {
+  zona: string
+  /** El día que el parser usó como "hoy", en AAAA-MM-DD. */
+  hoyResuelto: FechaISO
+}
+
+export interface ResultadoDeRegistro extends ResultadoParseo {
+  contexto: ContextoDeRegistro
+}
+
+/** `true` si `Intl` reconoce la zona IANA. */
+export declare function esZonaValida(zona: unknown): boolean
+
+/**
+ * El único punto de entrada de escritura: parsea y devuelve, además del
+ * resultado, el contexto que usó. Una zona que no existe advierte y cae al
+ * default en vez de rechazar.
+ */
+export declare function registrarMovimiento(
+  input: string | null | undefined,
+  opciones?: { zona?: string; hoy?: Date }
+): ResultadoDeRegistro
+
 // ── Contrato de la API ──────────────────────────────────────────────────────
 
 /** Un gasto como lo devuelve la API. */

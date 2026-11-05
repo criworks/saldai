@@ -1,9 +1,10 @@
-import { anioDeIso, categorizar, mesDeIso, METODO_DEFAULT, parsearGasto } from '@saldai/core'
+import { anioDeIso, categorizar, mesDeIso, METODO_DEFAULT, registrarMovimiento } from '@saldai/core'
 import type { Gasto, GastosDelMes } from '@saldai/core'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { CampoClave } from '@/constants/theme'
 import { llaves } from '@/lib/consultas'
+import { zonaDelDispositivo } from '@/lib/zona'
 import { crearGasto } from './api'
 
 /**
@@ -21,12 +22,14 @@ function llaveDelMesDe(fecha: string | null | undefined) {
  * Arma el gasto provisorio que se muestra mientras la API responde.
  *
  * El parser vive en `@saldai/core`, así que mobile puede leer el input sin
- * pasar por la red y el gasto aparece en la lista al toque. No se le pasa zona
- * horaria a propósito: el core asume Chile, igual que la API, y lo que importa
- * es que el "ayer" provisorio caiga en el mismo día que el del servidor.
+ * pasar por la red y el gasto aparece en la lista al toque. Lo que importa es
+ * que el "ayer" provisorio caiga en el mismo día que el del servidor, y por eso
+ * se le pasa **la misma zona** que va en el cuerpo del pedido: antes no se le
+ * pasaba ninguna y las dos puntas asumían Chile, así que para un usuario en
+ * otra zona el provisorio y la fila real podían caer en días distintos.
  */
-function gastoProvisorio(input: string): Gasto | null {
-  const { ok, datos } = parsearGasto(input)
+function gastoProvisorio(input: string, zona?: string): Gasto | null {
+  const { ok, datos } = registrarMovimiento(input, { zona })
   if (!ok || !datos) return null
 
   return {
@@ -82,14 +85,14 @@ export function useGastoMutation() {
   }
 
   const mutacion = useMutation({
-    mutationFn: (input: string) => crearGasto(input),
+    mutationFn: (input: string) => crearGasto(input, zonaDelDispositivo()),
 
     // Alta optimista: el gasto entra en la lista del mes que le toca por fecha,
     // que no siempre es el mes que se está mirando (un gasto de "ayer" el día 1
     // es del mes anterior).
     async onMutate(input: string) {
       if (temporizador.current) clearTimeout(temporizador.current)
-      const provisorio = gastoProvisorio(input)
+      const provisorio = gastoProvisorio(input, zonaDelDispositivo())
       if (!provisorio) return {}
 
       const llave = llaveDelMesDe(provisorio.fecha)

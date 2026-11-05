@@ -12,8 +12,15 @@ function repositorioDeGastos(token) {
   const supabase = createSupabaseClient(token)
 
   return {
-    /** Inserta el gasto parseado y devuelve la fila creada. */
-    insertar(gasto, { userId, inputOriginal }) {
+    /**
+     * Inserta el gasto parseado y devuelve la fila creada.
+     *
+     * `contexto` es la zona y el día de referencia con los que se resolvió la
+     * fecha. Se guardan para que el movimiento se pueda volver a derivar desde
+     * `input_original`: sin ellos, re-correr el parser cambia la fecha de todo
+     * lo que se escribió como "hoy" o "ayer".
+     */
+    insertar(gasto, { userId, inputOriginal, contexto }) {
       return supabase
         .from('gastos')
         .insert({
@@ -26,6 +33,8 @@ function repositorioDeGastos(token) {
           fecha: gasto.fecha,
           input_original: inputOriginal,
           user_id: userId,
+          zona: contexto?.zona,
+          hoy_resuelto: contexto?.hoyResuelto,
         })
         .select()
         .single()

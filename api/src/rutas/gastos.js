@@ -1,5 +1,5 @@
 const express = require('express')
-const { parsearGasto, hoyCivil, rangoDelMes } = require('@saldai/core')
+const { registrarMovimiento, hoyCivil, rangoDelMes } = require('@saldai/core')
 
 const { requireAuth } = require('../middleware/auth.js')
 const { repositorioDeGastos } = require('../gastos/repositorio')
@@ -13,9 +13,11 @@ const { errorDeBase, errorDeEntrada } = require('../respuestas')
 const { arregloDeTotales } = require('../gastos/totales')
 
 /**
- * Las rutas de gastos. `zona` es la zona horaria con la que se resuelve el
- * "hoy": la resuelve `cargarConfig()` y se inyecta acá, así el router no lee
- * variables de entorno por su cuenta. `limites` son los limitadores de pedidos:
+ * Las rutas de gastos. `zona` es la zona horaria **por defecto** con la que se
+ * resuelve el "hoy": la resuelve `cargarConfig()` y se inyecta acá, así el
+ * router no lee variables de entorno por su cuenta. El cliente puede mandar la
+ * suya en el cuerpo, que es lo que hace mobile con la del dispositivo; sin eso
+ * un usuario fuera de Chile registraba con el día de Chile. `limites` son los limitadores de pedidos:
  * el flojo para las rutas con sesión y el estricto para la que no la pide.
  */
 function rutasDeGastos({ zona, limites }) {
@@ -26,7 +28,9 @@ function rutasDeGastos({ zona, limites }) {
     const entrada = validarInput(req.body?.input)
     if (!entrada.ok) return errorDeEntrada(res, entrada.errores, { advertencias: [] })
 
-    const resultado = parsearGasto(entrada.valor, { zona })
+    const { contexto, ...resultado } = registrarMovimiento(entrada.valor, {
+      zona: req.body?.zona || zona,
+    })
     return res.status(resultado.ok ? 200 : 422).json(resultado)
   })
 
@@ -35,12 +39,15 @@ function rutasDeGastos({ zona, limites }) {
     const entrada = validarInput(req.body?.input)
     if (!entrada.ok) return errorDeEntrada(res, entrada.errores, { advertencias: [] })
 
-    const resultado = parsearGasto(entrada.valor, { zona })
+    const { contexto, ...resultado } = registrarMovimiento(entrada.valor, {
+      zona: req.body?.zona || zona,
+    })
     if (!resultado.ok) return res.status(422).json(resultado)
 
     const { data, error } = await repositorioDeGastos(req.token).insertar(resultado.datos, {
       userId: req.userId,
       inputOriginal: entrada.valor,
+      contexto,
     })
 
     if (error) {
