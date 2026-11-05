@@ -64,8 +64,8 @@ test('elegir una zona la guarda por su nombre IANA', async () => {
   const { getByTestId } = montar()
 
   await waitFor(() => getByTestId('zona-__automatica__'))
-  fireEvent.press(getByTestId('alternar-busqueda'))
-  fireEvent.changeText(getByTestId('buscador-de-zonas'), 'madrid')
+  fireEvent.press(getByTestId('buscador-de-zonas-boton'))
+  fireEvent.changeText(getByTestId('buscador-de-zonas-campo'), 'madrid')
 
   await waitFor(() => getByTestId('zona-Europe/Madrid'))
   fireEvent.press(getByTestId('zona-Europe/Madrid'))
@@ -89,8 +89,8 @@ test('volver a tocar la zona que ya está elegida no guarda nada', async () => {
   const { getByTestId } = montar()
 
   await waitFor(() => getByTestId('zona-__automatica__'))
-  fireEvent.press(getByTestId('alternar-busqueda'))
-  fireEvent.changeText(getByTestId('buscador-de-zonas'), 'madrid')
+  fireEvent.press(getByTestId('buscador-de-zonas-boton'))
+  fireEvent.changeText(getByTestId('buscador-de-zonas-campo'), 'madrid')
 
   await waitFor(() => getByTestId('zona-Europe/Madrid'))
   fireEvent.press(getByTestId('zona-Europe/Madrid'))
@@ -112,8 +112,8 @@ test('el buscador filtra y saca la fila "Automática" de la lista', async () => 
 
   await waitFor(() => getByTestId('zona-__automatica__'))
 
-  fireEvent.press(getByTestId('alternar-busqueda'))
-  fireEvent.changeText(getByTestId('buscador-de-zonas'), 'madrid')
+  fireEvent.press(getByTestId('buscador-de-zonas-boton'))
+  fireEvent.changeText(getByTestId('buscador-de-zonas-campo'), 'madrid')
 
   await waitFor(() => expect(queryByTestId('zona-Europe/Madrid')).not.toBeNull())
   expect(queryByTestId('zona-America/Santiago')).toBeNull()
@@ -125,11 +125,11 @@ test('cerrar el buscador devuelve la lista completa', async () => {
 
   await waitFor(() => getByTestId('zona-__automatica__'))
 
-  fireEvent.press(getByTestId('alternar-busqueda'))
-  fireEvent.changeText(getByTestId('buscador-de-zonas'), 'madrid')
+  fireEvent.press(getByTestId('buscador-de-zonas-boton'))
+  fireEvent.changeText(getByTestId('buscador-de-zonas-campo'), 'madrid')
   await waitFor(() => expect(queryByTestId('zona-__automatica__')).toBeNull())
 
-  fireEvent.press(getByTestId('alternar-busqueda'))
+  fireEvent.press(getByTestId('buscador-de-zonas-boton'))
 
   await waitFor(() => expect(queryByTestId('zona-__automatica__')).not.toBeNull())
 })
@@ -139,8 +139,8 @@ test('una búsqueda sin resultados lo dice, en vez de mostrar una lista vacía',
 
   await waitFor(() => getByTestId('zona-__automatica__'))
 
-  fireEvent.press(getByTestId('alternar-busqueda'))
-  fireEvent.changeText(getByTestId('buscador-de-zonas'), 'narnia')
+  fireEvent.press(getByTestId('buscador-de-zonas-boton'))
+  fireEvent.changeText(getByTestId('buscador-de-zonas-campo'), 'narnia')
 
   await waitFor(() => getByText('No hay ninguna zona que coincida.'))
 })

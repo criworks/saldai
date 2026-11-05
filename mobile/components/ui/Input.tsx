@@ -13,8 +13,11 @@ import { TextInput, TextInputProps, View } from 'react-native';
  * - `sin-fondo`: solo el texto. Es la de la captura de gastos, donde el campo
  *   va dentro de una fila que ya tiene su propio contorno. **No lleva icono**:
  *   sin caja no hay dónde apoyarlo.
+ * - `chip`: una píldora del ancho de lo que se escribe. Es la de crear una
+ *   categoría sin salir de la lista: el campo ocupa el lugar de la burbuja que
+ *   va a ser, así que tiene su forma y no la de un campo de formulario.
  */
-export type VarianteInput = 'con-fondo' | 'sin-fondo';
+export type VarianteInput = 'con-fondo' | 'sin-fondo' | 'chip';
 
 export interface EstadoCaja {
   /** El campo está en foco, o el que lo usa quiere mostrarlo como activo. */
@@ -46,6 +49,19 @@ export const cajaConFondo = ({ activo, error }: EstadoCaja = {}) =>
       : activo
         ? 'border-muted-foreground'
         : 'border-transparent'
+  }`;
+
+/**
+ * El contorno de un campo `chip`: la misma píldora que una burbuja de categoría
+ * ya cargada, para que al escribirla el lugar no cambie de forma.
+ *
+ * El borde es transparente en reposo y del mismo grosor que el activo, por la
+ * misma razón que en `cajaConFondo`: con un borde que aparece, el chip crece un
+ * pixel al entrar al campo.
+ */
+export const cajaDeChip = ({ activo, error }: EstadoCaja = {}) =>
+  `px-md py-sm rounded-full bg-secondary border-2 ${
+    error ? 'border-destructive' : activo ? 'border-muted-foreground' : 'border-transparent'
   }`;
 
 export interface InputProps extends TextInputProps {
@@ -107,7 +123,9 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
       className={
         variante === 'sin-fondo'
           ? `p-0 m-0 ${base} ${className || ''}`
-          : `w-full ${cajaConFondo({ activo: enFoco || resaltado })} text-body font-normal ${iconoDerecha ? 'pr-4xl' : ''} ${base} ${className || ''}`
+          : variante === 'chip'
+            ? `${cajaDeChip({ activo: enFoco || resaltado })} text-body font-normal ${iconoDerecha ? 'pr-xxl' : ''} ${base} ${className || ''}`
+            : `w-full ${cajaConFondo({ activo: enFoco || resaltado })} text-body font-normal ${iconoDerecha ? 'pr-4xl' : ''} ${base} ${className || ''}`
       }
     />
   );
@@ -117,8 +135,10 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
   // midiendo igual que antes.
   if (variante === 'sin-fondo') return campo;
 
+  // El chip mide lo que escribe, así que su capa no puede ser `w-full`: con el
+  // ancho completo la píldora quedaría del ancho de la pantalla.
   return (
-    <View className="w-full relative justify-center">
+    <View className={`${variante === 'chip' ? 'self-start' : 'w-full'} relative justify-center`}>
       {campo}
       {/*
         `box-none`: la capa no recibe taps pero sus hijos sí. Con
@@ -126,7 +146,10 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
         nada la capa se come los taps sobre el borde derecho del campo.
       */}
       {iconoDerecha && (
-        <View className="absolute right-lg" pointerEvents="box-none">
+        <View
+          className={`absolute ${variante === 'chip' ? 'right-md' : 'right-lg'}`}
+          pointerEvents="box-none"
+        >
           {iconoDerecha}
         </View>
       )}

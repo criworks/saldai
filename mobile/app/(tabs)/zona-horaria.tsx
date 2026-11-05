@@ -1,11 +1,10 @@
 import { buscarZonas, catalogoDeZonas, etiquetaDeDesplazamiento, type ZonaDelCatalogo } from '@saldai/core';
-import { Check, MagnifyingGlass, X } from 'phosphor-react-native';
+import { Check } from 'phosphor-react-native';
 import React, { useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, SectionList, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Alert } from '@/components/ui/Alert';
-import { BotonLimpiar } from '@/components/ui/BotonLimpiar';
-import { Input } from '@/components/ui/Input';
+import { Buscador } from '@/components/ui/Buscador';
 import { colors } from '@/constants/theme';
 import { usePreferencias } from '@/features/perfil';
 import { zonaDelDispositivo } from '@/lib/zona';
@@ -17,7 +16,6 @@ type Fila = { clave: string; zona: string | null; nombre: string; detalle: strin
 
 export default function ZonaHorariaScreen() {
   const { zonaElegida, guardar, guardando, cargando, error, errorAlGuardar } = usePreferencias();
-  const [buscando, setBuscando] = useState(false);
   const [texto, setTexto] = useState('');
 
   const delAparato = zonaDelDispositivo();
@@ -64,11 +62,6 @@ export default function ZonaHorariaScreen() {
     guardar({ zona: fila.zona });
   };
 
-  const cerrarBusqueda = () => {
-    setBuscando(false);
-    setTexto('');
-  };
-
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <Alert
@@ -77,46 +70,14 @@ export default function ZonaHorariaScreen() {
         type="error"
       />
 
-      <View className="px-xl pt-3xl pb-lg gap-lg">
-        <View className="flex-row items-center justify-between w-full">
-          <Text className="text-foreground text-xl font-normal leading-[normal]">
-            Zona horaria
-          </Text>
-          <Pressable
-            onPress={() => (buscando ? cerrarBusqueda() : setBuscando(true))}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel={buscando ? 'Cerrar el buscador' : 'Buscar una zona horaria'}
-            testID="alternar-busqueda"
-            className="w-4xl h-4xl rounded-full bg-card items-center justify-center active:opacity-80"
-          >
-            {buscando ? (
-              <X size={20} color={colors.text} weight="regular" />
-            ) : (
-              <MagnifyingGlass size={20} color={colors.text} weight="regular" />
-            )}
-          </Pressable>
-        </View>
-
-        {buscando && (
-          <Input
-            value={texto}
-            onChangeText={setTexto}
-            placeholder="Busca una ciudad o un país"
-            autoFocus
-            autoCorrect={false}
-            autoCapitalize="none"
-            returnKeyType="search"
-            accessibilityLabel="Busca una zona horaria"
-            testID="buscador-de-zonas"
-            iconoDerecha={
-              texto ? (
-                <BotonLimpiar onPress={() => setTexto('')} accessibilityLabel="Borrar la búsqueda" />
-              ) : undefined
-            }
-          />
-        )}
-      </View>
+      <Buscador
+        titulo="Zona horaria"
+        texto={texto}
+        onTexto={setTexto}
+        placeholder="Busca una ciudad o un país"
+        accessibilityLabel="Busca una zona horaria"
+        testID="buscador-de-zonas"
+      />
 
       {cargando ? (
         <View className="flex-1 items-center justify-center">
