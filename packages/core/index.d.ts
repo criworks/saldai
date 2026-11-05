@@ -145,6 +145,38 @@ export declare function registrarMovimiento(
   opciones?: { zona?: string; hoy?: Date }
 ): ResultadoDeRegistro
 
+// ── Zonas horarias ──────────────────────────────────────────────────────────
+
+/** Una zona del catálogo, lista para mostrar. */
+export interface ZonaDelCatalogo {
+  /** El nombre IANA, que es lo que se guarda. */
+  zona: string
+  /** El nombre para mostrar: "Buenos Aires, Argentina". */
+  nombre: string
+  /** Minutos adelantados respecto de UTC. */
+  minutos: number
+  /** "(UTC-03:00)". */
+  desplazamiento: string
+}
+
+/** Los nombres IANA que se le ofrecen al usuario. */
+export declare const ZONAS: readonly string[]
+
+/** Minutos adelantados respecto de UTC, o `null` si el motor no conoce la zona. */
+export declare function desplazamientoDeZona(zona: string, instante?: Date): number | null
+
+/** -180 → "(UTC-03:00)". */
+export declare function etiquetaDeDesplazamiento(minutos: number): string
+
+/** "America/Argentina/Buenos_Aires" → "Buenos Aires, Argentina". */
+export declare function nombreDeZona(zona: string): string
+
+/** El catálogo ordenado de oeste a este, sin las zonas que el motor no conoce. */
+export declare function catalogoDeZonas(instante?: Date): ZonaDelCatalogo[]
+
+/** Filtra el catálogo por nombre, nombre IANA o desplazamiento. */
+export declare function buscarZonas(texto: string, catalogo: ZonaDelCatalogo[]): ZonaDelCatalogo[]
+
 // ── Contrato de la API ──────────────────────────────────────────────────────
 
 /** Un gasto como lo devuelve la API. */

@@ -1,3 +1,5 @@
+import { nombreDeZona } from '@saldai/core'
+
 /**
  * La zona horaria del dispositivo.
  *
@@ -16,4 +18,16 @@ export function zonaDelDispositivo(): string | undefined {
   } catch {
     return undefined
   }
+}
+
+/**
+ * Cómo se muestra la zona en la fila de configuraciones.
+ *
+ * Sin zona guardada dice "Automática" y no el nombre de la zona del aparato,
+ * porque lo que el usuario eligió es justamente que la siga: si dijera
+ * "Santiago" parecería una elección fija y no se entendería que al viajar
+ * cambia sola.
+ */
+export function nombreDeZonaMostrada(zona: string | undefined): string {
+  return zona ? nombreDeZona(zona) : 'Automática'
 }

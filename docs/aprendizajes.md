@@ -296,3 +296,29 @@ vista agrupa, así que las sumas por mes no sirven para detectarlo. Lo que lo
 detecta es **re-derivar el dato desde su origen y comparar**, y eso solo es
 posible si el origen guarda el contexto con el que se decidió: una fecha
 relativa sin la zona y el día de referencia no es reproducible.
+
+---
+
+## `timeZone: undefined` no falla: significa "la del sistema"
+
+PR de la UI de preferencias · noviembre 2026
+
+- **Síntoma**: ninguno todavía. Lo agarró un test del catálogo de zonas antes
+  de que el selector llegara a una pantalla.
+- **Causa**: `desplazamientoDeZona()` validaba la zona dejando que
+  `new Intl.DateTimeFormat('en-US', { timeZone: zona })` tirara, que es la forma
+  en que `esZonaValida()` valida un nombre IANA y funciona bien para `''` o para
+  `'America/Narnia'`. Pero con `undefined` no tira: la opción ausente significa
+  "la zona del sistema". Así que una zona que no venía devolvía el
+  desplazamiento del aparato, presentado como si fuera el de la zona pedida.
+- **Por qué no se notaba**: el valor devuelto es un número perfectamente
+  válido, y en el contenedor de CI el sistema está en UTC, así que `0`. Cero es
+  además un desplazamiento real: en el selector, una zona que el motor no
+  conoce habría aparecido agrupada bajo `(UTC+00:00)` en vez de quedar fuera.
+  Nada da error en ninguna de las dos puntas.
+- **Arreglo**: un guardia explícito —si no es un string con contenido,
+  `null`— antes de construir el formateador, y un test que pasa `undefined`.
+- **Regla**: una opción de `Intl` que falta no es una opción inválida; es el
+  default. Validar "tira o no tira" solo sirve para los valores presentes, así
+  que el caso ausente se comprueba aparte. Y cuando una función devuelve un
+  número, "no sé" no puede ser un número que también signifique algo.

@@ -10,7 +10,8 @@
     "./dinero": "./dinero.js",
     "./fechas": "./fechas.js",
     "./fechas-humanas": "./fechas-humanas.js",
-    "./parser": "./parser.js"
+    "./parser": "./parser.js",
+    "./zonas": "./zonas.js"
   },
   "scripts": {
     "test": "node --test"

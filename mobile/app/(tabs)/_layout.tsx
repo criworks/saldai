@@ -23,6 +23,7 @@ export default function TabLayout() {
           <Tabs.Screen name="configuraciones" />
           <Tabs.Screen name="captura" />
           <Tabs.Screen name="cuenta" options={{ href: null }} />
+          <Tabs.Screen name="zona-horaria" options={{ href: null }} />
         </Tabs>
       </GastosProvider>
     </FilterProvider>
