@@ -74,8 +74,8 @@ solo le asigna color y emoji, así una categoría nueva no puede quedar a medias
 `server.js` solo carga la config y abre el puerto; la app se arma en
 `src/app.js`, que es lo que permite montarla en un test con supertest sin
 levantar un proceso. Rutas en `src/rutas/`, consultas a Supabase en
-`src/gastos/repositorio.js`, validación de parámetros como funciones puras en
-`src/gastos/validacion.js`.
+`src/gastos/repositorio.js` y `src/perfil/repositorio.js`, validación de
+parámetros como funciones puras en `src/gastos/validacion.js`.
 
 Endpoints:
 
@@ -83,11 +83,15 @@ Endpoints:
 |------|--------|
 | `POST /gastos/parsear` | no |
 | `POST /gastos` | sí |
-
 | `GET /gastos?mes=&anio=` | sí |
 | `GET /gastos/anuales?anio=` | sí |
+| `DELETE /perfil` | sí |
 | `GET /health` | no (keep-alive de Render) |
 | `GET /health/db` | no |
+
+`DELETE /perfil` borra los movimientos del usuario y su cuenta, llamando a
+`delete_user()`. **Es el único camino**: mobile no le habla a Supabase
+directamente para escribir.
 
 Las dos rutas de `POST` aceptan `zona` (IANA) en el cuerpo y caen a
 `APP_TIMEZONE` si no viene. El contexto que se usó se guarda en la fila pero

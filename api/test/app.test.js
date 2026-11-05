@@ -80,6 +80,7 @@ test('las rutas protegidas responden 401 sin token, antes de tocar la base', asy
     () => request(app).get('/gastos?mes=10'),
     () => request(app).get('/gastos/anuales?anio=2026'),
     () => request(app).post('/gastos').send({ input: '1000, pan' }),
+    () => request(app).delete('/perfil'),
   ]) {
     const res = await pedir()
     assert.strictEqual(res.status, 401)
@@ -133,4 +134,18 @@ test('helmet pone las cabeceras y saca la que delata el servidor', async () => {
   // Express manda `X-Powered-By: Express` por defecto, que le dice a cualquiera
   // con qué está escrita la API. Helmet la quita.
   assert.strictEqual(res.headers['x-powered-by'], undefined)
+})
+
+test('/perfil solo acepta DELETE', async () => {
+  // El borrado de cuenta no se puede disparar con un GET, que es lo que haría
+  // cualquier cosa que siga links: un prefetch del navegador, un bot, el
+  // preview de un chat.
+  for (const pedir of [
+    () => request(app).get('/perfil'),
+    () => request(app).post('/perfil'),
+  ]) {
+    const res = await pedir()
+    assert.strictEqual(res.status, 404)
+    assert.strictEqual(res.body.ok, false)
+  }
 })

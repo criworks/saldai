@@ -7,6 +7,7 @@ const helmet = require('helmet')
 const { limitadores } = require('./middleware/limites')
 const { manejadorDeErrores, noEncontrado } = require('./middleware/errores')
 const { rutasDeGastos } = require('./rutas/gastos')
+const { rutasDePerfil } = require('./rutas/perfil')
 const { rutasDeSalud } = require('./rutas/salud')
 
 /**
@@ -41,6 +42,7 @@ function crearApp({ origenesPermitidos, zona, limites }) {
   const limitadoresDePedidos = limitadores(limites)
 
   app.use('/gastos', rutasDeGastos({ zona, limites: limitadoresDePedidos }))
+  app.use('/perfil', rutasDePerfil({ limites: limitadoresDePedidos }))
   app.use('/health', rutasDeSalud({ limites: limitadoresDePedidos }))
 
   app.use(noEncontrado)
