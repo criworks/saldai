@@ -194,4 +194,39 @@ export interface TotalesAnuales {
   totales: number[]
 }
 
+/**
+ * Un flag del perfil.
+ *
+ * Son dos campos y no uno: `habilitado` es si el perfil *puede* usar la función
+ * (lo decide el plan) y `activo` si *quiere* usarla (lo decide el usuario). Con
+ * uno solo, al llegar un plan pago no se distingue "apagado porque lo apagó" de
+ * "apagado porque no pagó". La UI muestra la función cuando los dos son true.
+ */
+export interface FlagDePerfil {
+  habilitado: boolean
+  activo: boolean
+}
+
+/** `GET /perfil/preferencias` y `PATCH /perfil/preferencias` */
+export interface Preferencias {
+  ok: true
+  errores: []
+  datos: {
+    categorias: FlagDePerfil
+    metodos: FlagDePerfil
+    /** Zona IANA elegida. En `null`, se usa la del dispositivo. */
+    zona: string | null
+  }
+}
+
+/**
+ * El cuerpo de `PATCH /perfil/preferencias`. Todos los campos son opcionales:
+ * se manda solo lo que cambia. `habilitado` no se puede cambiar desde acá.
+ */
+export interface CambioDePreferencias {
+  categoriasActivo?: boolean
+  metodosActivo?: boolean
+  zona?: string | null
+}
+
 export type ApiResponse<T> = T | ApiError

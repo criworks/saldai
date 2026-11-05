@@ -19,6 +19,7 @@ UTC (`AAAAMMDDHHMMSS_descripcion.sql`).
 | `20261028000000_fecha_a_date.sql` | `gastos.fecha` pasa de text (`DD/MM/AAAA`) a `date`, convirtiendo los datos existentes, más el índice `(user_id, fecha desc)`. Verifica antes que cada valor sea un `DD/MM/AAAA` válido y falla sin tocar nada si alguno no lo es. |
 | `20261030000000_totales_por_mes.sql` | Crea `public.totales_por_mes(anio)`, que suma por mes en la base en vez de traer el año entero a la API. |
 | `20261105000000_contexto_en_gastos.sql` | Agrega `zona` y `hoy_resuelto` a `public.gastos`, con backfill de lo existente. Sin ellas la fecha no se podía volver a derivar desde `input_original`. |
+| `20261105010000_preferencias.sql` | Crea `public.preferencias`, con RLS: los flags por perfil (`habilitado` + `activo` por cada uno) y la zona elegida. La fila nace en el primer guardado; si no hay, valen los defaults de las columnas. |
 
 ## Cómo aplicarlas
 

@@ -1,3 +1,4 @@
+import type { CambioDePreferencias, Preferencias } from '@saldai/core'
 import { API_URL, getAuthHeaders, leerError } from '@/lib/peticiones'
 
 /**
@@ -21,4 +22,48 @@ export async function eliminarPerfil(): Promise<void> {
   if (!res.ok) {
     throw new Error(await leerError(res, 'Error en la respuesta del servidor al eliminar la cuenta'))
   }
+}
+
+/**
+ * Las preferencias del perfil.
+ *
+ * Nunca responde 404: hasta el primer guardado no hay fila y la API devuelve
+ * los defaults, así que quien llama tiene un solo camino en vez de uno para
+ * "tiene preferencias" y otro para "todavía no".
+ */
+export async function fetchPreferencias(): Promise<Preferencias> {
+  const res = await fetch(`${API_URL}/perfil/preferencias`, {
+    method: 'GET',
+    headers: await getAuthHeaders(),
+  })
+
+  if (!res.ok) {
+    throw new Error(
+      await leerError(res, 'Error en la respuesta del servidor al leer las preferencias')
+    )
+  }
+
+  return res.json()
+}
+
+/**
+ * Cambia solo los campos que se le pasen y devuelve el estado completo.
+ *
+ * Devuelve todo y no solo lo que cambió para que la app se quede con la verdad
+ * del servidor en vez de reconstruirla a partir de lo que mandó.
+ */
+export async function guardarPreferencias(cambio: CambioDePreferencias): Promise<Preferencias> {
+  const res = await fetch(`${API_URL}/perfil/preferencias`, {
+    method: 'PATCH',
+    headers: await getAuthHeaders(),
+    body: JSON.stringify(cambio),
+  })
+
+  if (!res.ok) {
+    throw new Error(
+      await leerError(res, 'Error en la respuesta del servidor al guardar las preferencias')
+    )
+  }
+
+  return res.json()
 }

@@ -23,6 +23,40 @@ function repositorioDePerfil(token) {
     eliminar() {
       return supabase.rpc('delete_user')
     },
+
+    /**
+     * Las preferencias del perfil, o `null` si todavía no guardó ninguna.
+     *
+     * `maybeSingle()` y no `single()`: no tener fila es lo normal hasta el
+     * primer guardado, y `single()` lo trataría como error. Los defaults no se
+     * inventan acá, están en el schema; quien llama los aplica con
+     * `conDefaults()` para que haya un solo lugar donde se definan.
+     */
+    leerPreferencias(userId) {
+      return supabase
+        .from('preferencias')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle()
+    },
+
+    /**
+     * Guarda los campos que vengan, creando la fila si no existe.
+     *
+     * Es un upsert y no un update porque la fila nace en el primer guardado y
+     * no al registrarse: así no hace falta un trigger sobre `auth.users`, que
+     * es una pieza más que mantener para algo que esta línea resuelve.
+     */
+    guardarPreferencias(userId, campos) {
+      return supabase
+        .from('preferencias')
+        .upsert(
+          { user_id: userId, ...campos, actualizado_en: new Date().toISOString() },
+          { onConflict: 'user_id' }
+        )
+        .select()
+        .single()
+    },
   }
 }
 

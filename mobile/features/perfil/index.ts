@@ -5,4 +5,5 @@
  * del perfil cuando existan: las preferencias del usuario y, más adelante, sus
  * cuentas.
  */
-export { eliminarPerfil } from './api'
+export { eliminarPerfil, fetchPreferencias, guardarPreferencias } from './api'
+export { PREFERENCIAS_POR_DEFECTO, usePreferencias } from './usePreferencias'
