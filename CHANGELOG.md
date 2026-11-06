@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+
+## [1.8.0] - 2026-11-06
 ### Changed
 - **Mobile**: los campos de texto unificados en un solo `Input`, el aviso del código de 6 dígitos, la app agrupada por feature, los imports al alias `@/`, los mocks a `services/mocks/`, la caché y el alta optimista con react-query, los colores y medidas desde los tokens, los identificadores alineados con la marca y las dependencias declaradas. El detalle está en [`mobile/CHANGELOG.md`](mobile/CHANGELOG.md).
 - **CI también corre en los PR hacia `main`**: el workflow se disparaba solo en `development`, así que un PR de release no traía ningún check propio — mostraba el run verde del tip de `development`, que es el mismo commit pero no es lo mismo que haberlo verificado contra `main`. Se vio en el release #59. Para que el check sea obligatorio ahí hace falta además agregarlo al ruleset de `main` desde la interfaz de GitHub.

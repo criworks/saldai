@@ -19,6 +19,8 @@ del formato; el texto de cada entrada es el original.
 
 
 ## [Unreleased]
+
+## [1.6.0] - 2026-11-06
 ### Added
 - **El mes visto por categoría**: al lado de "En curso", en el footer, un chip "Categorías" cambia entre los movimientos del mes y el mismo mes sumado por categoría, una fila por categoría con lo que se gastó en ella, de mayor a menor. No cambia de mes: desde un mes pasado se ve su desglose igual que el del mes en curso, porque la suma se deriva de los gastos que ya están en caché y no es otra consulta. Tocar una fila deja el listado filtrado por esa categoría, que es el camino de "en qué se me fue" a "en qué exactamente", y volver a tocar el chip vuelve al listado. Las filas se dibujan con `ExpenseItem`, que ya es monto, burbuja de categoría y nombre: la misma forma que esta fila. Es otra pantalla que la de "Categorías" de configuraciones, que es la de crear y editar las categorías propias y sigue siendo la de "avísenme". El chip no está si el perfil tiene las categorías apagadas.
 - **El encabezado del mes es un componente** (`features/gastos/componentes/EncabezadoDelMes.tsx`): el nombre del mes, que lleva a la lista de meses, y el total debajo. Lo usan el listado de movimientos y el desglose por categoría, y en los dos es el mismo bloque con el mismo destino, así que vive una vez. El total lo decide la pantalla, porque en el listado filtrado es el de lo que se ve.
