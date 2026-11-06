@@ -17,6 +17,21 @@ function validarInput(input) {
   return bien(input)
 }
 
+/**
+ * El `id` de un movimiento, tal como viene en la ruta.
+ *
+ * Es uuid porque la columna es uuid: sin esta comprobación, un `/gastos/hola`
+ * llega a Supabase y vuelve como error 500 de base ("invalid input syntax"),
+ * cuando es un 400 del cliente.
+ */
+function validarId(id) {
+  const esUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+    String(id ?? '').trim()
+  )
+  if (!esUuid) return mal("El parámetro 'id' tiene que ser el uuid de un movimiento")
+  return bien(String(id).trim())
+}
+
 /** `mes` de 1 a 12. */
 function validarMes(mes) {
   const numero = parseInt(mes, 10)
@@ -43,4 +58,4 @@ function validarAnioRequerido(anio) {
   return bien(parseInt(anio, 10))
 }
 
-module.exports = { validarInput, validarMes, validarAnio, validarAnioRequerido }
+module.exports = { validarInput, validarId, validarMes, validarAnio, validarAnioRequerido }

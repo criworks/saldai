@@ -19,6 +19,15 @@ del formato; el texto de cada entrada es el original.
 
 
 ## [Unreleased]
+### Added
+- **Editar y eliminar un movimiento**: tocar una fila del mes abre el movimiento y deja cambiarle el monto, la descripción, la fecha, la categoría y el método de pago, escribirle una nota, o eliminarlo. El borrado pide confirmación y dice qué se va a eliminar. La categoría y el método aparecen con la misma cuenta que en la captura: solo si el perfil los tiene prendidos, porque editar una categoría que no se ve en ningún otro lado no tendría dónde mostrarse.
+- **Nota en un movimiento**: un campo de texto libre, hasta 500 caracteres. Vaciarlo la borra. El parser no la lee: es para la persona.
+
+### Changed
+- **El editor manda solo lo que se tocó**: la API marca como editados a mano los campos que recibe, y esa marca es la que decide si un reclasificar masivo puede tocar la fila, así que mandar el movimiento completo marcaría los seis campos aunque se haya corregido uno. Con el movimiento sin cambios, el botón de guardar queda apagado.
+- **Sin alta optimista al editar**, al contrario del registro: ahí el gasto aparece al toque porque la persona está escribiendo uno nuevo y el provisorio es lo que da la sensación de guardado; acá el movimiento ya está en la lista y lo que hace falta saber es si la corrección quedó guardada, así que la fila se actualiza con lo que respondió el servidor. Si la API rechaza el cambio, el editor queda abierto con lo escrito: cerrarlo perdería la corrección.
+- **Un gasto recién registrado no se puede abrir hasta que el servidor responde**: el provisorio todavía no tiene id de Postgres y abrirlo mandaría un PATCH a un id que no existe.
+- **El campo de texto compartido soporta varias líneas**: con `h-control` puesto, un campo multilínea quedaba de una línea y el resto del texto no se veía. Lo usa la nota del movimiento.
 
 ## [1.6.0] - 2026-11-06
 ### Added

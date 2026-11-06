@@ -145,6 +145,55 @@ export declare function registrarMovimiento(
   opciones?: { zona?: string; hoy?: Date }
 ): ResultadoDeRegistro
 
+// ── Edición a mano de un movimiento ────────────────────────────────────────
+
+/** Los campos que el usuario puede corregir después de registrar. */
+export type CampoEditable = 'monto' | 'item' | 'categoria' | 'metodo' | 'fecha' | 'notas'
+
+export declare const CAMPOS_EDITABLES: readonly CampoEditable[]
+export declare const LARGO_MAXIMO_ITEM: number
+export declare const LARGO_MAXIMO_NOTAS: number
+
+/** `true` si es una fecha real en AAAA-MM-DD: el 31/02 no pasa. */
+export declare function esFechaIso(valor: unknown): boolean
+
+/**
+ * El cuerpo de `PATCH /gastos/:id`: solo los campos que cambian. `notas` en
+ * `null` o en `''` borra la nota.
+ */
+export interface CambioDeMovimiento {
+  monto?: number
+  item?: string
+  categoria?: CategoriaDeGasto
+  metodo?: Metodo
+  fecha?: FechaISO
+  notas?: string | null
+}
+
+export interface ResultadoDeCambio {
+  ok: boolean
+  errores: string[]
+  /** Los campos a guardar, con los nombres del dominio. Vacío si `ok` es false. */
+  campos: Record<string, unknown>
+  /** Los campos que este cambio toca, para `campos_editados`. */
+  editados: CampoEditable[]
+}
+
+/**
+ * Valida una edición a mano y la deja lista para guardar. Acá **no corre el
+ * parser**: el usuario corrige campos sueltos, no escribe una línea.
+ */
+export declare function validarCambioDeMovimiento(cambio: unknown): ResultadoDeCambio
+
+/** La unión de lo ya marcado con lo que cambia ahora, sin duplicados. */
+export declare function unirCamposEditados(
+  previos: readonly string[] | null | undefined,
+  nuevos: readonly string[]
+): CampoEditable[]
+
+/** `true` si ese campo del movimiento lo corrigió el usuario a mano. */
+export declare function fueEditadoAMano(movimiento: unknown, campo: CampoEditable): boolean
+
 // ── Zonas horarias ──────────────────────────────────────────────────────────
 
 /** Una zona del catálogo, lista para mostrar. */
@@ -189,6 +238,15 @@ export interface Gasto {
   /** AAAA-MM-DD: la columna es `date`. */
   fecha: FechaISO
   metodo: Metodo
+  /** Detalle libre del usuario. `null` mientras no escribió ninguno. */
+  notas?: string | null
+  /** Cuándo se editó a mano por última vez. `null` = nunca se editó. */
+  editado_en?: string | null
+  /**
+   * Los campos que el usuario corrigió a mano. Un reclasificar masivo tiene
+   * que saltearse los que estén acá, o le pisa la corrección.
+   */
+  campos_editados?: CampoEditable[]
 }
 
 /**
@@ -216,6 +274,14 @@ export interface GastosDelMes {
 export interface GastoCreado {
   ok: true
   datos: GastoParseado & { id: string | number }
+}
+
+/** `PATCH /gastos/:id` y `DELETE /gastos/:id` */
+export interface MovimientoCambiado {
+  ok: true
+  errores: []
+  /** La fila como quedó, o —en el borrado— como estaba antes de borrarse. */
+  datos: Gasto
 }
 
 /** `GET /gastos/anuales` */

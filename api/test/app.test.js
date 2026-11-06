@@ -83,6 +83,11 @@ test('las rutas protegidas responden 401 sin token, antes de tocar la base', asy
     () => request(app).delete('/perfil'),
     () => request(app).get('/perfil/preferencias'),
     () => request(app).patch('/perfil/preferencias').send({ categoriasActivo: true }),
+    () =>
+      request(app)
+        .patch('/gastos/0f1c6b5a-9d2e-4c3b-8a7f-1e2d3c4b5a69')
+        .send({ monto: 50000 }),
+    () => request(app).delete('/gastos/0f1c6b5a-9d2e-4c3b-8a7f-1e2d3c4b5a69'),
   ]) {
     const res = await pedir()
     assert.strictEqual(res.status, 401)
@@ -160,4 +165,31 @@ test('PATCH /perfil/preferencias pide sesión antes de validar el cuerpo', async
 
   assert.strictEqual(res.status, 401)
   assert.strictEqual(res.body.error, 'Token requerido')
+})
+
+test('editar y borrar un movimiento piden sesión antes de mirar el id', async () => {
+  // Mismo orden que en las preferencias: `requireAuth` antes de validar. Si
+  // fuera al revés, un id mal escrito respondería 400 y le diría a cualquiera
+  // sin token qué forma tiene un id válido.
+  for (const pedir of [
+    () => request(app).patch('/gastos/no-es-un-uuid').send({ monto: 1 }),
+    () => request(app).delete('/gastos/no-es-un-uuid'),
+  ]) {
+    const res = await pedir()
+    assert.strictEqual(res.status, 401)
+    assert.strictEqual(res.body.error, 'Token requerido')
+  }
+})
+
+test('los gastos no se borran ni se editan sin id', async () => {
+  // `DELETE /gastos` sin id no existe: si cayera en la ruta de la colección,
+  // un borrado masivo quedaría a un slash de distancia.
+  for (const pedir of [
+    () => request(app).delete('/gastos'),
+    () => request(app).patch('/gastos').send({ monto: 1 }),
+  ]) {
+    const res = await pedir()
+    assert.strictEqual(res.status, 404)
+    assert.strictEqual(res.body.ok, false)
+  }
 })

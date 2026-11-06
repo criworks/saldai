@@ -11,6 +11,8 @@
     "./fechas": "./fechas.js",
     "./fechas-humanas": "./fechas-humanas.js",
     "./parser": "./parser.js",
+    "./movimientos": "./movimientos.js",
+    "./ediciones": "./ediciones.js",
     "./zonas": "./zonas.js"
   },
   "scripts": {

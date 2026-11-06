@@ -4,6 +4,7 @@ const assert = require('node:assert')
 const {
   validarAnio,
   validarAnioRequerido,
+  validarId,
   validarInput,
   validarMes,
 } = require('../src/gastos/validacion')
@@ -47,5 +48,19 @@ test('la ruta anual pide el anio sí o sí', () => {
     const { ok, errores } = validarAnioRequerido(invalido)
     assert.strictEqual(ok, false)
     assert.match(errores[0], /es requerido/)
+  }
+})
+
+test('el id de un movimiento tiene que ser un uuid', () => {
+  const uuid = '0f1c6b5a-9d2e-4c3b-8a7f-1e2d3c4b5a69'
+  assert.strictEqual(validarId(uuid).valor, uuid)
+  assert.strictEqual(validarId(` ${uuid} `).valor, uuid)
+
+  // Sin esto un `/gastos/hola` llega a Supabase y vuelve como 500 de base,
+  // cuando es un 400 del cliente.
+  for (const invalido of [undefined, '', 'hola', '123', uuid + 'f']) {
+    const { ok, errores } = validarId(invalido)
+    assert.strictEqual(ok, false, `aceptó ${invalido}`)
+    assert.match(errores[0], /uuid de un movimiento/)
   }
 })

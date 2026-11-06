@@ -98,7 +98,18 @@ lee `errores` (plural) y cae a `error` solo para los 401 — si se agrega una
 llamada, usar ese helper y no leer el cuerpo a mano.
 
 Los tipos de las respuestas vienen de `@saldai/core`
-(`GastosDelMes`, `TotalesAnuales`, `GastoCreado`). No redeclararlos acá.
+(`GastosDelMes`, `TotalesAnuales`, `GastoCreado`, `MovimientoCambiado`). No
+redeclararlos acá.
+
+Editar y eliminar un movimiento van por `useMovimiento()`, y las dos mutaciones
+invalidan el **prefijo** de las llaves (`llaves.todosLosGastos()`) y no la de un
+mes: cambiarle la fecha a un movimiento lo mueve de mes, así que las llaves
+afectadas son dos y la de origen la pantalla no la tiene a mano. react-query
+vuelve a pedir solo las consultas activas, así que no es una ráfaga de pedidos.
+
+Lo que viaja en el `PATCH` es **solo lo que cambió** (`cambioPendiente`, en
+`features/gastos/edicion.ts`): la API marca como editados a mano los campos que
+recibe, y esa marca decide si un reclasificar masivo puede tocar la fila.
 
 ---
 
@@ -168,13 +179,19 @@ client de un dispositivo y para los APK de `preview`.
 
 ## Flags de producto
 
-`lib/funciones.ts` declara qué partes del producto se muestran. Son constantes y
-no variables de entorno a propósito: lo que entra en una versión es una decisión
-que queda en el código y en su historia, no algo que cambia según el build.
+Las dos funciones conmutables —categorías y métodos de pago— salen de las
+**preferencias del perfil**, que trae `usePreferencias()` de `features/perfil`:
+`categoriasVisibles` y `metodosVisibles` ya vienen resueltos, porque una función
+se ve cuando el perfil **puede** (`habilitado`, lo decide el plan) y el usuario
+**quiere** (`activo`, lo decide él en configuraciones). Esa cuenta se hace una
+vez en el hook y no en cada pantalla, que es como terminarían difiriendo.
 
-Hoy `CATEGORIAS_VISIBLES` y `METODOS_VISIBLES` están en `false`. Por dentro
-todo sigue funcionando y la API sigue guardando la categoría; lo que está
-apagado es solo lo que ve el usuario. No prenderlas de paso.
+Antes eran `CATEGORIAS_VISIBLES` y `METODOS_VISIBLES`, constantes de
+`lib/funciones.ts`: de compilación e iguales para todos, así que prender una
+función pedía publicar una versión nueva en las stores. Ese archivo ya no existe.
+
+El default sigue siendo apagado, y por dentro todo sigue funcionando: la API
+guarda la categoría igual. **No prenderlas de paso.**
 
 ---
 
@@ -186,8 +203,12 @@ apagado es solo lo que ve el usuario. No prenderlas de paso.
 - Instalar dependencias sin pedirlo. Una con código nativo obliga a un build
   nuevo, así que no entra sin avisar.
 - Tocar `app.json`, `app.config.js`, `eas.json`, `babel.config.js`,
-  `metro.config.js`, `tailwind.config.js`, `jest.config.js` o `package.json`
-  sin que se pida.
+  `metro.config.js`, `tailwind.config.js` o `package.json` sin que se pida.
+  `jest.config.js` tampoco, con una excepción: una dependencia en ESM tiene que
+  estar en su `transformIgnorePatterns`, o cualquier test que la importe
+  —aunque sea indirectamente, por el `index.ts` de una feature— falla al
+  parsear y el suite entero no corre. Pasó con `@rn-primitives`, el `Portal` de
+  los modales.
 - Editar `global.css` a mano: es generado, y CI lo verifica.
 - Romper rutas existentes de Expo Router.
 - Dejar errores de `tsc`.

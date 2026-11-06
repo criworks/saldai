@@ -11,10 +11,20 @@ function errorDeEntrada(res, errores, extra = {}) {
   return res.status(400).json({ ok: false, errores, datos: null, ...extra })
 }
 
+/**
+ * 404: la fila no existe, o es de otro usuario.
+ *
+ * Son el mismo 404 a propósito: distinguirlos le diría a cualquiera con sesión
+ * si un id existe en la base de otra persona.
+ */
+function noEncontrado(res, mensaje) {
+  return res.status(404).json({ ok: false, errores: [mensaje], datos: null })
+}
+
 /** 500: la base falló. El detalle va al log, no al cliente. */
 function errorDeBase(res, mensaje, error, extra = {}) {
   console.error('Supabase error:', error)
   return res.status(500).json({ ok: false, errores: [mensaje], datos: null, ...extra })
 }
 
-module.exports = { errorDeEntrada, errorDeBase }
+module.exports = { errorDeEntrada, errorDeBase, noEncontrado }
