@@ -1,5 +1,5 @@
 import { formatearMonto } from '@saldai/core'
-import React, { useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
 import {
   RefreshControl,
   SectionList,
@@ -9,7 +9,7 @@ import {
 } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { colors, SIN_CATEGORIA } from '@/constants/theme'
-import { EncabezadoDelMes, ExpenseItem, useFilter, useGastos, Gasto } from '@/features/gastos'
+import { EditorDeMovimiento, EncabezadoDelMes, ExpenseItem, useFilter, useGastos, Gasto } from '@/features/gastos'
 import { usePreferencias } from '@/features/perfil'
 import { Alert } from '@/components/ui/Alert'
 
@@ -68,6 +68,12 @@ export default function DashboardScreen() {
   // selección vieja dejaría el listado recortado sin forma de volver atrás.
   const { selectedCategory } = useFilter()
   const filtro = categoriasVisibles ? selectedCategory : null
+
+  // El movimiento que se está editando. `null` tiene el editor cerrado; se
+  // guarda el movimiento entero y no el id porque el editor abre con sus
+  // valores, y buscarlo de nuevo en la lista lo dejaría vacío justo cuando un
+  // refetch está en vuelo.
+  const [enEdicion, setEnEdicion] = useState<Gasto | null>(null)
 
   const insets = useSafeAreaInsets()
   const listPaddingBottom = 220 + insets.bottom;
@@ -207,18 +213,34 @@ export default function DashboardScreen() {
         )}
         ItemSeparatorComponent={() => <View className="h-xl" />}
         renderItem={({ item }) => (
-          // La categoría y el método se pasan solo si el perfil los tiene
-          // prendidos. Es la misma cuenta que hace la captura para mostrar sus
-          // selectores: lo que se registra se ve, y lo que no se registra no
-          // aparece a medias en el listado.
-          <ExpenseItem
-            monto={formatearMonto(item.monto)}
-            titulo={item.item}
-            categoria={categoriasVisibles ? item.categoria : undefined}
-            metodo={metodosVisibles ? item.metodo : undefined}
-          />
+          // Tocar la fila abre el editor. Un gasto provisorio (el que se ve
+          // mientras la API responde el alta) todavía no tiene id de Postgres,
+          // así que no se puede editar: abrirlo mandaría un PATCH a un id que
+          // no existe.
+          <Pressable
+            onPress={() => setEnEdicion(item)}
+            disabled={String(item.id).startsWith('provisorio-')}
+            accessibilityRole="button"
+            accessibilityLabel={`Editar ${item.item}`}
+            className="active:opacity-60"
+          >
+            {/*
+              La categoría y el método se pasan solo si el perfil los tiene
+              prendidos. Es la misma cuenta que hace la captura para mostrar sus
+              selectores: lo que se registra se ve, y lo que no se registra no
+              aparece a medias en el listado.
+            */}
+            <ExpenseItem
+              monto={formatearMonto(item.monto)}
+              titulo={item.item}
+              categoria={categoriasVisibles ? item.categoria : undefined}
+              metodo={metodosVisibles ? item.metodo : undefined}
+            />
+          </Pressable>
         )}
       />
+
+      <EditorDeMovimiento movimiento={enEdicion} onCerrar={() => setEnEdicion(null)} />
     </SafeAreaView>
   )
 }

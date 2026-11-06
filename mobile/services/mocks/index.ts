@@ -11,7 +11,8 @@
  * `fetch`, y costaba ver qué hacía la app de verdad.
  */
 
-import { categorizar, formatearMonto, isoAChileno } from '@saldai/core'
+import { categorizar, formatearMonto, isoAChileno, unirCamposEditados } from '@saldai/core'
+import type { CambioDeMovimiento, CampoEditable, Gasto } from '@saldai/core'
 import { mockFeedConfig } from './config'
 import { GASTOS, GASTOS_MUCHOS, gastoDeMentira } from './datos'
 
@@ -101,4 +102,48 @@ export async function crearGasto(input: string) {
       fechaFormateada: isoAChileno(nuevo.fecha),
     },
   }
+}
+
+/**
+ * Edita un movimiento del arreglo de mentira, en el lugar.
+ *
+ * Muta `GASTOS` igual que `crearGasto`: el mock tiene que comportarse como la
+ * base, o sea que después de editar, el siguiente `fetchGastosPorMes` devuelve
+ * lo editado. Si devolviera la fila cambiada sin guardarla, la lista volvería
+ * sola al valor viejo en el refetch y parecería un bug de la app.
+ */
+export async function editarMovimiento(id: string, cambio: CambioDeMovimiento) {
+  await esperar(500)
+
+  const indice = GASTOS.findIndex(g => String(g.id) === String(id))
+  if (indice === -1) throw new Error('Error simulado: ese movimiento no existe')
+
+  const previo = GASTOS[indice]
+  const editados = Object.keys(cambio) as CampoEditable[]
+
+  const actualizado: Gasto = {
+    ...previo,
+    ...cambio,
+    notas: cambio.notas === '' ? null : (cambio.notas ?? previo.notas ?? null),
+    monto_formateado:
+      cambio.monto === undefined ? previo.monto_formateado : formatearMonto(cambio.monto),
+    editado_en: new Date().toISOString(),
+    campos_editados: unirCamposEditados(previo.campos_editados, editados),
+  }
+
+  GASTOS[indice] = actualizado
+
+  return { ok: true as const, errores: [] as [], datos: actualizado }
+}
+
+/** Borra un movimiento del arreglo de mentira y devuelve el que borró. */
+export async function eliminarMovimiento(id: string) {
+  await esperar(500)
+
+  const indice = GASTOS.findIndex(g => String(g.id) === String(id))
+  if (indice === -1) throw new Error('Error simulado: ese movimiento no existe')
+
+  const [borrado] = GASTOS.splice(indice, 1)
+
+  return { ok: true as const, errores: [] as [], datos: borrado }
 }

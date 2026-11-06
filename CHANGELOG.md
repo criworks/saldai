@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+### Added
+- **Editar y eliminar un movimiento, con nota**: la API suma `PATCH /gastos/:id` y `DELETE /gastos/:id`, y `public.gastos` suma `notas`, `editado_en` y `campos_editados`. Las políticas RLS de UPDATE y DELETE ya existían desde `20261027000100_rls_gastos.sql`, así que lo que faltaba era el camino por la API: mobile sigue sin hablarle a Supabase para escribir.
+- **La marca de edición manual es por campo, no un booleano**: `campos_editados` guarda los nombres de los campos que el usuario corrigió a mano. El replay del parser sobre los 73 movimientos de producción mostró que los cinco campos que no son `fecha` reconstruyen 73/73, o sea que reclasificar el histórico es seguro **salvo en las filas que el usuario ya corrigió**; sin esta marca, el primer reclasificar masivo le pisa la corrección y no queda forma de distinguir "quedó así porque la puso el parser" de "quedó así porque la arreglé". Es por campo por la misma razón que las preferencias llevan dos columnas por flag: con un `editado boolean`, quien corrigió solo el monto queda excluido de un reclasificar que no tiene nada que ver con lo que cambió.
+- **`validarCambioDeMovimiento()` en `@saldai/core`** (`ediciones.js`): la edición a mano vale lo mismo en las dos puntas, así que el largo máximo de una nota, el monto mínimo y el catálogo de campos editables se definen una vez. La API valida el `PATCH` con eso y mobile apaga el botón de guardar con eso. En una edición **no corre el parser**: `input_original`, `zona` y `hoy_resuelto` quedan como están, porque siguen describiendo lo que la persona escribió; lo que cambia es el movimiento derivado, y eso es lo que dice `campos_editados`.
+
+### Changed
+- **Elegir la categoría a mano la guarda como `categoria_src = 'campo'`**, igual que cuando viene escrita en la línea. Dejarla en `'item'` diría que la dedujo el parser, que es justo lo que el usuario vino a corregir.
+- **El `PATCH` acepta solo los campos que cambian y recalcula lo derivado**: `monto_formateado` se deriva del monto y no se acepta del cuerpo, porque si no se podía guardar "$1" sobre un monto de 50.000.
+- **Un id mal escrito responde 400 y no 500**: `validarId` comprueba que sea un uuid antes de ir a Supabase, donde un `/gastos/hola` volvía como error de base. Y un movimiento que no existe —o que es de otro usuario— responde el mismo 404 en los dos casos: distinguirlos le diría a cualquiera con sesión si un id existe en la base de otra persona.
 
 ## [1.8.0] - 2026-11-06
 ### Changed

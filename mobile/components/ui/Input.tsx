@@ -23,6 +23,12 @@ export interface EstadoCaja {
   /** El campo está en foco, o el que lo usa quiere mostrarlo como activo. */
   activo?: boolean;
   /**
+   * El campo tiene varias líneas (la nota de un movimiento). La caja deja de
+   * tener la altura fija de un control y crece con el texto: con `h-control`
+   * puesto, un campo multilínea queda de una línea y el resto no se ve.
+   */
+  multilinea?: boolean;
+  /**
    * Marca el borde en rojo. Hoy el único error diseñado es el del código de 6
    * dígitos incorrecto, así que lo usa `OtpInput` y nadie más: `Input` no
    * expone un prop de error porque no hay ninguna pantalla que lo mostraría.
@@ -42,8 +48,8 @@ export interface EstadoCaja {
  * reposo y `border-2` en foco, la caja se movía un pixel al entrar y salir del
  * campo, que es lo que hacía el campo de email antes de esto.
  */
-export const cajaConFondo = ({ activo, error }: EstadoCaja = {}) =>
-  `h-control px-xl rounded-lg bg-secondary border-2 ${
+export const cajaConFondo = ({ activo, error, multilinea }: EstadoCaja = {}) =>
+  `${multilinea ? 'min-h-[96px] py-lg' : 'h-control'} px-xl rounded-lg bg-secondary border-2 ${
     error
       ? 'border-destructive'
       : activo
@@ -125,7 +131,7 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
           ? `p-0 m-0 ${base} ${className || ''}`
           : variante === 'chip'
             ? `${cajaDeChip({ activo: enFoco || resaltado })} text-body font-normal ${iconoDerecha ? 'pr-xxl' : ''} ${base} ${className || ''}`
-            : `w-full ${cajaConFondo({ activo: enFoco || resaltado })} text-body font-normal ${iconoDerecha ? 'pr-4xl' : ''} ${base} ${className || ''}`
+            : `w-full ${cajaConFondo({ activo: enFoco || resaltado, multilinea: props.multiline })} text-body font-normal ${iconoDerecha ? 'pr-4xl' : ''} ${base} ${className || ''}`
       }
     />
   );

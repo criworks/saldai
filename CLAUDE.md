@@ -52,6 +52,9 @@ el contexto, re-correr el parser cambia la fecha de todo lo que se escribió com
 (`require('@saldai/core/parser')`) y los tipos del contrato de la API en
 `index.d.ts`. Tests con `node --test`.
 
+`ediciones.js` hace lo propio para la edición a mano de un movimiento: qué
+campos se pueden corregir, sus topes, y qué queda marcado como editado.
+
 Si una regla significa lo mismo en la API y en la app, va acá y no duplicada en
 las dos.
 
@@ -83,6 +86,8 @@ Endpoints:
 |------|--------|
 | `POST /gastos/parsear` | no |
 | `POST /gastos` | sí |
+| `PATCH /gastos/:id` | sí |
+| `DELETE /gastos/:id` | sí |
 | `GET /gastos?mes=&anio=` | sí |
 | `GET /gastos/anuales?anio=` | sí |
 | `DELETE /perfil` | sí |
@@ -100,6 +105,18 @@ flag**: `habilitado` es el entitlement, que decide el plan, y `activo` la
 preferencia, que decide el usuario. El `PATCH` solo acepta `activo` y `zona`.
 Hasta el primer guardado no hay fila y el `GET` devuelve los defaults, que están
 en `api/src/perfil/preferencias.js` y en el schema.
+
+`PATCH /gastos/:id` es la **edición a mano**, y ahí **no corre el parser**: el
+usuario corrige campos sueltos, no escribe una línea. `input_original`, `zona` y
+`hoy_resuelto` quedan como están —siguen describiendo lo que la persona
+escribió— y lo que cambia es el movimiento derivado de eso. Por eso la fila
+lleva `campos_editados`: los nombres de los campos que el usuario corrigió él
+mismo. **Un reclasificar masivo tiene que saltearse los campos que estén ahí**,
+o le pisa la corrección, y después no hay forma de distinguir "quedó así porque
+la puso el parser" de "quedó así porque la arreglé". Es un arreglo de nombres y
+no un booleano por la misma razón que las preferencias llevan dos campos por
+flag. Las reglas de qué se puede editar están en `packages/core/ediciones.js`
+(`validarCambioDeMovimiento`), porque valen igual en la API y en la app.
 
 Las dos rutas de `POST` aceptan `zona` (IANA) en el cuerpo y caen a
 `APP_TIMEZONE` si no viene. El contexto que se usó se guarda en la fila pero
