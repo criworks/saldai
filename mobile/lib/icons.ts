@@ -10,7 +10,8 @@ import {
   PencilSimple,
   Clock,
   Calendar,
-  CaretDown
+  CaretDown,
+  X
 } from 'phosphor-react-native';
 
 declare module 'phosphor-react-native' {
@@ -40,3 +41,4 @@ cssInterop(PencilSimple, iconConfig as any);
 cssInterop(Clock, iconConfig as any);
 cssInterop(Calendar, iconConfig as any);
 cssInterop(CaretDown, iconConfig as any);
+cssInterop(X, iconConfig as any);

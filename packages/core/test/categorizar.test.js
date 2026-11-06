@@ -67,3 +67,12 @@ test('toda keyword listada matchea su propia categoría', () => {
     }
   }
 })
+
+test('el nombre de cada categoría se categoriza como sí misma', () => {
+  // La pantalla de captura manda la categoría confirmada por su nombre. Si un
+  // nombre cayera en otra categoría por el orden de prioridad, el gasto se
+  // guardaría con una categoría distinta a la que el usuario tocó.
+  for (const categoria of Object.keys(CATEGORIAS)) {
+    assert.equal(categorizar(categoria), categoria)
+  }
+})

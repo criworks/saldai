@@ -1,10 +1,15 @@
-import { Check, Clock, Info, Warning, XCircle } from 'phosphor-react-native';
+import { Check, Clock, Info, Mailbox, Warning, XCircle } from 'phosphor-react-native';
 import React from 'react';
 import { Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, withAlpha } from '@/constants/theme';
 
-export type AlertType = 'success' | 'warning' | 'error' | 'info' | 'pending';
+/**
+ * `pending` y `mailbox` dicen lo mismo (estamos esperando algo tuyo) con
+ * distinto icono: el reloj es "esperá", el buzón es "andá a ver tu email".
+ * Son dos variantes y no una porque el flujo decide cuál cuenta mejor.
+ */
+export type AlertType = 'success' | 'warning' | 'error' | 'info' | 'pending' | 'mailbox';
 
 export interface AlertProps {
   visible: boolean;
@@ -28,6 +33,9 @@ export function Alert({ visible, message, type = 'info', inline = false }: Alert
         return <XCircle size={18} color={colors.text} weight="fill" />;
       case 'pending':
         return <Clock size={18} color={colors.text} weight="fill" />;
+      // El único icono a 24: el resto va a 18 y acá se pidió más presencia.
+      case 'mailbox':
+        return <Mailbox size={24} color={colors.text} weight="fill" />;
       default:
         return <Info size={18} color={colors.text} weight="fill" />;
     }
@@ -51,7 +59,9 @@ export function Alert({ visible, message, type = 'info', inline = false }: Alert
         className="w-full max-w-[364px] p-xl flex-col justify-center items-start gap-lg rounded-lg border-2 border-border-active"
         style={{ backgroundColor: withAlpha(colors.bgElevated, 0.4) }}
       >
-        <View className="flex-row justify-start items-start rounded-lg">
+        {/* El testID lleva el tipo para poder afirmar en un test qué icono
+            le toca a cada flujo, que es lo que se pidió y no se ve en el svg. */}
+        <View className="flex-row justify-start items-start rounded-lg" testID={`alerta-icono-${type}`}>
           {getIcon()}
         </View>
         <Text className="text-white font-['Inter'] text-detail font-normal leading-[normal]">

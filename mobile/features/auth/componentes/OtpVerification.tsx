@@ -1,6 +1,6 @@
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { Alert } from '@/components/ui/Alert';
+import { Alert, AlertType } from '@/components/ui/Alert';
 import { OtpInput } from './OtpInput';
 
 export interface OtpVerificationProps {
@@ -11,6 +11,12 @@ export interface OtpVerificationProps {
   onResend: () => void;
   loading?: boolean;
   cooldownSeconds?: number;
+  /**
+   * Icono del aviso de arriba. Por defecto el reloj, que es lo que ya
+   * mostraban los dos flujos que usan este componente: así cambiarlo es una
+   * decisión explícita de la pantalla y no algo que se arrastre sin querer.
+   */
+  alertType?: AlertType;
 }
 
 export function OtpVerification({
@@ -21,13 +27,14 @@ export function OtpVerification({
   onResend,
   loading,
   cooldownSeconds = 0,
+  alertType = 'pending',
 }: OtpVerificationProps) {
   return (
     <View className="w-full flex-col items-center gap-xl">
       <Alert
         visible={true}
         message={message}
-        type="pending"
+        type={alertType}
         inline={true}
       />
 

@@ -119,6 +119,64 @@ export declare function parsearGasto(
   opciones?: { zona?: string; hoy?: Date }
 ): ResultadoParseo
 
+// ── Registro de un movimiento ───────────────────────────────────────────────
+
+/** La zona y el día de referencia con los que se resolvió la fecha. */
+export interface ContextoDeRegistro {
+  zona: string
+  /** El día que el parser usó como "hoy", en AAAA-MM-DD. */
+  hoyResuelto: FechaISO
+}
+
+export interface ResultadoDeRegistro extends ResultadoParseo {
+  contexto: ContextoDeRegistro
+}
+
+/** `true` si `Intl` reconoce la zona IANA. */
+export declare function esZonaValida(zona: unknown): boolean
+
+/**
+ * El único punto de entrada de escritura: parsea y devuelve, además del
+ * resultado, el contexto que usó. Una zona que no existe advierte y cae al
+ * default en vez de rechazar.
+ */
+export declare function registrarMovimiento(
+  input: string | null | undefined,
+  opciones?: { zona?: string; hoy?: Date }
+): ResultadoDeRegistro
+
+// ── Zonas horarias ──────────────────────────────────────────────────────────
+
+/** Una zona del catálogo, lista para mostrar. */
+export interface ZonaDelCatalogo {
+  /** El nombre IANA, que es lo que se guarda. */
+  zona: string
+  /** El nombre para mostrar: "Buenos Aires, Argentina". */
+  nombre: string
+  /** Minutos adelantados respecto de UTC. */
+  minutos: number
+  /** "(UTC-03:00)". */
+  desplazamiento: string
+}
+
+/** Los nombres IANA que se le ofrecen al usuario. */
+export declare const ZONAS: readonly string[]
+
+/** Minutos adelantados respecto de UTC, o `null` si el motor no conoce la zona. */
+export declare function desplazamientoDeZona(zona: string, instante?: Date): number | null
+
+/** -180 → "(UTC-03:00)". */
+export declare function etiquetaDeDesplazamiento(minutos: number): string
+
+/** "America/Argentina/Buenos_Aires" → "Buenos Aires, Argentina". */
+export declare function nombreDeZona(zona: string): string
+
+/** El catálogo ordenado de oeste a este, sin las zonas que el motor no conoce. */
+export declare function catalogoDeZonas(instante?: Date): ZonaDelCatalogo[]
+
+/** Filtra el catálogo por nombre, nombre IANA o desplazamiento. */
+export declare function buscarZonas(texto: string, catalogo: ZonaDelCatalogo[]): ZonaDelCatalogo[]
+
 // ── Contrato de la API ──────────────────────────────────────────────────────
 
 /** Un gasto como lo devuelve la API. */
@@ -166,6 +224,41 @@ export interface TotalesAnuales {
   anio: number | string
   /** Doce posiciones, de enero a diciembre. */
   totales: number[]
+}
+
+/**
+ * Un flag del perfil.
+ *
+ * Son dos campos y no uno: `habilitado` es si el perfil *puede* usar la función
+ * (lo decide el plan) y `activo` si *quiere* usarla (lo decide el usuario). Con
+ * uno solo, al llegar un plan pago no se distingue "apagado porque lo apagó" de
+ * "apagado porque no pagó". La UI muestra la función cuando los dos son true.
+ */
+export interface FlagDePerfil {
+  habilitado: boolean
+  activo: boolean
+}
+
+/** `GET /perfil/preferencias` y `PATCH /perfil/preferencias` */
+export interface Preferencias {
+  ok: true
+  errores: []
+  datos: {
+    categorias: FlagDePerfil
+    metodos: FlagDePerfil
+    /** Zona IANA elegida. En `null`, se usa la del dispositivo. */
+    zona: string | null
+  }
+}
+
+/**
+ * El cuerpo de `PATCH /perfil/preferencias`. Todos los campos son opcionales:
+ * se manda solo lo que cambia. `habilitado` no se puede cambiar desde acá.
+ */
+export interface CambioDePreferencias {
+  categoriasActivo?: boolean
+  metodosActivo?: boolean
+  zona?: string | null
 }
 
 export type ApiResponse<T> = T | ApiError

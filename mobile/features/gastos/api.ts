@@ -1,51 +1,7 @@
 import type { GastoCreado, GastosDelMes, TotalesAnuales } from '@saldai/core'
 import * as mocks from '@/services/mocks'
 import { enModoMock } from '@/services/mocks'
-import { supabase } from '@/services/supabase'
-
-const API_URL = process.env.EXPO_PUBLIC_API_URL
-
-/** Headers con el token de la sesión. Sin esto la API responde 401. */
-async function getAuthHeaders() {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  }
-
-  if (session?.access_token) {
-    headers['Authorization'] = `Bearer ${session.access_token}`
-  }
-
-  return headers
-}
-
-/**
- * Saca el mensaje de error de una respuesta de la API.
- *
- * La API responde `{ ok, errores: string[] }` cuando falla el parser y
- * `{ ok, error }` solo en los 401 de auth, así que leer `error` dejaba fuera el
- * detalle (por ejemplo "El parámetro 'mes' debe ser un número entre 1 y 12") y
- * siempre se mostraba el texto genérico. Los errores del parser vienen varios
- * juntos, así que se muestran todos.
- */
-async function leerError(res: Response, fallback: string): Promise<string> {
-  const cuerpo = await res.json().catch(() => null)
-  return mensajeDeError(cuerpo, fallback)
-}
-
-function mensajeDeError(cuerpo: unknown, fallback: string): string {
-  if (cuerpo && typeof cuerpo === 'object') {
-    const { errores, error } = cuerpo as { errores?: unknown; error?: unknown }
-    if (Array.isArray(errores) && errores.length > 0) {
-      return errores.filter((e): e is string => typeof e === 'string').join('\n') || fallback
-    }
-    if (typeof error === 'string' && error) return error
-  }
-  return fallback
-}
+import { API_URL, getAuthHeaders, leerError, mensajeDeError } from '@/lib/peticiones'
 
 export async function fetchGastosPorMes(mes: number, anio?: number): Promise<GastosDelMes> {
   if (enModoMock) return mocks.fetchGastosPorMes()
@@ -83,13 +39,17 @@ export async function fetchGastosAnuales(anio: number | string): Promise<Totales
   return res.json()
 }
 
-export async function crearGasto(inputStr: string): Promise<GastoCreado> {
+/**
+ * `zona` va en el cuerpo para que el "hoy" del servidor sea el del usuario y no
+ * el de Chile. Si no se manda, la API cae a su `APP_TIMEZONE`.
+ */
+export async function crearGasto(inputStr: string, zona?: string): Promise<GastoCreado> {
   if (enModoMock) return mocks.crearGasto(inputStr)
 
   const res = await fetch(`${API_URL}/gastos`, {
     method: 'POST',
     headers: await getAuthHeaders(),
-    body: JSON.stringify({ input: inputStr }),
+    body: JSON.stringify(zona ? { input: inputStr, zona } : { input: inputStr }),
   })
 
   const json = await res.json().catch(() => null)

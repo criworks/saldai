@@ -3,7 +3,10 @@ import React, { useState } from 'react';
 import { View, ScrollView } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
+import { BotonNuevo } from '@/components/ui/BotonNuevo';
+import { Buscador } from '@/components/ui/Buscador';
 import { Input } from '@/components/ui/Input';
+import { Switch } from '@/components/ui/Switch';
 import { Notification } from '@/components/ui/Notification';
 import { Alert } from '@/components/ui/Alert';
 import { SectionHeader } from '@/components/ui/SectionHeader';
@@ -12,6 +15,7 @@ import { ExpenseItem } from '@/features/gastos';
 import { CategorySelector } from '@/features/gastos';
 import { PaymentMethodSelector } from '@/features/gastos';
 import { OtpInput } from '@/features/auth';
+import { CampoDeCategoria } from '@/features/gastos';
 import { router } from 'expo-router';
 import { mockFeedConfig } from '@/services/mocks/config';
 
@@ -64,6 +68,18 @@ export default function UIPlayground() {
               monto="$4,500.00"
               titulo="Café Starbucks"
             />
+            {/* Con las dos funciones prendidas: la pantalla le pasa categoría y
+                método, y la fila dibuja las dos burbujas. */}
+            <ExpenseItem
+              id="3"
+              monto="$4,500.00"
+              titulo="Café Starbucks"
+              categoria="Ocio"
+              metodo="TC"
+            />
+            {/* Solo una prendida. */}
+            <ExpenseItem id="4" monto="$420.000" titulo="Arriendo del mes" categoria="Básicos" />
+            <ExpenseItem id="5" monto="$1" titulo="Sin categoría" metodo="EF" />
           </View>
 
           <Text className="mb-2 text-foreground font-semibold mt-6">Category Selector:</Text>
@@ -130,9 +146,78 @@ export default function UIPlayground() {
         <View className="mb-8">
           <SectionHeader title="Inputs & Form" />
           <View className="mt-4 gap-4">
-            <Input placeholder="Input default" />
-            <Input placeholder="Input con valor" defaultValue="Valor ingresado" />
-            <Input placeholder="Input deshabilitado" editable={false} className="opacity-50" />
+            <Input placeholder="Con fondo, vacío" />
+            <Input placeholder="Con fondo, con valor" value="Valor ingresado" />
+            <Input placeholder="Con fondo, resaltado" value="Editando" resaltado />
+            <Input placeholder="Con fondo, atenuado" value="confirmado@email.com" atenuado />
+            <Input placeholder="Con fondo, deshabilitado" editable={false} className="opacity-50" />
+            {/* La variante de la captura: sin caja y sin icono. Va sobre una
+                fila propia porque no tiene contorno que la delimite. */}
+            <View className="flex-row justify-end items-center w-full">
+              <Input variante="sin-fondo" placeholder="Sin fondo" className="text-body text-right" />
+            </View>
+            {/* La variante chip: mide lo que escribe, para ocupar el lugar de
+                la burbuja que va a ser. */}
+            <Input variante="chip" placeholder="Chip, vacío" />
+            <Input variante="chip" value="Mascotas" />
+          </View>
+        </View>
+
+        <Separator className="mb-8" />
+
+        {/* SWITCH */}
+        <View className="mb-8">
+          <SectionHeader title="Switch (preferencias)" />
+          <View className="mt-4 gap-4">
+            <View className="flex-row items-center gap-4">
+              <Switch value={false} onValueChange={() => {}} accessibilityLabel="Apagado" />
+              <Switch value onValueChange={() => {}} accessibilityLabel="Prendido" />
+              <Switch value disabled onValueChange={() => {}} accessibilityLabel="Guardando" />
+            </View>
+          </View>
+        </View>
+
+        <Separator className="mb-8" />
+
+        {/* BOTÓN NUEVO Y CAMPO DE CATEGORÍA */}
+        <View className="mb-8">
+          <SectionHeader title="Crear una categoría" />
+          <View className="mt-4 gap-4">
+            {/* Con etiqueta mientras la lista está vacía; sin ella una vez que
+                hay elementos y el `+` se entiende solo. */}
+            <View className="flex-row justify-end w-full">
+              <BotonNuevo etiqueta="Nueva categoría" onPress={() => {}} />
+            </View>
+            <View className="flex-row justify-end w-full">
+              <BotonNuevo etiqueta="Nueva categoría" conEtiqueta={false} onPress={() => {}} />
+            </View>
+            <CampoDeCategoria
+              emoji=""
+              nombre=""
+              onEmoji={() => {}}
+              onNombre={() => {}}
+              onConfirmar={() => {}}
+              onCancelar={() => {}}
+            />
+            <CampoDeCategoria
+              emoji="🐈"
+              nombre="Mascotas"
+              onEmoji={() => {}}
+              onNombre={() => {}}
+              onConfirmar={() => {}}
+              onCancelar={() => {}}
+            />
+          </View>
+        </View>
+
+        <Separator className="mb-8" />
+
+        {/* BUSCADOR */}
+        <View className="mb-8">
+          <SectionHeader title="Buscador (cabecera de pantalla)" />
+          {/* Trae su propio padding, porque en una pantalla es la cabecera. */}
+          <View className="-mx-xl">
+            <Buscador titulo="Zona horaria" texto="" onTexto={() => {}} placeholder="Busca una ciudad o un país" />
           </View>
         </View>
 

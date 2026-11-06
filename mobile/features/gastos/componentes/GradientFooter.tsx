@@ -1,58 +1,68 @@
-import { BellSimple, CardsThree, Nut, Plus, Check } from 'phosphor-react-native';
+import { ArrowLeft, BellSimple, CardsThree, Nut, Plus, Check } from 'phosphor-react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useEffect, useState, useRef } from 'react';
-import { Pressable, ScrollView, Text, View, Keyboard, Platform, DeviceEventEmitter } from 'react-native';
+import React, { useEffect, useMemo } from 'react';
+import { LayoutChangeEvent, Pressable, ScrollView, Text, View, DeviceEventEmitter } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { TODAS_LAS_CATEGORIAS } from '@saldai/core';
 import { categoryEmoji, colors, withAlpha } from '@/constants/theme';
+import { usePreferencias } from '@/features/perfil';
 import { useFilter } from '../FilterContext';
 import { useGastos } from '../GastosContext';
 
 export function GradientFooter(props: BottomTabBarProps) {
-  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
-  const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-
-    const showSub = Keyboard.addListener(showEvent, () => {
-      if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
-      setKeyboardVisible(true);
-    });
-    const hideSub = Keyboard.addListener(hideEvent, () => {
-      hideTimeoutRef.current = setTimeout(() => {
-        setKeyboardVisible(false);
-      }, 50);
-    });
-
-    return () => {
-      if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
-      showSub.remove();
-      hideSub.remove();
-    };
-  }, []);
-
   const insets = useSafeAreaInsets();
   const safePaddingBottom = 24 + insets.bottom;
 
-  const { mes, setMes } = useGastos();
+  const { mes, setMes, categorias } = useGastos();
+  const { categoriasVisibles } = usePreferencias();
+  const { selectedCategory, setSelectedCategory } = useFilter();
+
+  // Las categorías que de verdad tiene el mes, en el orden del catálogo y no
+  // por monto: ordenadas por lo gastado, las burbujas se reacomodan debajo del
+  // dedo cada vez que entra un gasto.
+  const categoriasDelMes = useMemo(
+    () => TODAS_LAS_CATEGORIAS.filter((cat) => categorias.some(([nombre]) => nombre === cat)),
+    [categorias],
+  );
+
+  // Al cambiar de mes el filtro se suelta: una categoría que el mes nuevo no
+  // tiene dejaría el listado vacío, y la burbuja para soltarlo tampoco estaría.
+  useEffect(() => {
+    setSelectedCategory(null);
+  }, [mes, setSelectedCategory]);
+
+  // El footer no se desmonta cuando sube el teclado: se va animado contra la
+  // misma curva del sistema que mueve el form en captura. Un `return null`
+  // no puede animar su salida, y ahí estaba el salto que se veía.
+  const { progress } = useReanimatedKeyboardAnimation();
+  const alto = useSharedValue(0);
+  const medirAlto = (e: LayoutChangeEvent) => {
+    alto.value = e.nativeEvent.layout.height;
+  };
+  const estiloSalida = useAnimatedStyle(() => ({
+    transform: [{ translateY: progress.value * alto.value }],
+    opacity: 1 - progress.value,
+  }));
   const currentCalendarMonth = new Date().getMonth() + 1;
 
   const routeName = props.state.routeNames[props.state.index];
-  const isGastosActive = routeName === 'index' || routeName === 'meses';
+  const isListaActive = routeName === 'index';
   const isMesesViewActive = routeName === 'meses';
+  const isPorCategoriaActive = routeName === 'por-categoria';
+  // Las tres son la misma sección: el mes que se está mirando. El footer les
+  // deja el icono encendido y el degradado.
+  const isGastosActive = isListaActive || isMesesViewActive || isPorCategoriaActive;
   const isCapturaActive = routeName === 'captura';
-  const isCategoriasActive = routeName === 'categorias';
   const isConfiguracionesActive = routeName === 'configuraciones';
   const isCuentaActive = routeName === 'cuenta';
+  // Las pantallas a las que solo se entra desde configuraciones: el footer les
+  // cambia los tres iconos por una flecha de volver, porque desde ahí la única
+  // navegación que tiene sentido es salir.
+  const esPantallaDeAjuste = routeName === 'zona-horaria';
   const isEnCursoActive = routeName === 'index' && mes === currentCalendarMonth;
-
-  if (isKeyboardVisible) {
-    return null;
-  }
-
-  const { selectedCategory, setSelectedCategory, availableCategories } = useFilter();
 
   const handleCategoryPress = (category: string) => {
     if (selectedCategory === category) {
@@ -70,14 +80,19 @@ export function GradientFooter(props: BottomTabBarProps) {
   const content = (
     <View className="flex-col gap-sm px-xl">
       {/* Categories Row (Emojis) */}
-      {isGastosActive && !isMesesViewActive && availableCategories.length > 0 && (
+      {/*
+        Las burbujas filtran el listado, así que van solo sobre el listado: en
+        el desglose por categoría cada fila ya es una categoría, y en la lista
+        de meses no hay nada que filtrar.
+      */}
+      {categoriasVisibles && isListaActive && categoriasDelMes.length > 0 && (
         <View className="mb-lg -mx-xl">
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, gap: 12 }}
           >
-            {availableCategories.map((category) => {
+            {categoriasDelMes.map((category) => {
               const emoji = categoryEmoji(category);
               const isBgActive = selectedCategory === null || selectedCategory === category;
               const bgClass = isBgActive ? 'bg-secondary' : 'bg-transparent';
@@ -85,6 +100,12 @@ export function GradientFooter(props: BottomTabBarProps) {
               return (
                 <Pressable
                   key={category}
+                  // Un emoji solo no se lee: el nombre de la categoría va en la
+                  // etiqueta, y el estado dice si está filtrando por ella.
+                  accessibilityRole="button"
+                  accessibilityLabel={category}
+                  accessibilityState={{ selected: selectedCategory === category }}
+                  testID={`filtro-${category}`}
                   onPress={() => handleCategoryPress(category)}
                   className={`${bgClass} rounded-full w-xxl h-xxl items-center justify-center active:opacity-80`}
                 >
@@ -97,8 +118,8 @@ export function GradientFooter(props: BottomTabBarProps) {
       )}
 
       {/* Filters Row (Centrado) */}
-      {!isConfiguracionesActive && !isCapturaActive && !isCuentaActive && (
-        <View className="flex-row justify-center items-center w-full mb-sm">
+      {!isConfiguracionesActive && !isCapturaActive && !isCuentaActive && !esPantallaDeAjuste && (
+        <View className="flex-row justify-center items-center w-full mb-sm gap-sm">
           <Pressable
             className={`rounded-full px-md py-sm active:opacity-80 ${isEnCursoActive ? 'bg-secondary' : 'bg-transparent'}`}
             onPress={() => {
@@ -110,6 +131,27 @@ export function GradientFooter(props: BottomTabBarProps) {
               En curso
             </Text>
           </Pressable>
+
+          {/*
+            Cambia entre los movimientos del mes y el mismo mes sumado por
+            categoría, sin tocar qué mes se mira: desde un mes pasado se ve su
+            desglose igual que el del mes en curso. Vuelve a tocarlo y se
+            vuelve al listado, así el chip es el camino de ida y de vuelta.
+          */}
+          {categoriasVisibles && (
+            <Pressable
+              accessibilityRole="button"
+              testID="chip-categorias"
+              className={`rounded-full px-md py-sm active:opacity-80 ${isPorCategoriaActive ? 'bg-secondary' : 'bg-transparent'}`}
+              onPress={() =>
+                props.navigation.navigate(isPorCategoriaActive ? 'index' : 'por-categoria')
+              }
+            >
+              <Text className={`${isPorCategoriaActive ? 'text-foreground' : 'text-muted-foreground'} text-detail font-normal leading-[14px]`}>
+                Categorías
+              </Text>
+            </Pressable>
+          )}
         </View>
       )}
 
@@ -117,6 +159,24 @@ export function GradientFooter(props: BottomTabBarProps) {
       <View className="flex-row justify-between items-center w-full">
         
         {/* Nav Group (Izquierda) */}
+        {esPantallaDeAjuste ? (
+          <Pressable
+            className="w-4xl h-4xl items-center justify-center rounded-full active:opacity-80"
+            accessibilityRole="button"
+            accessibilityLabel="Volver a configuraciones"
+            onPress={() => props.navigation.navigate('configuraciones')}
+          >
+            {/*
+              El color va por prop y no por `className` como los otros iconos
+              del footer: los demás son `weight="fill"` y NativeWind les llega
+              por el color del texto, pero un icono `regular` de phosphor es un
+              trazo con `fill="none"`, así que la clase no lo pinta y la flecha
+              salía negra sobre el fondo oscuro. Con `bold` además pesa lo mismo
+              que los iconos rellenos de al lado.
+            */}
+            <ArrowLeft size={24} color={colors.textMuted} weight="bold" />
+          </Pressable>
+        ) : (
         <View className="flex-row items-center gap-sm">
           
           {/* Bell (Idle only for now) */}
@@ -141,9 +201,14 @@ export function GradientFooter(props: BottomTabBarProps) {
           </Pressable>
 
         </View>
+        )}
 
-        {/* FAB Item (Derecha) */}
-        {isCapturaActive ? (
+        {/*
+          FAB Item (Derecha). No va en una pantalla de ajuste: ahí la única
+          acción es volver, y un `+` que salta a la captura deja a medias lo
+          que el usuario estaba configurando.
+        */}
+        {esPantallaDeAjuste ? null : isCapturaActive ? (
           <Pressable
             className="bg-primary rounded-full items-center justify-center active:opacity-80 px-8 py-3"
             onPress={() => DeviceEventEmitter.emit('submitCaptura')}
@@ -164,7 +229,11 @@ export function GradientFooter(props: BottomTabBarProps) {
   );
 
   return (
-    <View className="absolute bottom-0 left-0 right-0 pointer-events-box-none">
+    <Animated.View
+      onLayout={medirAlto}
+      style={estiloSalida}
+      className="absolute bottom-0 left-0 right-0 pointer-events-box-none"
+    >
       {hasSubmenus ? (
         <LinearGradient
           // El fondo de la app, de transparente a opaco, para que el footer
@@ -190,6 +259,6 @@ export function GradientFooter(props: BottomTabBarProps) {
           {content}
         </View>
       )}
-    </View>
+    </Animated.View>
   );
 }

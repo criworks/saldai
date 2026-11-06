@@ -132,9 +132,145 @@ iOS). Después de instalarlo, el ciclo de trabajo es el de siempre:
 npm start      # y se abre la app instalada, no Expo Go
 ```
 
-Hay que volver a buildear solo cuando cambian las dependencias nativas o la
-configuración de `app.json`; los cambios de JavaScript y de estilos entran por
-el dev server como antes.
+Hay que volver a buildear solo cuando cambia el código nativo; los cambios de
+JavaScript y de estilos entran por el dev server. La lista exacta está en la
+sección siguiente.
+
+### Cuándo hay que rebuildear y cuándo no
+
+Instalar la app y cargar el código son pasos separados, y el que tarda es solo
+el primero. El development build no lleva el código adentro: cuando lo abres
+busca el servidor de Metro de tu máquina y baja el bundle de ahí. Mientras el
+binario tenga los mismos módulos nativos, cambiar código no lo toca.
+
+**Sí hay que rebuildear** cuando:
+
+*   Agregas, sacas o subes de versión una dependencia con código nativo. Las que
+    tiene hoy el proyecto: `react-native-keyboard-controller`,
+    `react-native-reanimated`, `react-native-screens`, `react-native-svg`,
+    `expo-secure-store`, `expo-font`, `expo-linear-gradient` y
+    `@react-native-community/datetimepicker`.
+*   Cambia `app.json` en lo que toca el binario: `plugins`, `package` /
+    `bundleIdentifier`, `scheme`, iconos y splash, `edgeToEdgeEnabled`,
+    `newArchEnabled`, permisos.
+*   Subes la versión del SDK de Expo o de React Native.
+
+**No hay que rebuildear** cuando cambia:
+
+*   Cualquier `.ts` / `.tsx` de `app/`, `features/`, `components/`, `lib/` o
+    `services/`.
+*   `tailwind.config.js`, `global.css`, los tokens de `packages/ui` o cualquier
+    cosa de `packages/core`.
+*   `mobile/.env` — eso sí pide reiniciar el dev server, porque las variables
+    `EXPO_PUBLIC_*` se leen al arrancar.
+*   Un asset que ya estaba referenciado.
+
+Si un cambio de estilos no aparece, antes de sospechar del binario:
+`npm run start:clear`, que limpia la caché de Metro.
+
+### Buildear en tu máquina en vez de la nube
+
+EAS buildea en una máquina efímera, así que no guarda la caché de Gradle entre
+builds y todos tardan parejo (del orden de 10 a 25 minutos, más la cola).
+Compilando en tu máquina el primer build tarda parecido, porque baja Gradle y
+el NDK, pero los siguientes reusan casi todo:
+
+```bash
+npm run run:android     # o run:ios
+```
+
+Requisitos, una sola vez: para Android, JDK 17 y el SDK de Android (lo más
+simple es instalar Android Studio y desde su SDK Manager agregar la plataforma
+y los Build-Tools), con `ANDROID_HOME` apuntando a `~/Library/Android/sdk`.
+Para iOS, Xcode.
+
+El proyecto no versiona las carpetas nativas (`/ios` y `/android` están en el
+`.gitignore`), así que `run:android` corre `expo prebuild` y las genera la
+primera vez. Eso es esperado y no se commitea.
+
+`eas build --local` existe también, pero pide los mismos requisitos y sirve
+para otra cosa: sacar un artefacto idéntico al de la nube sin gastar cola.
+
+### El emulador de Android y el simulador de iOS
+
+Corren enteros en tu computador, sin teléfono. Con el dev server arriba, `a`
+abre el emulador de Android y `i` el simulador de iOS.
+
+Para que `a` funcione, el emulador necesita el development build instalado, y
+el APK de EAS está compilado para los ABI del teléfono. Lo más simple es abrir
+el emulador y correr `npm run run:android`, que compila e instala con el ABI
+correcto. Para el simulador de iOS hace falta un build hecho para simulador:
+ese es el perfil `development-simulator` de `eas.json`, o sea
+`npm run build:dev:ios:sim`, porque el perfil `development` declara
+`ios.simulator: false`.
+
+Dos limitaciones que conviene tener claras:
+
+*   **El teclado.** Por defecto el emulador de Android usa el teclado físico de
+    tu máquina, así que el teclado en pantalla no aparece. Se enciende
+    desmarcando "Enable keyboard input" en los ajustes del AVD. Aun así es el
+    teclado de AOSP: su altura, su barra de sugerencias y su animación no son
+    las de Gboard ni las del teclado de Samsung.
+*   **El edge-to-edge de Android 16.** Depende de la versión de Android y de
+    cómo el fabricante dibuja las barras del sistema. Un AVD con la imagen de
+    API 36 se acerca, pero la altura real de la barra de navegación, el modo de
+    gestos y el notch son del dispositivo.
+
+O sea: el emulador sirve muy bien para layout, espaciados, navegación y estados
+de pantalla. Un fix de teclado o de safe areas se firma en un dispositivo real.
+
+### Las dos apps conviven en el teléfono
+
+El development build y el de `preview` son dos cosas distintas que uno quiere
+tener a la vez: el primero hace rápida la revisión, el segundo funciona con el
+computador apagado. Android identifica una app por su `package`, así que si los
+dos builds comparten package son la misma app para el sistema y una desinstala a
+la otra.
+
+Por eso `mobile/app.config.js` le da identidad propia a la variante de
+desarrollo. Lee el `app.json` de siempre y le cambia cuatro cosas cuando
+`APP_VARIANT=development`:
+
+| | `development` | `preview` y `production` |
+| --- | --- | --- |
+| `android.package` / `ios.bundleIdentifier` | `com.crirun.saldai.dev` | `com.crirun.saldai` |
+| `name` | Saldai (Dev) | Saldai |
+| `scheme` | `saldai-dev` | `saldai` |
+| `icon` (iOS y general) | `icon-dev.png` | `icon.png` |
+| Icono adaptativo de Android | `adaptive-icon-dev.png` sobre `#ffffff` | `adaptive-icon.png` sobre `#111217` |
+
+`preview` y `production` comparten identidad a propósito: el APK de preview es
+la app de verdad, solo repartida a mano.
+
+La variante la fija `APP_VARIANT`, que declara el perfil `development` de
+`eas.json` y que los scripts de `package.json` repiten, porque el dev server
+tiene que calcular el mismo package que el APK instalado. Sin la variable se
+asume producción: una variable que falta no debería renombrar la app.
+
+Los dos logos vienen del Figma y se distinguen solos: el de desarrollo lleva
+la marca oscura sobre blanco y entre chevrones, el otro la marca clara sobre
+el fondo oscuro de la marca.
+
+Cada variante necesita dos archivos y no uno, porque Android no usa una imagen
+sino dos piezas: la de adelante, que lleva la marca sola sobre transparencia, y
+un color de fondo plano. De ahí que `adaptive-icon*.png` sea la marca recortada
+y centrada en la zona segura (Android solo muestra el centro 72/108 del lienzo),
+y que el fondo sea un color y no el degradado del diseño. `icon*.png` sí es el
+cuadrado completo, que es lo que quiere iOS.
+
+Un par de consecuencias de que sean dos apps distintas:
+
+*   Cada una guarda su sesión por separado en `expo-secure-store`, así que hay
+    que autenticarse una vez en cada una.
+*   EAS genera un keystore propio para `com.crirun.saldai.dev`. El de
+    `com.crirun.saldai`, que es el que importa si la app llega a la Play Store,
+    no se toca.
+*   El `versionCode` remoto se cuenta por identificador, así que la variante de
+    desarrollo arranca su propia numeración.
+*   El package queda horneado en la carpeta nativa que genera `prebuild`. Los
+    scripts locales fijan siempre `APP_VARIANT=development`, así que no hay de
+    qué preocuparse; si alguna vez queda una carpeta `android/` generada con el
+    otro package, `npm run prebuild:clean` la regenera.
 
 ### Tener la app funcionando sin el computador: build de `preview`
 

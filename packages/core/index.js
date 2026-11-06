@@ -13,4 +13,6 @@ module.exports = {
   ...require('./fechas'),
   ...require('./fechas-humanas'),
   ...require('./parser'),
+  ...require('./movimientos'),
+  ...require('./zonas'),
 }

@@ -99,6 +99,16 @@ export const spacing = {
   "6xl": 80,
 };
 
+/**
+ * Medidas con nombre de uso. `control` es la altura que comparten los campos
+ * de texto, el campo del código de 6 dígitos y los botones grandes: estaba
+ * escrita como `h-[56px]` en cinco archivos, que es justo la clase de valor
+ * suelto que se desincroniza cuando alguien ajusta uno solo.
+ */
+export const sizes = {
+  control: 56,
+};
+
 export const fontSize = {
   xs:   11,
   sm:   12,

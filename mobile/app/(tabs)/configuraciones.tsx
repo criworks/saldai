@@ -10,12 +10,25 @@ import { Notification } from '@/components/ui/Notification';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth';
-import { supabase } from '@/services/supabase';
+import { eliminarPerfil, usePreferencias } from '@/features/perfil';
 import { colors } from '@/constants/theme';
+import { nombreDeZonaMostrada } from '@/lib/zona';
 
 export default function ConfigurationsScreen() {
   const { signOut, session } = useAuth();
   const router = useRouter();
+
+  // Las dos funciones conmutables y la zona salen de la misma lectura. Mientras
+  // carga los switches se ven apagados, que es el estado de la v1: al revés
+  // aparecerían prendidos y se apagarían solos al llegar la respuesta.
+  const {
+    preferencias,
+    categoriasVisibles,
+    metodosVisibles,
+    zonaElegida,
+    guardar,
+    guardando,
+  } = usePreferencias();
 
   // Loading States
   const [isProcessing, setIsProcessing] = useState(false);
@@ -63,14 +76,10 @@ export default function ConfigurationsScreen() {
         await new Promise(res => setTimeout(res, 1500));
         await signOut(); // Simulamos que se borra y cerramos sesión
       } else {
-        // Borrar un usuario de auth.users no es algo que el rol de la sesión
-        // pueda hacer, así que va por la función delete_user() de Supabase
-        // (ver supabase/migrations/), que borra los gastos y la cuenta.
-        const { error: rpcError } = await supabase.rpc('delete_user');
-
-        // Si falla, la cuenta sigue viva: no se puede cerrar sesión y decir
-        // que se eliminó.
-        if (rpcError) throw new Error(rpcError.message);
+        // Va por la API, que es el único camino de escritura de la app. Si
+        // falla, tira: la cuenta sigue viva y no se puede cerrar sesión
+        // diciendo que se eliminó.
+        await eliminarPerfil();
 
         await signOut();
       }
@@ -138,7 +147,7 @@ export default function ConfigurationsScreen() {
           <View className="w-full flex-col">
             <SectionHeader title="General" />
             <MenuItem
-              title="Cuenta de usuario"
+              title="Perfil"
               onPress={() => router.push('/cuenta')}
             />
           </View>
@@ -146,13 +155,45 @@ export default function ConfigurationsScreen() {
           {/* Funcionamiento Section */}
           <View className="w-full flex-col">
             <SectionHeader title="Funcionamiento" />
-            <MenuItem 
-              title="Categorías" 
-              onPress={() => router.push('/categorias')} 
-            />
+            {/*
+              El switch prende la función y el chevron entra a configurarla. La
+              fila se muestra siempre que el perfil tenga la función habilitada,
+              aunque el usuario la tenga apagada: si desapareciera al apagarla
+              no habría forma de volver a prenderla.
+
+              `habilitado` es del plan y `activo` del usuario, así que una fila
+              que no está habilitada no se muestra: no es algo que el usuario
+              pueda prender.
+            */}
+            {preferencias.categorias.habilitado && (
+              <MenuItem
+                title="Categorías"
+                switchValue={categoriasVisibles}
+                onSwitchChange={(activo) => guardar({ categoriasActivo: activo })}
+                switchDisabled={guardando}
+                onPress={() => router.push('/categorias')}
+              />
+            )}
+            {/*
+              Métodos de pago va sin chevron: el diseño de esa pantalla es para
+              crear y editar métodos propios, y hoy los métodos son los dos del
+              catálogo de `@saldai/core` (EF y TC), iguales para todos. El
+              switch prende el selector de la captura, que es lo que ya existe;
+              la pantalla entra cuando exista el modelo de métodos por usuario.
+            */}
+            {preferencias.metodos.habilitado && (
+              <MenuItem
+                title="Métodos de pago"
+                switchValue={metodosVisibles}
+                onSwitchChange={(activo) => guardar({ metodosActivo: activo })}
+                switchDisabled={guardando}
+                hideChevron
+              />
+            )}
             <MenuItem
-              title="Mes contable"
-              onPress={() => router.push('/mes-contable')}
+              title="Zona horaria"
+              value={nombreDeZonaMostrada(zonaElegida)}
+              onPress={() => router.push('/zona-horaria')}
             />
           </View>
 

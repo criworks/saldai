@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "scripts": {
-    "start": "expo start --dev-client",
+    "start": "APP_VARIANT=development expo start --dev-client",
+    "start:clear": "APP_VARIANT=development expo start --dev-client --clear",
+    "run:android": "APP_VARIANT=development expo run:android",
+    "run:ios": "APP_VARIANT=development expo run:ios",
+    "prebuild:clean": "APP_VARIANT=development expo prebuild --clean --platform android",
     "typecheck": "tsc --noEmit",
     "test": "jest",
     "tokens:css": "node scripts/generar-global-css.mjs",
@@ -11,9 +15,10 @@
     "tailwind:content:check": "node scripts/verificar-content-tailwind.mjs",
     "build:dev:android": "npx eas-cli@latest build --profile development --platform android",
     "build:dev:ios": "npx eas-cli@latest build --profile development --platform ios",
+    "build:dev:ios:sim": "npx eas-cli@latest build --profile development-simulator --platform ios",
     "build:preview:android": "npx eas-cli@latest build --profile preview --platform android",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "APP_VARIANT=development expo start --android",
+    "ios": "APP_VARIANT=development expo start --ios",
     "web": "expo start --web"
   },
   "dependencies": {
@@ -49,6 +54,7 @@
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
     "react-native-css-interop": "^0.2.2",
+    "react-native-keyboard-controller": "^1.22.9",
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
