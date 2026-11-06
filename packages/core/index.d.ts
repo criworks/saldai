@@ -247,6 +247,13 @@ export interface Gasto {
    * que saltearse los que estén acá, o le pisa la corrección.
    */
   campos_editados?: CampoEditable[]
+  /**
+   * La cuenta del perfil a la que pertenece el movimiento. La llena la base
+   * (trigger `gastos_asignar_cuenta`), así que la app no la manda al crear.
+   * Todavía no hay pantalla de cuentas: viaja porque la API devuelve la fila
+   * entera, y está acá para que el día que se use no se declare de nuevo.
+   */
+  cuenta_id?: string | null
 }
 
 /**
