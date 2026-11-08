@@ -15,5 +15,6 @@ module.exports = {
   ...require('./parser'),
   ...require('./movimientos'),
   ...require('./ediciones'),
+  ...require('./recurrencias'),
   ...require('./zonas'),
 }

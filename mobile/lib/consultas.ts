@@ -40,6 +40,15 @@ export const llaves = {
   gastosDelMes: (mes: number, anio: number) => ['gastos', anio, mes] as const,
   totalesAnuales: (anio: number) => ['gastos-anuales', anio] as const,
   preferencias: () => ['preferencias'] as const,
+  recurrencias: () => ['recurrencias'] as const,
+  /**
+   * Las propuestas pendientes.
+   *
+   * No lleva el mes ni la zona en la llave: la respuesta son las propuestas
+   * hasta hoy, no las de un periodo, así que no hay parámetro de agrupación que
+   * se pueda cambiar sin que la llave lo refleje.
+   */
+  propuestas: () => ['propuestas'] as const,
   /**
    * El prefijo de todos los meses y de todos los años.
    *

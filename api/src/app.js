@@ -8,6 +8,7 @@ const { limitadores } = require('./middleware/limites')
 const { manejadorDeErrores, noEncontrado } = require('./middleware/errores')
 const { rutasDeGastos } = require('./rutas/gastos')
 const { rutasDePerfil } = require('./rutas/perfil')
+const { rutasDeRecurrencias } = require('./rutas/recurrencias')
 const { rutasDeSalud } = require('./rutas/salud')
 
 /**
@@ -43,6 +44,7 @@ function crearApp({ origenesPermitidos, zona, limites }) {
 
   app.use('/gastos', rutasDeGastos({ zona, limites: limitadoresDePedidos }))
   app.use('/perfil', rutasDePerfil({ limites: limitadoresDePedidos }))
+  app.use('/recurrencias', rutasDeRecurrencias({ zona, limites: limitadoresDePedidos }))
   app.use('/health', rutasDeSalud({ limites: limitadoresDePedidos }))
 
   app.use(noEncontrado)

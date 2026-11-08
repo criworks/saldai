@@ -11,7 +11,9 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { colors, SIN_CATEGORIA } from '@/constants/theme'
 import { EditorDeMovimiento, EncabezadoDelMes, ExpenseItem, useFilter, useGastos, Gasto } from '@/features/gastos'
 import { usePreferencias } from '@/features/perfil'
+import { ConfirmarPropuesta, ListaDePropuestas, usePropuestas } from '@/features/recurrencias'
 import { Alert } from '@/components/ui/Alert'
+import type { PropuestaPendiente } from '@saldai/core'
 
 /**
  * `AAAA-MM-DD` a Date del día, en hora local.
@@ -74,6 +76,17 @@ export default function DashboardScreen() {
   // valores, y buscarlo de nuevo en la lista lo dejaría vacío justo cuando un
   // refetch está en vuelo.
   const [enEdicion, setEnEdicion] = useState<Gasto | null>(null)
+
+  // Lo que las recurrencias proponen y el usuario todavía no decidió. Va en el
+  // feed y no en una pantalla aparte porque es lo único del producto que le
+  // pide algo: una propuesta pendiente es plata que ya salió y que todavía no
+  // está contada en el total del mes.
+  //
+  // Con el filtro de categoría puesto no se muestran: el listado está recortado
+  // a una categoría y las propuestas no son parte de ese recorte, así que
+  // quedarían arriba de una lista que no las incluye.
+  const { propuestas } = usePropuestas()
+  const [propuestaElegida, setPropuestaElegida] = useState<PropuestaPendiente | null>(null)
 
   const insets = useSafeAreaInsets()
   const listPaddingBottom = 220 + insets.bottom;
@@ -195,7 +208,14 @@ export default function DashboardScreen() {
           />
         }
         showsVerticalScrollIndicator={false}
-        ListHeaderComponent={<EncabezadoDelMes mes={mes} total={totalMostrado} loading={loading} />}
+        ListHeaderComponent={
+          <View className="w-full flex-col">
+            <EncabezadoDelMes mes={mes} total={totalMostrado} loading={loading} />
+            {!filtro && (
+              <ListaDePropuestas propuestas={propuestas} onElegir={setPropuestaElegida} />
+            )}
+          </View>
+        }
         ListEmptyComponent={vacio}
         renderSectionHeader={({ section }) => (
           // El primer día va más arriba que los siguientes: entre dos grupos
@@ -241,6 +261,11 @@ export default function DashboardScreen() {
       />
 
       <EditorDeMovimiento movimiento={enEdicion} onCerrar={() => setEnEdicion(null)} />
+
+      <ConfirmarPropuesta
+        propuesta={propuestaElegida}
+        onCerrar={() => setPropuestaElegida(null)}
+      />
     </SafeAreaView>
   )
 }

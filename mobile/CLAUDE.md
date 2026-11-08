@@ -54,9 +54,11 @@ app/                        # Rutas (Expo Router)
   (tabs)/mes-contable.tsx
   (tabs)/categorias.tsx
   (tabs)/configuraciones.tsx
+  (tabs)/recurrencias.tsx   # Crear y editar planes de recurrencia
   (tabs)/cuenta.tsx
   playground.tsx            # Pruebas de UI (solo en dev con mocks)
 features/gastos/            # Estado, componentes y llamadas de gastos
+features/recurrencias/      # Planes, propuestas pendientes y confirmación
 features/auth/              # Lo mismo para la sesión
 components/ui/              # Solo primitivos sin dominio
 lib/                        # icons, consultas (react-query), funciones (flags), theme, utils
@@ -106,6 +108,14 @@ invalidan el **prefijo** de las llaves (`llaves.todosLosGastos()`) y no la de un
 mes: cambiarle la fecha a un movimiento lo mueve de mes, así que las llaves
 afectadas son dos y la de origen la pantalla no la tiene a mano. react-query
 vuelve a pedir solo las consultas activas, así que no es una ráfaga de pedidos.
+
+Las recurrencias van por `useRecurrencias()` y las propuestas pendientes por
+`usePropuestas()`, las dos en `features/recurrencias`. Confirmar invalida
+además el prefijo de los gastos: el movimiento que se crea puede caer en un mes
+que no es el que está en pantalla, porque se confirma la propuesta de marzo en
+abril. Omitir no crea movimiento, así que no toca la caché de gastos. Crear o
+editar un plan invalida también las propuestas: un plan nuevo propone desde su
+fecha ancla, que puede ser pasada.
 
 Lo que viaja en el `PATCH` es **solo lo que cambió** (`cambioPendiente`, en
 `features/gastos/edicion.ts`): la API marca como editados a mano los campos que

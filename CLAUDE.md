@@ -91,6 +91,13 @@ Endpoints:
 | `GET /gastos?mes=&anio=` | sí |
 | `GET /gastos/anuales?anio=` | sí |
 | `DELETE /perfil` | sí |
+| `GET /recurrencias` | sí |
+| `POST /recurrencias` | sí |
+| `PATCH /recurrencias/:id` | sí |
+| `GET /recurrencias/propuestas` | sí |
+| `POST /recurrencias/propuestas/confirmar` | sí |
+| `POST /recurrencias/propuestas/omitir` | sí |
+| `DELETE /recurrencias/propuestas/omitida` | sí |
 | `GET /perfil/preferencias` | sí |
 | `PATCH /perfil/preferencias` | sí |
 | `GET /health` | no (keep-alive de Render) |
@@ -99,6 +106,18 @@ Endpoints:
 `DELETE /perfil` borra los movimientos del usuario y su cuenta, llamando a
 `delete_user()`. **Es el único camino**: mobile no le habla a Supabase
 directamente para escribir.
+
+**Recurrencia con confirmación.** Un plan (`public.recurrencias`) propone;
+confirmar es lo que **crea** el movimiento. Las propuestas **no se guardan**:
+una pendiente es la ausencia de una fila en `public.ocurrencias_recurrentes`,
+que es donde van las decisiones ya tomadas (`confirmada` u `omitida`). Las
+fechas se derivan del plan en `packages/core/recurrencias.js`, y por eso no hay
+ningún proceso que corra solo. Confirmar y editar-de-aquí-en-adelante pasan por
+dos funciones de Postgres (`confirmar_ocurrencia_recurrente`,
+`editar_recurrencia_desde`) porque cada una escribe dos tablas y a medias
+dejan, respectivamente, un gasto duplicable y un perfil sin recurrencia.
+`recurrencias` no tiene política de DELETE: terminar un plan es escribir
+`vigente_hasta`.
 
 Las preferencias del perfil (`public.preferencias`) llevan **dos campos por
 flag**: `habilitado` es el entitlement, que decide el plan, y `activo` la

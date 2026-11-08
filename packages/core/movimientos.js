@@ -15,7 +15,7 @@
  */
 
 const { parsearGasto } = require('./parser')
-const { hoyCivil, ZONA_DEFECTO } = require('./fechas-humanas')
+const { hoyCivil, aIsoCivil, ZONA_DEFECTO } = require('./fechas-humanas')
 
 /**
  * Si `Intl` no sabe de la zona, construir el formateador tira RangeError. Es la
@@ -29,13 +29,6 @@ function esZonaValida(zona) {
   } catch {
     return false
   }
-}
-
-/** Una fecha civil a AAAA-MM-DD, el formato de la columna `date`. */
-function aIso(fecha) {
-  const dd = String(fecha.getUTCDate()).padStart(2, '0')
-  const mm = String(fecha.getUTCMonth() + 1).padStart(2, '0')
-  return `${fecha.getUTCFullYear()}-${mm}-${dd}`
 }
 
 /**
@@ -68,7 +61,7 @@ function registrarMovimiento(input, opciones = {}) {
     ...resultado,
     advertencias: [...advertencias, ...resultado.advertencias],
     // Lo que hay que guardar para que el movimiento se pueda volver a derivar.
-    contexto: { zona, hoyResuelto: aIso(hoy) },
+    contexto: { zona, hoyResuelto: aIsoCivil(hoy) },
   }
 }
 
