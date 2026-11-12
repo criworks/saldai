@@ -188,11 +188,17 @@ create trigger gastos_asignar_cuenta
 -- todos sus movimientos colgados de ella. Un perfil sin movimientos no recibe
 -- cuenta todavía; la va a crear su primer movimiento, igual que uno nuevo.
 
--- El `exists` contra `auth.users` no es decorativo: `gastos.user_id` no tiene
--- foreign key (por eso `delete_user()` borra los movimientos a mano), así que
--- un perfil borrado por fuera de esa función pudo dejar movimientos huérfanos.
--- Sin el filtro, esos movimientos harían fallar la migración entera al crear
--- su cuenta, y quedarían sin cuenta igual.
+-- Corregido el 12-nov-2026: el `exists` contra `auth.users` se escribió
+-- creyendo que `gastos.user_id` no tenía foreign key y que un perfil borrado
+-- por fuera de `delete_user()` podía dejar movimientos huérfanos. Era falso.
+-- Producción tiene esa foreign key desde antes del baseline, solo que ninguna
+-- migración del repo la declaraba hasta
+-- `20261112010000_fk_movimientos_user_id.sql`. El filtro queda escrito como
+-- está —la migración ya se aplicó y no hace daño—, pero no protege de nada:
+-- con la foreign key puesta no puede haber movimientos huérfanos. Lo que sí
+-- sigue siendo cierto, y por otra razón, es que `delete_user()` tiene que
+-- borrar los movimientos antes que la fila de `auth.users`: la foreign key no
+-- tiene `on delete cascade`, así que sin ese orden el borrado falla.
 insert into public.cuentas (user_id, nombre, es_predeterminada)
 select distinct g.user_id, 'Principal', true
   from public.gastos g

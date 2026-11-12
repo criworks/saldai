@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+### Fixed
+- **La foreign key `movimientos.user_id → auth.users(id)` pasa a estar declarada en el repo.** Producción la tenía desde antes del baseline, con el nombre `gastos_user_id_fkey`, porque la tabla se había creado a mano: ninguna migración la creaba y el renombre del 12-nov tampoco la tocó, por la misma razón. Lo que eso rompía no era producción sino cualquier base levantada desde este repo, que no la reproducía, y los comentarios escritos sobre el repo —los de `20261106010000_cuentas.sql`— razonaban sobre una tabla sin foreign key que no existe en ningún lado, afirmando que un perfil borrado por fuera de `delete_user()` podía dejar movimientos huérfanos. No puede. La migración nueva no cambia producción: renombra la constraint donde ya está —renombrar no revalida las filas— y la crea donde no, y se verificó en los dos sentidos contra un Postgres 16 local, porque CI no corre el SQL. Queda sin `on delete cascade`, que es lo que hay en producción y lo que obliga a `delete_user()` a borrar los movimientos antes que la fila de `auth.users`.
+
 
 ## [1.10.0] - 2026-11-12
 ### Changed
