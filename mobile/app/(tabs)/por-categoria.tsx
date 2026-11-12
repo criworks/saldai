@@ -5,7 +5,7 @@ import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Alert } from '@/components/ui/Alert'
 import { colors } from '@/constants/theme'
-import { EncabezadoDelMes, ExpenseItem, useFilter, useGastos } from '@/features/gastos'
+import { EncabezadoDelMes, ExpenseItem, useFilter, useMovimientos } from '@/features/movimientos'
 import { usePreferencias } from '@/features/perfil'
 
 /**
@@ -13,7 +13,7 @@ import { usePreferencias } from '@/features/perfil'
  * ella, de mayor a menor.
  *
  * Es el mismo mes que el listado de movimientos, no otra consulta: la suma por
- * categoría la deriva `GastosContext` de los gastos que ya están en caché. Por
+ * categoría la deriva `MovimientosContext` de los movimientos que ya están en caché. Por
  * eso el mes elegido se arrastra solo y cambiar de mes acá y allá es lo mismo.
  *
  * Las filas se dibujan con `ExpenseItem`, que es monto, burbuja de categoría y
@@ -23,7 +23,7 @@ import { usePreferencias } from '@/features/perfil'
  */
 export default function PorCategoriaScreen() {
   const router = useRouter()
-  const { mes, categorias, loading, refreshing, error, fetchGastos, totalMes } = useGastos()
+  const { mes, categorias, loading, refreshing, error, fetchMovimientos, totalMes } = useMovimientos()
   const { setSelectedCategory } = useFilter()
   const { categoriasVisibles } = usePreferencias()
 
@@ -53,7 +53,7 @@ export default function PorCategoriaScreen() {
     <View className="w-full flex-col pt-xl pb-24 items-center">
       <Text className="text-destructive text-body font-medium text-center">Error al cargar datos</Text>
       <Pressable
-        onPress={() => fetchGastos()}
+        onPress={() => fetchMovimientos()}
         className="mt-4 px-6 py-3 bg-secondary rounded-full active:opacity-80"
       >
         <Text className="text-foreground font-medium">Reintentar</Text>
@@ -61,7 +61,7 @@ export default function PorCategoriaScreen() {
     </View>
   ) : (
     <View className="w-full flex-col pt-xl items-start">
-      <Text className="text-muted-foreground text-body font-medium">No hay gastos este mes</Text>
+      <Text className="text-muted-foreground text-body font-medium">No hay movimientos este mes</Text>
     </View>
   )
 
@@ -97,7 +97,7 @@ export default function PorCategoriaScreen() {
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={() => fetchGastos()}
+            onRefresh={() => fetchMovimientos()}
             tintColor={colors.bgElevated}
           />
         }

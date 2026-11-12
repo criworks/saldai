@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * CLI — Gastos Parser
+ * CLI — Movimientos Parser
  *
  * Uso:
  *   node index.js                              → modo interactivo (REPL)
@@ -9,7 +9,7 @@
  */
 
 const readline = require('readline')
-const { parsearGasto } = require('@saldai/core')
+const { parsearMovimiento } = require('@saldai/core')
 
 // La zona no la lee el core: se la pasa quien lo usa. Sin APP_TIMEZONE el core
 // asume Chile.
@@ -42,7 +42,7 @@ function printResultado(input, resultado) {
       ninguna: `${RED}[sin categoría]${RESET}`,
     }[d.categoriaSrc]
 
-    console.log(`${GREEN}${BOLD}✓ Gasto parseado${RESET}`)
+    console.log(`${GREEN}${BOLD}✓ Movimiento parseado${RESET}`)
     console.log(`  ${BOLD}Monto:     ${RESET}${CYAN}${d.montoFormateado}${RESET}`)
     console.log(`  ${BOLD}Item:      ${RESET}${d.item}`)
     console.log(`  ${BOLD}Categoría: ${RESET}${CYAN}${d.categoria}${RESET} ${srcLabel}`)
@@ -104,7 +104,7 @@ function runTests() {
   let fail = 0
 
   casos.forEach(({ input, desc }) => {
-    const resultado = parsearGasto(input, OPCIONES)
+    const resultado = parsearMovimiento(input, OPCIONES)
     const tieneAdvertencias = resultado.advertencias.length > 0
     const icono = !resultado.ok
       ? `${RED}✗${RESET}`
@@ -127,7 +127,7 @@ function runTests() {
 }
 
 function modoInteractivo() {
-  console.log(`\n${BOLD}${CYAN}Gastos Parser — Modo Interactivo${RESET}`)
+  console.log(`\n${BOLD}${CYAN}Movimientos Parser — Modo Interactivo${RESET}`)
   console.log(`${DIM}Formato: MONTO, ITEM, CATEGORIA, FECHA, METODO${RESET}`)
   console.log(`${DIM}Delimitadores: , | - /${RESET}`)
   console.log(`${DIM}Categoría y fecha opcionales. Método default: TC${RESET}`)
@@ -158,7 +158,7 @@ function modoInteractivo() {
       return
     }
 
-    printResultado(input, parsearGasto(input, OPCIONES))
+    printResultado(input, parsearMovimiento(input, OPCIONES))
     rl.prompt()
   })
 
@@ -167,5 +167,5 @@ function modoInteractivo() {
 
 const args = process.argv.slice(2)
 if (args[0] === '--test') runTests()
-else if (args.length > 0) printResultado(args.join(' '), parsearGasto(args.join(' '), OPCIONES))
+else if (args.length > 0) printResultado(args.join(' '), parsearMovimiento(args.join(' '), OPCIONES))
 else modoInteractivo()

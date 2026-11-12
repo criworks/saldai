@@ -6,13 +6,13 @@ import { editarMovimiento, eliminarMovimiento } from './api'
 /**
  * Editar y eliminar un movimiento ya registrado.
  *
- * Las dos mutaciones invalidan el prefijo de los gastos y no la llave de un mes
+ * Las dos mutaciones invalidan el prefijo de los movimientos y no la llave de un mes
  * puntual: una edición de fecha mueve el movimiento de mes, así que las llaves
  * afectadas son dos, y la de origen la pantalla no la tiene a mano cuando la
  * respuesta ya trae la fila nueva. Invalidar el prefijo cubre las dos sin que
  * nadie tenga que acordarse de la fecha anterior (ver `llaves`).
  *
- * Sin alta optimista, al contrario del registro: ahí el gasto aparece al toque
+ * Sin alta optimista, al contrario del registro: ahí el movimiento aparece al toque
  * porque el usuario está escribiendo uno nuevo y el provisorio es lo que da la
  * sensación de guardado. Acá el movimiento ya está en la lista y lo que el
  * usuario necesita saber es si su corrección quedó guardada, así que la fila se
@@ -22,7 +22,7 @@ export function useMovimiento() {
   const cliente = useQueryClient()
 
   const invalidar = () => {
-    cliente.invalidateQueries({ queryKey: llaves.todosLosGastos() })
+    cliente.invalidateQueries({ queryKey: llaves.todosLosMovimientos() })
     cliente.invalidateQueries({ queryKey: llaves.todosLosTotalesAnuales() })
   }
 

@@ -7,12 +7,12 @@ import { confirmarPropuesta, fetchPropuestas, omitirPropuesta } from './api'
 /**
  * Las propuestas pendientes y las dos decisiones que se toman sobre una.
  *
- * Confirmar invalida los gastos además de las propuestas: el movimiento que se
+ * Confirmar invalida los movimientos además de las propuestas: el movimiento que se
  * crea entra en un mes que puede no ser el que está en pantalla —se confirma la
  * propuesta de marzo en abril— así que se invalida el prefijo y no la llave de
  * un mes, por lo mismo que en `useMovimiento`.
  *
- * Omitir no crea ningún movimiento, así que no toca la caché de gastos: lo
+ * Omitir no crea ningún movimiento, así que no toca la caché de movimientos: lo
  * único que cambia es que esa propuesta ya no está pendiente.
  */
 export function usePropuestas() {
@@ -40,7 +40,7 @@ export function usePropuestas() {
     }) => confirmarPropuesta(recurrenciaId, fecha, cambio),
     onSuccess: () => {
       invalidarPropuestas()
-      cliente.invalidateQueries({ queryKey: llaves.todosLosGastos() })
+      cliente.invalidateQueries({ queryKey: llaves.todosLosMovimientos() })
       cliente.invalidateQueries({ queryKey: llaves.todosLosTotalesAnuales() })
     },
   })

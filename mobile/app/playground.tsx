@@ -11,11 +11,11 @@ import { Notification } from '@/components/ui/Notification';
 import { Alert } from '@/components/ui/Alert';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { Separator } from '@/components/ui/separator';
-import { ExpenseItem } from '@/features/gastos';
-import { CategorySelector } from '@/features/gastos';
-import { PaymentMethodSelector } from '@/features/gastos';
+import { ExpenseItem } from '@/features/movimientos';
+import { CategorySelector } from '@/features/movimientos';
+import { PaymentMethodSelector } from '@/features/movimientos';
 import { OtpInput } from '@/features/auth';
-import { CampoDeCategoria } from '@/features/gastos';
+import { CampoDeCategoria } from '@/features/movimientos';
 import { router } from 'expo-router';
 import { mockFeedConfig } from '@/services/mocks/config';
 

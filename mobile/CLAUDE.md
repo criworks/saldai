@@ -34,7 +34,7 @@ Los íconos **no** son `@expo/vector-icons`. Para usar uno nuevo hay que
 agregarlo a `lib/icons.ts`, que les aplica `cssInterop` para que acepten
 `className`.
 
-Los imports son absolutos con el alias `@/` (`@/features/gastos`). El alias
+Los imports son absolutos con el alias `@/` (`@/features/movimientos`). El alias
 está en `tsconfig.json` y repetido en el `moduleNameMapper` de
 `jest.config.js`, porque Jest no lee `tsconfig.json`.
 
@@ -49,7 +49,7 @@ app/                        # Rutas (Expo Router)
   _layout.tsx               # Fuentes, AuthProvider, QueryClientProvider, PortalHost
   (auth)/login.tsx          # Login por OTP de 6 dígitos al email
   (tabs)/index.tsx          # Feed del mes
-  (tabs)/captura.tsx        # Captura de gasto
+  (tabs)/captura.tsx        # Captura de movimiento
   (tabs)/meses.tsx
   (tabs)/mes-contable.tsx
   (tabs)/categorias.tsx
@@ -57,7 +57,7 @@ app/                        # Rutas (Expo Router)
   (tabs)/recurrencias.tsx   # Crear y editar planes de recurrencia
   (tabs)/cuenta.tsx
   playground.tsx            # Pruebas de UI (solo en dev con mocks)
-features/gastos/            # Estado, componentes y llamadas de gastos
+features/movimientos/            # Estado, componentes y llamadas de movimientos
 features/recurrencias/      # Planes, propuestas pendientes y confirmación
 features/auth/              # Lo mismo para la sesión
 components/ui/              # Solo primitivos sin dominio
@@ -74,7 +74,7 @@ los archivos internos de una feature.
 
 En `components/ui/` van solo los primitivos sin dominio (`Alert`, `Input`,
 `BotonLimpiar`, `MenuItem`, `button`, `text`…). Un componente que lee un
-contexto de gastos pertenece a `features/gastos/componentes/`.
+contexto de movimientos pertenece a `features/movimientos/componentes/`.
 
 Los tests viven en `__tests__/` al lado de lo que prueban.
 
@@ -88,37 +88,37 @@ que no se invalida, así que las llaves nuevas van ahí.
 
 Los defaults que vale conocer: `staleTime` 60s (un mes ya cargado se muestra al
 toque y se revalida en segundo plano), `gcTime` 30min, dos reintentos para las
-queries y **cero para las mutaciones** (reintentar a ciegas un `POST /gastos`
-puede duplicar el gasto). `refetchOnWindowFocus` está en `false` porque React
+queries y **cero para las mutaciones** (reintentar a ciegas un `POST /movimientos`
+puede duplicar el movimiento). `refetchOnWindowFocus` está en `false` porque React
 Native no tiene foco de ventana: el refetch al volver a una pantalla lo maneja
 cada pantalla con `useFocusEffect`.
 
-Las llamadas están en `features/gastos/api.ts`. Van con
+Las llamadas están en `features/movimientos/api.ts`. Van con
 `Authorization: Bearer <access_token>` de la sesión de Supabase; sin eso la API
 responde 401. El mensaje de error se saca con el helper `mensajeDeError`, que
 lee `errores` (plural) y cae a `error` solo para los 401 — si se agrega una
 llamada, usar ese helper y no leer el cuerpo a mano.
 
 Los tipos de las respuestas vienen de `@saldai/core`
-(`GastosDelMes`, `TotalesAnuales`, `GastoCreado`, `MovimientoCambiado`). No
+(`MovimientosDelMes`, `TotalesAnuales`, `MovimientoCreado`, `MovimientoCambiado`). No
 redeclararlos acá.
 
 Editar y eliminar un movimiento van por `useMovimiento()`, y las dos mutaciones
-invalidan el **prefijo** de las llaves (`llaves.todosLosGastos()`) y no la de un
+invalidan el **prefijo** de las llaves (`llaves.todosLosMovimientos()`) y no la de un
 mes: cambiarle la fecha a un movimiento lo mueve de mes, así que las llaves
 afectadas son dos y la de origen la pantalla no la tiene a mano. react-query
 vuelve a pedir solo las consultas activas, así que no es una ráfaga de pedidos.
 
 Las recurrencias van por `useRecurrencias()` y las propuestas pendientes por
 `usePropuestas()`, las dos en `features/recurrencias`. Confirmar invalida
-además el prefijo de los gastos: el movimiento que se crea puede caer en un mes
+además el prefijo de los movimientos: el movimiento que se crea puede caer en un mes
 que no es el que está en pantalla, porque se confirma la propuesta de marzo en
-abril. Omitir no crea movimiento, así que no toca la caché de gastos. Crear o
+abril. Omitir no crea movimiento, así que no toca la caché de movimientos. Crear o
 editar un plan invalida también las propuestas: un plan nuevo propone desde su
 fecha ancla, que puede ser pasada.
 
 Lo que viaja en el `PATCH` es **solo lo que cambió** (`cambioPendiente`, en
-`features/gastos/edicion.ts`): la API marca como editados a mano los campos que
+`features/movimientos/edicion.ts`): la API marca como editados a mano los campos que
 recibe, y esa marca decide si un reclasificar masivo puede tocar la fila.
 
 ---

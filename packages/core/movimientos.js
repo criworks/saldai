@@ -1,10 +1,10 @@
 /**
  * El registro de un movimiento: el único punto de entrada de escritura.
  *
- * Antes la API y mobile llamaban `parsearGasto` cada una por su cuenta y
+ * Antes la API y mobile llamaban `parsearMovimiento` cada una por su cuenta y
  * resolvían el "hoy" con su propia zona: la API con `APP_TIMEZONE` y mobile sin
  * pasar ninguna, o sea con el default. Las dos asumían Chile, así que un
- * usuario en otra zona registraba un gasto con el día de Chile.
+ * usuario en otra zona registraba un movimiento con el día de Chile.
  *
  * Lo que agrega esta función sobre el parser es **el contexto con el que se
  * decidió**: la zona y el día que se usó como referencia para resolver "hoy",
@@ -14,7 +14,7 @@
  * equivocada. Guardar el contexto lo vuelve reproducible por construcción.
  */
 
-const { parsearGasto } = require('./parser')
+const { parsearMovimiento } = require('./parser')
 const { hoyCivil, aIsoCivil, ZONA_DEFECTO } = require('./fechas-humanas')
 
 /**
@@ -55,7 +55,7 @@ function registrarMovimiento(input, opciones = {}) {
   }
 
   const hoy = opciones.hoy ?? hoyCivil(zona)
-  const resultado = parsearGasto(input, { zona, hoy })
+  const resultado = parsearMovimiento(input, { zona, hoy })
 
   return {
     ...resultado,

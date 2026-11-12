@@ -10,7 +10,7 @@ import { QueryClient } from '@tanstack/react-query'
 export const clienteDeConsultas = new QueryClient({
   defaultOptions: {
     queries: {
-      // Un gasto no cambia solo: el mes que ya se cargó se muestra al toque y
+      // Un movimiento no cambia solo: el mes que ya se cargó se muestra al toque y
       // se revalida en segundo plano pasado este rato.
       staleTime: 60_000,
       // Lo que se vio hace menos de media hora queda en memoria, así moverse
@@ -25,8 +25,8 @@ export const clienteDeConsultas = new QueryClient({
       refetchOnWindowFocus: false,
     },
     mutations: {
-      // Guardar un gasto no se reintenta solo: el usuario ve el error y
-      // decide, porque un reintento a ciegas puede duplicar el gasto.
+      // Guardar un movimiento no se reintenta solo: el usuario ve el error y
+      // decide, porque un reintento a ciegas puede duplicar el movimiento.
       retry: 0,
     },
   },
@@ -37,8 +37,8 @@ export const clienteDeConsultas = new QueryClient({
  * pantallas distintas es una caché que no se invalida.
  */
 export const llaves = {
-  gastosDelMes: (mes: number, anio: number) => ['gastos', anio, mes] as const,
-  totalesAnuales: (anio: number) => ['gastos-anuales', anio] as const,
+  movimientosDelMes: (mes: number, anio: number) => ['movimientos', anio, mes] as const,
+  totalesAnuales: (anio: number) => ['movimientos-anuales', anio] as const,
   preferencias: () => ['preferencias'] as const,
   recurrencias: () => ['recurrencias'] as const,
   /**
@@ -58,6 +58,6 @@ export const llaves = {
    * el prefijo no hace falta, y no cuesta una ráfaga de pedidos: react-query
    * vuelve a pedir solo las consultas activas y marca viejas las demás.
    */
-  todosLosGastos: () => ['gastos'] as const,
-  todosLosTotalesAnuales: () => ['gastos-anuales'] as const,
+  todosLosMovimientos: () => ['movimientos'] as const,
+  todosLosTotalesAnuales: () => ['movimientos-anuales'] as const,
 }

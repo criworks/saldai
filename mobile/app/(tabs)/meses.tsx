@@ -6,20 +6,20 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useFocusEffect } from '@react-navigation/native';
 import { formatearMonto } from '@saldai/core';
 import { colors, MESES } from '@/constants/theme';
-import { consultaDelMes, fetchGastosAnuales, useGastos } from '@/features/gastos';
+import { consultaDelMes, fetchMovimientosAnuales, useMovimientos } from '@/features/movimientos';
 import { llaves } from '@/lib/consultas';
 import { Alert } from '@/components/ui/Alert';
 
 export default function MesesScreen() {
   const router = useRouter();
-  const { setMes, anio: currentYear } = useGastos();
+  const { setMes, anio: currentYear } = useMovimientos();
   const insets = useSafeAreaInsets();
 
   // Los totales del año salen de la caché: volver a esta pantalla los muestra
-  // al toque y los revalida detrás, y el alta de un gasto los invalida sola.
+  // al toque y los revalida detrás, y el alta de un movimiento los invalida sola.
   const consulta = useQuery({
     queryKey: llaves.totalesAnuales(currentYear),
-    queryFn: () => fetchGastosAnuales(currentYear),
+    queryFn: () => fetchMovimientosAnuales(currentYear),
   });
 
   const { refetch, isStale } = consulta;

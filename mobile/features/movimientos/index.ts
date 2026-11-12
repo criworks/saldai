@@ -1,16 +1,16 @@
 /**
- * La superficie pública de la feature de gastos.
+ * La superficie pública de la feature de movimientos.
  *
  * Las pantallas importan desde acá y no de los archivos de adentro: así el
  * reacomodo interno de la feature no toca las rutas, y se ve de un vistazo qué
  * expone.
  */
-export { GastosProvider, useGastos } from './GastosContext'
-export type { CategoriaInfo, DatosResponse, Gasto } from './GastosContext'
+export { MovimientosProvider, useMovimientos } from './MovimientosContext'
+export type { CategoriaInfo, DatosResponse, Movimiento } from './MovimientosContext'
 export { FilterProvider, useFilter } from './FilterContext'
-export { useGastoMutation } from './useGastoMutation'
+export { useMovimientoMutation } from './useMovimientoMutation'
 export { consultaDelMes } from './consultaDelMes'
-export { crearGasto, fetchGastosAnuales, fetchGastosPorMes } from './api'
+export { crearMovimiento, fetchMovimientosAnuales, fetchMovimientosPorMes } from './api'
 export { borradorDe, cambioPendiente, hayAlgoQueGuardar } from './edicion'
 export type { BorradorDeMovimiento } from './edicion'
 export { useMovimiento } from './useMovimiento'

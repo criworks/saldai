@@ -9,7 +9,7 @@ import {
 } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { colors, SIN_CATEGORIA } from '@/constants/theme'
-import { EditorDeMovimiento, EncabezadoDelMes, ExpenseItem, useFilter, useGastos, Gasto } from '@/features/gastos'
+import { EditorDeMovimiento, EncabezadoDelMes, ExpenseItem, useFilter, useMovimientos, Movimiento } from '@/features/movimientos'
 import { usePreferencias } from '@/features/perfil'
 import { ConfirmarPropuesta, ListaDePropuestas, usePropuestas } from '@/features/recurrencias'
 import { Alert } from '@/components/ui/Alert'
@@ -57,9 +57,9 @@ export default function DashboardScreen() {
     loading,
     refreshing,
     error,
-    fetchGastos,
+    fetchMovimientos,
     totalMes,
-  } = useGastos()
+  } = useMovimientos()
 
   // Las dos funciones conmutables del perfil: deciden si la fila del listado
   // muestra la burbuja de categoría y la de método.
@@ -75,7 +75,7 @@ export default function DashboardScreen() {
   // guarda el movimiento entero y no el id porque el editor abre con sus
   // valores, y buscarlo de nuevo en la lista lo dejaría vacío justo cuando un
   // refetch está en vuelo.
-  const [enEdicion, setEnEdicion] = useState<Gasto | null>(null)
+  const [enEdicion, setEnEdicion] = useState<Movimiento | null>(null)
 
   // Lo que las recurrencias proponen y el usuario todavía no decidió. Va en el
   // feed y no en una pantalla aparte porque es lo único del producto que le
@@ -91,49 +91,49 @@ export default function DashboardScreen() {
   const insets = useSafeAreaInsets()
   const listPaddingBottom = 220 + insets.bottom;
 
-  const gastosVisibles = useMemo(() => {
+  const movimientosVisibles = useMemo(() => {
     const delMes = datos?.datos ?? []
     if (!filtro) return delMes
-    // `|| SIN_CATEGORIA` como en el desglose: un gasto sin categoría cae en el
+    // `|| SIN_CATEGORIA` como en el desglose: un movimiento sin categoría cae en el
     // mismo grupo por el que se puede filtrar.
     return delMes.filter((g) => (g.categoria || SIN_CATEGORIA) === filtro)
   }, [datos?.datos, filtro])
 
-  // Los gastos agrupados por día, en el orden en que se muestran: el día más
+  // Los movimientos agrupados por día, en el orden en que se muestran: el día más
   // nuevo primero. Es lo que SectionList espera como `sections`.
   const secciones = useMemo(() => {
-    const conFecha = gastosVisibles.map((g) => ({
+    const conFecha = movimientosVisibles.map((g) => ({
       ...g,
-      diaDelGasto: fechaDelDia(g.fecha),
+      diaDelMovimiento: fechaDelDia(g.fecha),
     }))
 
-    conFecha.sort((a, b) => b.diaDelGasto.getTime() - a.diaDelGasto.getTime())
+    conFecha.sort((a, b) => b.diaDelMovimiento.getTime() - a.diaDelMovimiento.getTime())
 
     // Un Map y no un objeto: el Map mantiene el orden de inserción, que acá es
     // el orden en que se van a ver los grupos.
-    const porDia = new Map<string, Gasto[]>()
-    for (const gasto of conFecha) {
-      const titulo = tituloDelDia(gasto.diaDelGasto)
+    const porDia = new Map<string, Movimiento[]>()
+    for (const movimiento of conFecha) {
+      const titulo = tituloDelDia(movimiento.diaDelMovimiento)
       if (!porDia.has(titulo)) porDia.set(titulo, [])
-      porDia.get(titulo)!.push(gasto)
+      porDia.get(titulo)!.push(movimiento)
     }
 
     return Array.from(porDia, ([titulo, data]) => ({ titulo, data }))
-  }, [gastosVisibles])
+  }, [movimientosVisibles])
 
   // Con filtro, el total es el de lo que se ve. El total del mes arriba de una
   // lista recortada es un número que no corresponde a ninguna de sus filas.
   const totalMostrado = useMemo(
-    () => (filtro ? gastosVisibles.reduce((suma, g) => suma + g.monto, 0) : totalMes),
-    [filtro, gastosVisibles, totalMes],
+    () => (filtro ? movimientosVisibles.reduce((suma, g) => suma + g.monto, 0) : totalMes),
+    [filtro, movimientosVisibles, totalMes],
   )
 
-  const hayGastosEnElMes = !loading && !error && !!datos && datos.cantidad > 0
-  const sinGastos = !loading && !error && (!datos || datos.cantidad === 0)
-  // El mes tiene gastos pero ninguno de la categoría elegida: es distinto de un
+  const hayMovimientosEnElMes = !loading && !error && !!datos && datos.cantidad > 0
+  const sinMovimientos = !loading && !error && (!datos || datos.cantidad === 0)
+  // El mes tiene movimientos pero ninguno de la categoría elegida: es distinto de un
   // mes vacío y se dice distinto, porque lo que hay que hacer es soltar el
-  // filtro y no registrar un gasto.
-  const sinResultados = hayGastosEnElMes && secciones.length === 0
+  // filtro y no registrar un movimiento.
+  const sinResultados = hayMovimientosEnElMes && secciones.length === 0
 
   // Esqueleto de la primera carga de un mes que no se había visto. Con caché,
   // volver a un mes ya visto no pasa por acá.
@@ -165,19 +165,19 @@ export default function DashboardScreen() {
     // Se muestra si la consulta falló incluso después de los reintentos.
     <View className="w-full flex-col pt-xl pb-24 items-center">
       <Text className="text-destructive text-body font-medium text-center">Error al cargar datos</Text>
-      <Pressable onPress={() => fetchGastos()} className="mt-4 px-6 py-3 bg-secondary rounded-full active:opacity-80">
+      <Pressable onPress={() => fetchMovimientos()} className="mt-4 px-6 py-3 bg-secondary rounded-full active:opacity-80">
         <Text className="text-foreground font-medium">Reintentar</Text>
       </Pressable>
     </View>
   ) : sinResultados ? (
     <View className="w-full flex-col pt-xl items-start">
       <Text className="text-muted-foreground text-body font-medium">
-        No hay gastos de {filtro} este mes
+        No hay movimientos de {filtro} este mes
       </Text>
     </View>
-  ) : sinGastos ? (
+  ) : sinMovimientos ? (
     <View className="w-full flex-col pt-xl items-start">
-      <Text className="text-muted-foreground text-body font-medium">No hay gastos este mes</Text>
+      <Text className="text-muted-foreground text-body font-medium">No hay movimientos este mes</Text>
     </View>
   ) : null
 
@@ -186,14 +186,14 @@ export default function DashboardScreen() {
       <Alert visible={!!error} message={error || ''} type="error" />
 
       {/*
-        SectionList y no un ScrollView con todos los gastos dibujados: la lista
+        SectionList y no un ScrollView con todos los movimientos dibujados: la lista
         crece con cada mes y solo lo que está en pantalla se monta. Los títulos
         de día no quedan pegados arriba, porque el diseño los tiene scrolleando
-        con los gastos.
+        con los movimientos.
       */}
       <SectionList
         sections={secciones}
-        keyExtractor={(gasto) => String(gasto.id)}
+        keyExtractor={(movimiento) => String(movimiento.id)}
         stickySectionHeadersEnabled={false}
         contentContainerStyle={{
           paddingHorizontal: 24,
@@ -203,7 +203,7 @@ export default function DashboardScreen() {
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={() => fetchGastos()}
+            onRefresh={() => fetchMovimientos()}
             tintColor={colors.bgElevated}
           />
         }
@@ -233,7 +233,7 @@ export default function DashboardScreen() {
         )}
         ItemSeparatorComponent={() => <View className="h-xl" />}
         renderItem={({ item }) => (
-          // Tocar la fila abre el editor. Un gasto provisorio (el que se ve
+          // Tocar la fila abre el editor. Un movimiento provisorio (el que se ve
           // mientras la API responde el alta) todavía no tiene id de Postgres,
           // así que no se puede editar: abrirlo mandaría un PATCH a un id que
           // no existe.

@@ -6,7 +6,7 @@ test('el mes en curso se revalida al minuto', () => {
   expect(frescuraDelMes(10, 2026, hoy)).toBe(60_000)
 })
 
-test('un mes que no es el en curso no vence solo: lo invalida el alta de un gasto', () => {
+test('un mes que no es el en curso no vence solo: lo invalida el alta de un movimiento', () => {
   expect(frescuraDelMes(9, 2026, hoy)).toBe(Infinity)
   expect(frescuraDelMes(11, 2026, hoy)).toBe(Infinity)
 })

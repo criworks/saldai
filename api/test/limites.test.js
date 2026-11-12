@@ -21,7 +21,7 @@ function appConLimites({ sinSesion = 1000, conSesion = 1000, salud = 1000 } = {}
 
 test('la ruta sin sesión corta con 429 al pasarse del límite', async () => {
   const app = appConLimites({ sinSesion: 2 })
-  const pedir = () => request(app).post('/gastos/parsear').send({ input: '1000, pan' })
+  const pedir = () => request(app).post('/movimientos/parsear').send({ input: '1000, pan' })
 
   assert.strictEqual((await pedir()).status, 200)
   assert.strictEqual((await pedir()).status, 200)
@@ -34,9 +34,9 @@ test('la ruta sin sesión corta con 429 al pasarse del límite', async () => {
 
 test('el 429 trae la cabecera que dice cuándo reintentar', async () => {
   const app = appConLimites({ sinSesion: 1 })
-  await request(app).post('/gastos/parsear').send({ input: '1000, pan' })
+  await request(app).post('/movimientos/parsear').send({ input: '1000, pan' })
 
-  const cortado = await request(app).post('/gastos/parsear').send({ input: '1000, pan' })
+  const cortado = await request(app).post('/movimientos/parsear').send({ input: '1000, pan' })
   assert.strictEqual(cortado.status, 429)
   assert.ok(cortado.headers['retry-after'] || cortado.headers['ratelimit'])
 })
@@ -44,11 +44,11 @@ test('el 429 trae la cabecera que dice cuándo reintentar', async () => {
 test('cada ruta tiene su propio cupo: gastar el de parsear no corta las otras', async () => {
   const app = appConLimites({ sinSesion: 1, conSesion: 10 })
 
-  await request(app).post('/gastos/parsear').send({ input: '1000, pan' })
-  assert.strictEqual((await request(app).post('/gastos/parsear').send({ input: '1000, pan' })).status, 429)
+  await request(app).post('/movimientos/parsear').send({ input: '1000, pan' })
+  assert.strictEqual((await request(app).post('/movimientos/parsear').send({ input: '1000, pan' })).status, 429)
 
   // La ruta con sesión sigue respondiendo su 401 de siempre, no un 429.
-  const conSesion = await request(app).get('/gastos?mes=10')
+  const conSesion = await request(app).get('/movimientos?mes=10')
   assert.strictEqual(conSesion.status, 401)
 })
 
@@ -87,7 +87,7 @@ test('el cupo es por IP de cliente y no por IP del proxy', async () => {
   // Esto es lo que verifica que la app lee `X-Forwarded-For`.
   const app = appConLimites({ sinSesion: 1 })
   const pedir = (ip) =>
-    request(app).post('/gastos/parsear').set('X-Forwarded-For', ip).send({ input: '1000, pan' })
+    request(app).post('/movimientos/parsear').set('X-Forwarded-For', ip).send({ input: '1000, pan' })
 
   assert.strictEqual((await pedir('1.1.1.1')).status, 200)
   assert.strictEqual((await pedir('1.1.1.1')).status, 429)

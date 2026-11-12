@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 
 import { CategorySelector, estadoDeCategoria } from '../componentes/CategorySelector'
 
-/** El selector con el estado que en la pantalla vive en useGastoMutation. */
+/** El selector con el estado que en la pantalla vive en useMovimientoMutation. */
 function ConEstado({ inferida }: { inferida: string }) {
   const [elegida, setElegida] = useState('')
   return (

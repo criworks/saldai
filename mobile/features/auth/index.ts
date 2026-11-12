@@ -1,7 +1,7 @@
 /**
  * La superficie pública de la feature de sesión.
  *
- * Igual que en gastos: las pantallas importan desde acá, no de los archivos de
+ * Igual que en movimientos: las pantallas importan desde acá, no de los archivos de
  * adentro.
  */
 export { AuthProvider, useAuth } from './AuthContext'

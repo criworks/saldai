@@ -22,9 +22,9 @@ const app = crearApp({
   limites: { porMinutoSinSesion: 10_000, porMinutoConSesion: 10_000, porMinutoSalud: 10_000 },
 })
 
-test('POST /gastos/parsear parsea sin pedir sesión', async () => {
+test('POST /movimientos/parsear parsea sin pedir sesión', async () => {
   const res = await request(app)
-    .post('/gastos/parsear')
+    .post('/movimientos/parsear')
     .send({ input: '45000, uber, transporte, 15/02/2026, ef' })
 
   assert.strictEqual(res.status, 200)
@@ -34,9 +34,9 @@ test('POST /gastos/parsear parsea sin pedir sesión', async () => {
   assert.strictEqual(res.body.datos.fecha, '2026-02-15')
 })
 
-test('POST /gastos/parsear acepta la zona del cliente y no filtra el contexto', async () => {
+test('POST /movimientos/parsear acepta la zona del cliente y no filtra el contexto', async () => {
   const res = await request(app)
-    .post('/gastos/parsear')
+    .post('/movimientos/parsear')
     .send({ input: '45000, uber, transporte, 15/02/2026, ef', zona: 'Europe/Madrid' })
 
   assert.strictEqual(res.status, 200)
@@ -46,9 +46,9 @@ test('POST /gastos/parsear acepta la zona del cliente y no filtra el contexto', 
   assert.strictEqual(res.body.contexto, undefined)
 })
 
-test('POST /gastos/parsear con una zona inexistente advierte y no rechaza', async () => {
+test('POST /movimientos/parsear con una zona inexistente advierte y no rechaza', async () => {
   const res = await request(app)
-    .post('/gastos/parsear')
+    .post('/movimientos/parsear')
     .send({ input: '45000, uber, transporte, 15/02/2026, ef', zona: 'Marte/Olympus' })
 
   assert.strictEqual(res.status, 200)
@@ -57,8 +57,8 @@ test('POST /gastos/parsear con una zona inexistente advierte y no rechaza', asyn
   assert.ok(res.body.advertencias.some(a => a.includes('Marte/Olympus')))
 })
 
-test('POST /gastos/parsear sin input responde 400 con el detalle', async () => {
-  const res = await request(app).post('/gastos/parsear').send({})
+test('POST /movimientos/parsear sin input responde 400 con el detalle', async () => {
+  const res = await request(app).post('/movimientos/parsear').send({})
 
   assert.strictEqual(res.status, 400)
   assert.strictEqual(res.body.ok, false)
@@ -68,7 +68,7 @@ test('POST /gastos/parsear sin input responde 400 con el detalle', async () => {
 })
 
 test('un input que el parser rechaza responde 422, no 400', async () => {
-  const res = await request(app).post('/gastos/parsear').send({ input: '45000, uber, , 31/02/2026' })
+  const res = await request(app).post('/movimientos/parsear').send({ input: '45000, uber, , 31/02/2026' })
 
   assert.strictEqual(res.status, 422)
   assert.strictEqual(res.body.ok, false)
@@ -77,17 +77,17 @@ test('un input que el parser rechaza responde 422, no 400', async () => {
 
 test('las rutas protegidas responden 401 sin token, antes de tocar la base', async () => {
   for (const pedir of [
-    () => request(app).get('/gastos?mes=10'),
-    () => request(app).get('/gastos/anuales?anio=2026'),
-    () => request(app).post('/gastos').send({ input: '1000, pan' }),
+    () => request(app).get('/movimientos?mes=10'),
+    () => request(app).get('/movimientos/anuales?anio=2026'),
+    () => request(app).post('/movimientos').send({ input: '1000, pan' }),
     () => request(app).delete('/perfil'),
     () => request(app).get('/perfil/preferencias'),
     () => request(app).patch('/perfil/preferencias').send({ categoriasActivo: true }),
     () =>
       request(app)
-        .patch('/gastos/0f1c6b5a-9d2e-4c3b-8a7f-1e2d3c4b5a69')
+        .patch('/movimientos/0f1c6b5a-9d2e-4c3b-8a7f-1e2d3c4b5a69')
         .send({ monto: 50000 }),
-    () => request(app).delete('/gastos/0f1c6b5a-9d2e-4c3b-8a7f-1e2d3c4b5a69'),
+    () => request(app).delete('/movimientos/0f1c6b5a-9d2e-4c3b-8a7f-1e2d3c4b5a69'),
   ]) {
     const res = await pedir()
     assert.strictEqual(res.status, 401)
@@ -113,7 +113,7 @@ test('una ruta que no existe responde 404 con la forma de siempre', async () => 
 
 test('un cuerpo que no es JSON válido responde 400 y no 500', async () => {
   const res = await request(app)
-    .post('/gastos/parsear')
+    .post('/movimientos/parsear')
     .set('Content-Type', 'application/json')
     .send('{esto no es json')
 
@@ -124,7 +124,7 @@ test('un cuerpo que no es JSON válido responde 400 y no 500', async () => {
 
 test('un cuerpo más grande que el límite responde 413', async () => {
   const res = await request(app)
-    .post('/gastos/parsear')
+    .post('/movimientos/parsear')
     .send({ input: 'a'.repeat(20 * 1024) })
 
   assert.strictEqual(res.status, 413)
@@ -172,8 +172,8 @@ test('editar y borrar un movimiento piden sesión antes de mirar el id', async (
   // fuera al revés, un id mal escrito respondería 400 y le diría a cualquiera
   // sin token qué forma tiene un id válido.
   for (const pedir of [
-    () => request(app).patch('/gastos/no-es-un-uuid').send({ monto: 1 }),
-    () => request(app).delete('/gastos/no-es-un-uuid'),
+    () => request(app).patch('/movimientos/no-es-un-uuid').send({ monto: 1 }),
+    () => request(app).delete('/movimientos/no-es-un-uuid'),
   ]) {
     const res = await pedir()
     assert.strictEqual(res.status, 401)
@@ -181,15 +181,31 @@ test('editar y borrar un movimiento piden sesión antes de mirar el id', async (
   }
 })
 
-test('los gastos no se borran ni se editan sin id', async () => {
-  // `DELETE /gastos` sin id no existe: si cayera en la ruta de la colección,
+test('los movimientos no se borran ni se editan sin id', async () => {
+  // `DELETE /movimientos` sin id no existe: si cayera en la ruta de la colección,
   // un borrado masivo quedaría a un slash de distancia.
   for (const pedir of [
-    () => request(app).delete('/gastos'),
-    () => request(app).patch('/gastos').send({ monto: 1 }),
+    () => request(app).delete('/movimientos'),
+    () => request(app).patch('/movimientos').send({ monto: 1 }),
   ]) {
     const res = await pedir()
     assert.strictEqual(res.status, 404)
     assert.strictEqual(res.body.ok, false)
   }
+})
+
+test('`/gastos` sigue respondiendo lo mismo que `/movimientos`', async () => {
+  // El alias existe porque un build de la app que ya está instalado en un
+  // teléfono le habla a `/gastos` y no se actualiza con el deploy. Si alguien
+  // lo saca de `app.js`, esto falla antes de que lo descubra un usuario con la
+  // app rota y un 404 que no explica nada.
+  const viejo = await request(app).post('/gastos/parsear').send({ input: '45000, uber' })
+  const nuevo = await request(app).post('/movimientos/parsear').send({ input: '45000, uber' })
+
+  assert.strictEqual(viejo.status, nuevo.status)
+  assert.deepStrictEqual(viejo.body, nuevo.body)
+
+  // Y las protegidas siguen pidiendo sesión por el nombre viejo.
+  const sinToken = await request(app).get('/gastos')
+  assert.strictEqual(sinToken.status, 401)
 })

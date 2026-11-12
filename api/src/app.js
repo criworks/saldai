@@ -6,7 +6,7 @@ const helmet = require('helmet')
 
 const { limitadores } = require('./middleware/limites')
 const { manejadorDeErrores, noEncontrado } = require('./middleware/errores')
-const { rutasDeGastos } = require('./rutas/gastos')
+const { rutasDeMovimientos } = require('./rutas/movimientos')
 const { rutasDePerfil } = require('./rutas/perfil')
 const { rutasDeRecurrencias } = require('./rutas/recurrencias')
 const { rutasDeSalud } = require('./rutas/salud')
@@ -34,7 +34,7 @@ function crearApp({ origenesPermitidos, zona, limites }) {
   app.use(helmet())
   app.use(cors({ origin: origenesPermitidos }))
 
-  // El límite por defecto de express.json() es 100kb. Un gasto es una línea de
+  // El límite por defecto de express.json() es 100kb. Un movimiento es una línea de
   // texto, así que 10kb ya es holgado y recorta el margen para mandar basura.
   app.use(express.json({ limit: '10kb' }))
 
@@ -42,7 +42,15 @@ function crearApp({ origenesPermitidos, zona, limites }) {
   // contador, así gastar el cupo de una ruta no corta las otras.
   const limitadoresDePedidos = limitadores(limites)
 
-  app.use('/gastos', rutasDeGastos({ zona, limites: limitadoresDePedidos }))
+  app.use('/movimientos', rutasDeMovimientos({ zona, limites: limitadoresDePedidos }))
+
+  // `/gastos` es el nombre viejo de la misma ruta, y sigue montado a propósito.
+  // La app no se actualiza sola: un build que ya está instalado en un teléfono
+  // le habla a `/gastos` y seguiría haciéndolo después del deploy, así que
+  // sacarlo hoy rompe la app de quien no rebuildeó. `web/` también lo usa.
+  // Se saca cuando no quede ningún build apuntando acá, junto con la vista
+  // `public.gastos` que la migración del renombre dejó por la misma razón.
+  app.use('/gastos', rutasDeMovimientos({ zona, limites: limitadoresDePedidos }))
   app.use('/perfil', rutasDePerfil({ limites: limitadoresDePedidos }))
   app.use('/recurrencias', rutasDeRecurrencias({ zona, limites: limitadoresDePedidos }))
   app.use('/health', rutasDeSalud({ limites: limitadoresDePedidos }))

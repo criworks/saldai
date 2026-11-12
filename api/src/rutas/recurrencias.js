@@ -29,7 +29,7 @@ const { errorDeBase, errorDeEntrada, noEncontrado } = require('../respuestas')
  * vez que se la pide (`@saldai/core/recurrencias`).
  *
  * `zona` es la zona por defecto con la que se resuelve el "hoy", igual que en
- * las rutas de gastos: el cliente manda la suya y acá se cae a la de la config.
+ * las rutas de movimientos: el cliente manda la suya y acá se cae a la de la config.
  * Importa más que en un alta, porque el "hoy" decide **cuántas** propuestas se
  * le deben al usuario: con la zona equivocada, el día 1 a las 23:00 en Chile la
  * API todavía no propondría la cuota del mes.
@@ -61,13 +61,13 @@ function rutasDeRecurrencias({ zona, limites }) {
   //
   // El plan se escribe con la misma línea que un movimiento y lo lee
   // `registrarMovimiento`, el único punto de entrada de escritura: así una
-  // categoría o un método significan lo mismo en un plan que en un gasto, y la
+  // categoría o un método significan lo mismo en un plan que en un movimiento, y la
   // fecha de la línea queda como el ancla de la recurrencia.
   router.post('/', limites.conSesion, requireAuth, async (req, res) => {
     const entrada = validarPlanDeRecurrencia(req.body, { zona: req.body?.zona || zona })
     if (!entrada.ok) {
       // 422 y no 400 cuando lo que falló fue leer la línea, igual que en
-      // `POST /gastos`: el cuerpo estaba bien formado, el contenido no.
+      // `POST /movimientos`: el cuerpo estaba bien formado, el contenido no.
       const estado = entrada.errorDeLectura ? 422 : 400
       return res
         .status(estado)
@@ -226,7 +226,7 @@ function rutasDeRecurrencias({ zona, limites }) {
   // Deshace una omisión: la propuesta de esa fecha vuelve a estar pendiente.
   // Solo las omitidas. Una confirmada se deshace borrando su movimiento, y eso
   // ya devuelve la propuesta por la foreign key con `on delete cascade`; borrar
-  // la decisión dejando el movimiento sería el mismo gasto dos veces.
+  // la decisión dejando el movimiento sería el mismo movimiento dos veces.
   router.delete('/propuestas/omitida', limites.conSesion, requireAuth, async (req, res) => {
     const propuesta = validarPropuesta(req.query)
     if (!propuesta.ok) return errorDeEntrada(res, propuesta.errores)
@@ -250,7 +250,7 @@ function rutasDeRecurrencias({ zona, limites }) {
   // default que cambiaría en silencio lo que el usuario pidió.
   //
   // Lo ya confirmado no se toca, y no porque esta ruta lo cuide: las
-  // ocurrencias confirmadas son filas de `gastos` y acá no se mira ninguna.
+  // ocurrencias confirmadas son filas de `movimientos` y acá no se mira ninguna.
   router.patch('/:id', limites.conSesion, requireAuth, async (req, res) => {
     const id = validarIdDeRecurrencia(req.params.id)
     if (!id.ok) return errorDeEntrada(res, id.errores)

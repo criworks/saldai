@@ -4,7 +4,7 @@ const { createSupabaseClient } = require('../supabase')
  * Las consultas de los planes de recurrencia y de las decisiones ya tomadas,
  * atadas a la sesión del usuario.
  *
- * Igual que el repositorio de gastos, la traducción entre los nombres del
+ * Igual que el repositorio de movimientos, la traducción entre los nombres del
  * dominio (`vigenteDesde`) y los de las columnas (`vigente_desde`) es este
  * archivo. Lo que se **lee** viaja con la forma de la fila, porque es lo que la
  * API devuelve y lo que el core y la app consumen tal cual.
@@ -26,7 +26,7 @@ function repositorioDeRecurrencias(token) {
      * Un plan del perfil, o `null` si no existe o no es suyo.
      *
      * `maybeSingle()` y el `eq('user_id')` explícito por lo mismo que en
-     * gastos: con solo la RLS, un id de otro perfil devuelve cero filas en
+     * movimientos: con solo la RLS, un id de otro perfil devuelve cero filas en
      * silencio y eso se ve igual que un id inexistente.
      */
     buscar(id, { userId }) {
@@ -93,7 +93,7 @@ function repositorioDeRecurrencias(token) {
      * Va por la función de Postgres y no por dos escrituras desde acá porque
      * las dos se tienen que ver o no verse juntas: con el movimiento primero,
      * un error en la segunda deja la propuesta pendiente y el siguiente toque
-     * duplica el gasto; con la decisión primero, un error en la segunda pierde
+     * duplica el movimiento; con la decisión primero, un error en la segunda pierde
      * el movimiento sin que nada lo diga.
      */
     confirmar({ recurrenciaId, fechaPrevista, movimiento, camposEditados }) {
@@ -134,8 +134,8 @@ function repositorioDeRecurrencias(token) {
      *
      * Solo las omitidas: una confirmada se deshace borrando su movimiento, y
      * eso ya devuelve la propuesta por la foreign key con `on delete cascade`.
-     * Borrar la decisión sin borrar el movimiento dejaría el gasto registrado y
-     * la propuesta pendiente, o sea el mismo gasto dos veces.
+     * Borrar la decisión sin borrar el movimiento dejaría el movimiento registrado y
+     * la propuesta pendiente, o sea el mismo movimiento dos veces.
      */
     deshacerOmision({ userId, recurrenciaId, fechaPrevista }) {
       return supabase

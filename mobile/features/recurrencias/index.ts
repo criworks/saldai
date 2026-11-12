@@ -2,7 +2,7 @@
  * La superficie pública de la feature de recurrencias.
  *
  * Las pantallas importan desde acá y no de los archivos de adentro, igual que
- * en gastos: así reacomodar la feature por dentro no toca las rutas.
+ * en movimientos: así reacomodar la feature por dentro no toca las rutas.
  */
 export { usePropuestas } from './usePropuestas'
 export { useRecurrencias } from './useRecurrencias'

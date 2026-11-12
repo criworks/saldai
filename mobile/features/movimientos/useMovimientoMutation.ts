@@ -1,11 +1,11 @@
 import { anioDeIso, categorizar, mesDeIso, METODO_DEFAULT, registrarMovimiento } from '@saldai/core'
-import type { Gasto, GastosDelMes } from '@saldai/core'
+import type { Movimiento, MovimientosDelMes } from '@saldai/core'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { CampoClave } from '@/constants/theme'
 import { llaves } from '@/lib/consultas'
 import { zonaDelDispositivo } from '@/lib/zona'
-import { crearGasto } from './api'
+import { crearMovimiento } from './api'
 
 /**
  * La llave de caché del mes al que pertenece una fecha ISO. `null` si la fecha
@@ -15,20 +15,20 @@ function llaveDelMesDe(fecha: string | null | undefined) {
   const mes = mesDeIso(fecha)
   const anio = anioDeIso(fecha)
   if (mes === null || anio === null) return null
-  return llaves.gastosDelMes(mes, anio)
+  return llaves.movimientosDelMes(mes, anio)
 }
 
 /**
- * Arma el gasto provisorio que se muestra mientras la API responde.
+ * Arma el movimiento provisorio que se muestra mientras la API responde.
  *
  * El parser vive en `@saldai/core`, así que mobile puede leer el input sin
- * pasar por la red y el gasto aparece en la lista al toque. Lo que importa es
+ * pasar por la red y el movimiento aparece en la lista al toque. Lo que importa es
  * que el "ayer" provisorio caiga en el mismo día que el del servidor, y por eso
  * se le pasa **la misma zona** que va en el cuerpo del pedido: antes no se le
  * pasaba ninguna y las dos puntas asumían Chile, así que para un usuario en
  * otra zona el provisorio y la fila real podían caer en días distintos.
  */
-function gastoProvisorio(input: string, zona?: string): Gasto | null {
+function movimientoProvisorio(input: string, zona?: string): Movimiento | null {
   const { ok, datos } = registrarMovimiento(input, { zona })
   if (!ok || !datos) return null
 
@@ -45,10 +45,10 @@ function gastoProvisorio(input: string, zona?: string): Gasto | null {
   }
 }
 
-export function useGastoMutation() {
+export function useMovimientoMutation() {
   const cliente = useQueryClient()
   // El mensaje de resultado se borra a los 4 segundos. Si el usuario guarda
-  // otro gasto antes, el temporizador del anterior se cancela: si no, borraba
+  // otro movimiento antes, el temporizador del anterior se cancela: si no, borraba
   // el mensaje del nuevo apenas aparecía.
   const temporizador = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [valores, setValores] = useState<Record<CampoClave, string>>({
@@ -85,25 +85,25 @@ export function useGastoMutation() {
   }
 
   const mutacion = useMutation({
-    mutationFn: (input: string) => crearGasto(input, zonaDelDispositivo()),
+    mutationFn: (input: string) => crearMovimiento(input, zonaDelDispositivo()),
 
-    // Alta optimista: el gasto entra en la lista del mes que le toca por fecha,
-    // que no siempre es el mes que se está mirando (un gasto de "ayer" el día 1
+    // Alta optimista: el movimiento entra en la lista del mes que le toca por fecha,
+    // que no siempre es el mes que se está mirando (un movimiento de "ayer" el día 1
     // es del mes anterior).
     async onMutate(input: string) {
       if (temporizador.current) clearTimeout(temporizador.current)
-      const provisorio = gastoProvisorio(input, zonaDelDispositivo())
+      const provisorio = movimientoProvisorio(input, zonaDelDispositivo())
       if (!provisorio) return {}
 
       const llave = llaveDelMesDe(provisorio.fecha)
       if (!llave) return {}
       await cliente.cancelQueries({ queryKey: llave })
 
-      const previo = cliente.getQueryData<GastosDelMes>(llave)
+      const previo = cliente.getQueryData<MovimientosDelMes>(llave)
       // Si ese mes no está en caché no hay nada que mostrar de más: lo va a
       // traer completo cuando se abra.
       if (previo) {
-        cliente.setQueryData<GastosDelMes>(llave, {
+        cliente.setQueryData<MovimientosDelMes>(llave, {
           ...previo,
           datos: [provisorio, ...(previo.datos ?? [])],
           total: (previo.total ?? 0) + provisorio.monto,
@@ -114,7 +114,7 @@ export function useGastoMutation() {
     },
 
     onError(error, _input, contexto) {
-      // Si la API rechazó el gasto, la lista vuelve a como estaba.
+      // Si la API rechazó el movimiento, la lista vuelve a como estaba.
       if (contexto?.llave && contexto.previo) {
         cliente.setQueryData(contexto.llave, contexto.previo)
       }
@@ -135,7 +135,7 @@ export function useGastoMutation() {
       limpiarEnUnRato()
     },
 
-    // El gasto guardado trae el id y los campos como los dejó el servidor, así
+    // El movimiento guardado trae el id y los campos como los dejó el servidor, así
     // que el mes afectado y los totales del año se vuelven a pedir igual.
     onSettled(json, _error, _input, contexto) {
       const fecha = json?.datos.fecha
@@ -149,7 +149,7 @@ export function useGastoMutation() {
     },
   })
 
-  const guardarGasto = async (onSuccessCallback?: () => void) => {
+  const guardarMovimiento = async (onSuccessCallback?: () => void) => {
     if (!valores.monto || !valores.item) return
 
     try {
@@ -184,7 +184,7 @@ export function useGastoMutation() {
     estado,
     mensaje,
     handleChange,
-    guardarGasto,
+    guardarMovimiento,
     listo,
     lastSaved,
     categoriaInferida,

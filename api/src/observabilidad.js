@@ -27,7 +27,7 @@ function iniciarObservabilidad({ dsn, entorno }) {
     environment: entorno,
     // Sin trazas de performance: lo que hace falta es saber que algo explotó.
     tracesSampleRate: 0,
-    // El cuerpo de un request trae el gasto que la persona escribió, que es
+    // El cuerpo de un request trae el movimiento que la persona escribió, que es
     // dato suyo y no hace falta para arreglar un stack trace.
     sendDefaultPii: false,
   })

@@ -8,7 +8,7 @@ export interface ExpenseItemProps {
   monto: string;
   titulo: string;
   /**
-   * La categoría del gasto. Se omite para no mostrarla: quien usa el
+   * La categoría del movimiento. Se omite para no mostrarla: quien usa el
    * componente decide según las preferencias del perfil, y así la fila no
    * depende de una consulta.
    */

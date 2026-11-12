@@ -1,4 +1,4 @@
-import type { Gasto, MovimientoCambiado, Preferencias } from '@saldai/core'
+import type { Movimiento, MovimientoCambiado, Preferencias } from '@saldai/core'
 import { PortalHost } from '@rn-primitives/portal'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
@@ -13,7 +13,7 @@ const editarMock = editarMovimiento as jest.MockedFunction<typeof editarMovimien
 const eliminarMock = eliminarMovimiento as jest.MockedFunction<typeof eliminarMovimiento>
 const preferenciasMock = fetchPreferencias as jest.MockedFunction<typeof fetchPreferencias>
 
-const MOVIMIENTO: Gasto = {
+const MOVIMIENTO: Movimiento = {
   id: '0f1c6b5a-9d2e-4c3b-8a7f-1e2d3c4b5a69',
   monto: 45000,
   monto_formateado: '$45.000',
@@ -29,7 +29,7 @@ const METRICAS = {
   insets: { top: 24, left: 0, right: 0, bottom: 24 },
 }
 
-const respuesta = (datos: Gasto): MovimientoCambiado => ({ ok: true, errores: [], datos })
+const respuesta = (datos: Movimiento): MovimientoCambiado => ({ ok: true, errores: [], datos })
 
 const PREFERENCIAS: Preferencias = {
   ok: true,
@@ -43,7 +43,7 @@ const PREFERENCIAS: Preferencias = {
   },
 }
 
-function montar(movimiento: Gasto | null = MOVIMIENTO) {
+function montar(movimiento: Movimiento | null = MOVIMIENTO) {
   const cliente = new QueryClient({
     // `gcTime: Infinity` no programa el temporizador de garbage collection: con
     // el default de cinco minutos, la consulta de preferencias y la mutación
@@ -162,7 +162,7 @@ test('abrir otro movimiento reemplaza los valores del anterior', () => {
 
   fireEvent.changeText(getByLabelText('Descripción'), 'taxi')
 
-  const otro: Gasto = { ...MOVIMIENTO, id: 'otro-id', item: 'pan', monto: 1000 }
+  const otro: Movimiento = { ...MOVIMIENTO, id: 'otro-id', item: 'pan', monto: 1000 }
   rerender(<EditorDeMovimiento movimiento={otro} onCerrar={jest.fn()} />)
 
   // Sin rearmar el borrador, la segunda fila abría con lo escrito en la primera.

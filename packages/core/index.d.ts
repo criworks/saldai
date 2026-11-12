@@ -2,12 +2,12 @@
  * Tipos de @saldai/core.
  *
  * El paquete está escrito en JavaScript porque la API lo consume con
- * `require`, así que los tipos van acá. `Gasto` y `ApiResponse` describen el
+ * `require`, así que los tipos van acá. `Movimiento` y `ApiResponse` describen el
  * contrato de la API: mobile los declaraba por su cuenta y así se colaron
  * errores como leer `error` cuando la API responde `errores[]`.
  */
 
-// ── Categorías ──────────────────────────────────────────────────────────────
+// ── Categorías ─────────────────────────────────────────────────────────────
 
 /** Las siete categorías del catálogo. */
 export type Categoria =
@@ -19,17 +19,17 @@ export type Categoria =
   | 'Delivery'
   | 'Transporte'
 
-/** Lo que puede tener un gasto en el campo categoría. */
-export type CategoriaDeGasto = Categoria | 'Sin categoría'
+/** Lo que puede tener un movimiento en el campo categoría. */
+export type CategoriaDeMovimiento = Categoria | 'Sin categoría'
 
 export declare const CATEGORIAS: Record<Categoria, string[]>
 export declare const NOMBRES_CATEGORIAS: readonly Categoria[]
-export declare const TODAS_LAS_CATEGORIAS: readonly CategoriaDeGasto[]
+export declare const TODAS_LAS_CATEGORIAS: readonly CategoriaDeMovimiento[]
 export declare const SIN_CATEGORIA: 'Sin categoría'
-export declare function categorizar(descripcion: string): CategoriaDeGasto
+export declare function categorizar(descripcion: string): CategoriaDeMovimiento
 export declare function esCategoriaValida(categoria: unknown): boolean
 
-// ── Métodos de pago ─────────────────────────────────────────────────────────
+// ── Métodos de pago ────────────────────────────────────────────────────────
 
 /** EF es efectivo y TC tarjeta de crédito. */
 export type Metodo = 'EF' | 'TC'
@@ -46,7 +46,7 @@ export declare function normalizarMetodo(raw: string | null | undefined): {
 }
 export declare function esMetodoValido(metodo: unknown): boolean
 
-// ── Montos ──────────────────────────────────────────────────────────────────
+// ── Montos ─────────────────────────────────────────────────────────────────
 
 export declare const LOCALE: 'es-CL'
 /** 12500 → "12.500" */
@@ -54,7 +54,7 @@ export declare function formatearNumero(monto: unknown): string
 /** 12500 → "$12.500" */
 export declare function formatearMonto(monto: unknown): string
 
-// ── Fechas ──────────────────────────────────────────────────────────────────
+// ── Fechas ─────────────────────────────────────────────────────────────────
 
 /** Una fecha en AAAA-MM-DD, que es como la guarda y la devuelve la API. */
 export type FechaISO = string
@@ -71,7 +71,7 @@ export declare function anioDeIso(iso: string | null | undefined): number | null
 export declare function rangoDelMes(anio: number, mes: number): { desde: FechaISO; hasta: FechaISO }
 export declare function rangoDelAnio(anio: number): { desde: FechaISO; hasta: FechaISO }
 
-// ── Fechas escritas por una persona ─────────────────────────────────────────
+// ── Fechas escritas por una persona ────────────────────────────────────────
 
 export declare const ZONA_DEFECTO: 'America/Santiago'
 /** El día de hoy en `zona`, como fecha civil anclada a medianoche UTC. */
@@ -96,17 +96,17 @@ export declare function parsearFecha(
   error?: string
 }
 
-// ── Parser ──────────────────────────────────────────────────────────────────
+// ── Parser ─────────────────────────────────────────────────────────────────
 
 /** De dónde salió la categoría: del campo, inferida del item, o de ninguno. */
 export type FuenteCategoria = 'campo' | 'item' | 'ninguna'
 
 /** Lo que el parser saca de un texto, antes de guardarlo. */
-export interface GastoParseado {
+export interface MovimientoParseado {
   monto: number
   montoFormateado: string
   item: string
-  categoria: CategoriaDeGasto
+  categoria: CategoriaDeMovimiento
   categoriaSrc: FuenteCategoria
   metodo: Metodo
   /** AAAA-MM-DD, el formato de la columna. */
@@ -119,15 +119,15 @@ export interface ResultadoParseo {
   ok: boolean
   errores: string[]
   advertencias: string[]
-  datos: GastoParseado | null
+  datos: MovimientoParseado | null
 }
 
-export declare function parsearGasto(
+export declare function parsearMovimiento(
   input: string | null | undefined,
   opciones?: { zona?: string; hoy?: Date }
 ): ResultadoParseo
 
-// ── Registro de un movimiento ───────────────────────────────────────────────
+// ── Registro de un movimiento ──────────────────────────────────────────────
 
 /** La zona y el día de referencia con los que se resolvió la fecha. */
 export interface ContextoDeRegistro {
@@ -166,13 +166,13 @@ export declare const LARGO_MAXIMO_NOTAS: number
 export declare function esFechaIso(valor: unknown): boolean
 
 /**
- * El cuerpo de `PATCH /gastos/:id`: solo los campos que cambian. `notas` en
+ * El cuerpo de `PATCH /movimientos/:id`: solo los campos que cambian. `notas` en
  * `null` o en `''` borra la nota.
  */
 export interface CambioDeMovimiento {
   monto?: number
   item?: string
-  categoria?: CategoriaDeGasto
+  categoria?: CategoriaDeMovimiento
   metodo?: Metodo
   fecha?: FechaISO
   notas?: string | null
@@ -202,7 +202,7 @@ export declare function unirCamposEditados(
 /** `true` si ese campo del movimiento lo corrigió el usuario a mano. */
 export declare function fueEditadoAMano(movimiento: unknown, campo: CampoEditable): boolean
 
-// ── Recurrencia con confirmación ────────────────────────────────────────────
+// ── Recurrencia con confirmación ───────────────────────────────────────────
 
 /** Cada cuánto propone un plan. */
 export type Frecuencia = 'semanal' | 'mensual' | 'anual'
@@ -223,7 +223,7 @@ export interface Recurrencia {
   monto: number
   monto_formateado: string | null
   item: string
-  categoria: CategoriaDeGasto | null
+  categoria: CategoriaDeMovimiento | null
   categoria_src: FuenteCategoria | null
   metodo: Metodo | null
   notas: string | null
@@ -246,7 +246,7 @@ export interface MovimientoPropuesto {
   monto: number
   montoFormateado: string | null
   item: string
-  categoria: CategoriaDeGasto
+  categoria: CategoriaDeMovimiento
   categoriaSrc: FuenteCategoria
   metodo: Metodo
   fecha: FechaISO
@@ -331,7 +331,7 @@ export interface CambioDeRecurrencia {
   desde: FechaISO
   monto?: number
   item?: string
-  categoria?: CategoriaDeGasto
+  categoria?: CategoriaDeMovimiento
   metodo?: Metodo
   notas?: string | null
   frecuencia?: Frecuencia
@@ -343,7 +343,7 @@ export declare function validarCambioDePlan(
   cambio: unknown
 ): { ok: boolean; errores: string[]; plan: Record<string, unknown> | null; desde: FechaISO | null }
 
-// ── Zonas horarias ──────────────────────────────────────────────────────────
+// ── Zonas horarias ─────────────────────────────────────────────────────────
 
 /** Una zona del catálogo, lista para mostrar. */
 export interface ZonaDelCatalogo {
@@ -375,15 +375,15 @@ export declare function catalogoDeZonas(instante?: Date): ZonaDelCatalogo[]
 /** Filtra el catálogo por nombre, nombre IANA o desplazamiento. */
 export declare function buscarZonas(texto: string, catalogo: ZonaDelCatalogo[]): ZonaDelCatalogo[]
 
-// ── Contrato de la API ──────────────────────────────────────────────────────
+// ── Contrato de la API ─────────────────────────────────────────────────────
 
-/** Un gasto como lo devuelve la API. */
-export interface Gasto {
+/** Un movimiento como lo devuelve la API. */
+export interface Movimiento {
   id: string | number
   monto: number
   monto_formateado: string
   item: string
-  categoria: CategoriaDeGasto
+  categoria: CategoriaDeMovimiento
   /** AAAA-MM-DD: la columna es `date`. */
   fecha: FechaISO
   metodo: Metodo
@@ -398,7 +398,7 @@ export interface Gasto {
   campos_editados?: CampoEditable[]
   /**
    * La cuenta del perfil a la que pertenece el movimiento. La llena la base
-   * (trigger `gastos_asignar_cuenta`), así que la app no la manda al crear.
+   * (trigger `movimientos_asignar_cuenta`), así que la app no la manda al crear.
    * Todavía no hay pantalla de cuentas: viaja porque la API devuelve la fila
    * entera, y está acá para que el día que se use no se declare de nuevo.
    */
@@ -417,27 +417,27 @@ export interface ApiError {
   datos?: null
 }
 
-/** `GET /gastos` */
-export interface GastosDelMes {
+/** `GET /movimientos` */
+export interface MovimientosDelMes {
   ok: true
   cantidad: number
   total: number
   totalFormateado: string
-  datos: Gasto[]
+  datos: Movimiento[]
 }
 
-/** `POST /gastos` */
-export interface GastoCreado {
+/** `POST /movimientos` */
+export interface MovimientoCreado {
   ok: true
-  datos: GastoParseado & { id: string | number }
+  datos: MovimientoParseado & { id: string | number }
 }
 
-/** `PATCH /gastos/:id` y `DELETE /gastos/:id` */
+/** `PATCH /movimientos/:id` y `DELETE /movimientos/:id` */
 export interface MovimientoCambiado {
   ok: true
   errores: []
   /** La fila como quedó, o —en el borrado— como estaba antes de borrarse. */
-  datos: Gasto
+  datos: Movimiento
 }
 
 /** `GET /recurrencias` */
@@ -468,15 +468,15 @@ export interface RecurrenciaGuardada {
  * `POST /recurrencias/propuestas/confirmar`
  *
  * Devuelve el movimiento que se creó, no la propuesta: lo que la app tiene que
- * mostrar y sumar es el gasto.
+ * mostrar y sumar es el movimiento.
  */
 export interface PropuestaConfirmada {
   ok: true
   errores: []
-  datos: Gasto
+  datos: Movimiento
 }
 
-/** `GET /gastos/anuales` */
+/** `GET /movimientos/anuales` */
 export interface TotalesAnuales {
   ok: true
   anio: number | string

@@ -1,5 +1,5 @@
 /**
- * Categorías de gasto: el catálogo y la regla que decide a cuál cae un texto.
+ * Categorías de movimiento: el catálogo y la regla que decide a cuál cae un texto.
  *
  * Vive en core porque la API lo necesita para categorizar y las interfaces lo
  * necesitan para listar, pintar y filtrar. Cuando cada una tenía su propia
@@ -66,7 +66,7 @@ const SIN_CATEGORIA = 'Sin categoría'
 /** Las categorías reales, sin el comodín. Para selectores y filtros. */
 const NOMBRES_CATEGORIAS = Object.freeze([...ORDEN_PRIORIDAD])
 
-/** Todo lo que un gasto puede tener en el campo categoría. */
+/** Todo lo que un movimiento puede tener en el campo categoría. */
 const TODAS_LAS_CATEGORIAS = Object.freeze([...ORDEN_PRIORIDAD, SIN_CATEGORIA])
 
 function esCategoriaValida(categoria) {
@@ -86,7 +86,7 @@ function escaparRegex(texto) {
 }
 
 /**
- * Las keywords se precompilan una vez: el servidor categoriza en cada gasto y
+ * Las keywords se precompilan una vez: el servidor categoriza en cada movimiento y
  * armar los regex en caliente sería trabajo repetido.
  *
  * El sufijo opcional "s"/"es" acepta el plural sin tener que listarlo:
