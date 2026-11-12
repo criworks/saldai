@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+
+## [1.9.0] - 2026-11-12
 ### Added
 - **Editar y eliminar un movimiento, con nota**: la API suma `PATCH /gastos/:id` y `DELETE /gastos/:id`, y `public.gastos` suma `notas`, `editado_en` y `campos_editados`. Las políticas RLS de UPDATE y DELETE ya existían desde `20261027000100_rls_gastos.sql`, así que lo que faltaba era el camino por la API: mobile sigue sin hablarle a Supabase para escribir.
 - **La marca de edición manual es por campo, no un booleano**: `campos_editados` guarda los nombres de los campos que el usuario corrigió a mano. El replay del parser sobre los 73 movimientos de producción mostró que los cinco campos que no son `fecha` reconstruyen 73/73, o sea que reclasificar el histórico es seguro **salvo en las filas que el usuario ya corrigió**; sin esta marca, el primer reclasificar masivo le pisa la corrección y no queda forma de distinguir "quedó así porque la puso el parser" de "quedó así porque la arreglé". Es por campo por la misma razón que las preferencias llevan dos columnas por flag: con un `editado boolean`, quien corrigió solo el monto queda excluido de un reclasificar que no tiene nada que ver con lo que cambió.

@@ -19,6 +19,8 @@ del formato; el texto de cada entrada es el original.
 
 
 ## [Unreleased]
+
+## [1.7.0] - 2026-11-12
 ### Added
 - **Editar y eliminar un movimiento**: tocar una fila del mes abre el movimiento y deja cambiarle el monto, la descripción, la fecha, la categoría y el método de pago, escribirle una nota, o eliminarlo. El borrado pide confirmación y dice qué se va a eliminar. La categoría y el método aparecen con la misma cuenta que en la captura: solo si el perfil los tiene prendidos, porque editar una categoría que no se ve en ningún otro lado no tendría dónde mostrarse.
 - **Recurrencias**: en Configuraciones → Recurrencias se crean escribiendo la misma línea que un gasto ("525457, arriendo, basicos, 1/12/2026, tc") y eligiendo cada cuánto se repite: semana, mes o año. La fecha de la línea es la primera vez que se propone.
