@@ -1,14 +1,14 @@
 const test = require('node:test')
 const assert = require('node:assert/strict')
 
-const { parsearGasto } = require('../parser')
+const { parsearMovimiento } = require('../parser')
 
 /** Las fechas relativas se prueban en dateParser.test.js; aquí solo el formato. */
 const FORMATO_ISO = /^\d{4}-\d{2}-\d{2}$/
 const FORMATO_MOSTRAR = /^\d{2}\/\d{2}\/\d{4}$/
 
 const datosDe = (input) => {
-  const resultado = parsearGasto(input)
+  const resultado = parsearMovimiento(input)
   assert.ok(resultado.ok, `"${input}" debería parsear: ${resultado.errores.join(' · ')}`)
   return resultado.datos
 }
@@ -55,7 +55,7 @@ test('en el sufijo k el punto es decimal, no separador de miles', () => {
 
 test('un monto que no es un número válido es un error', () => {
   for (const input of ['abc, netflix', '0, netflix', '12.34, netflix', '1.2.3k, netflix', '12kk, netflix']) {
-    const resultado = parsearGasto(input)
+    const resultado = parsearMovimiento(input)
     assert.equal(resultado.ok, false, `"${input}" no debería parsear`)
     assert.ok(
       resultado.errores.some((e) => /Monto inválido/.test(e)),
@@ -71,7 +71,7 @@ test('la categoría del campo gana sobre el item', () => {
 })
 
 test('una categoría vacía se infiere del item', () => {
-  const resultado = parsearGasto('2800, rappi, , ayer, tc')
+  const resultado = parsearMovimiento('2800, rappi, , ayer, tc')
   assert.ok(resultado.ok)
   assert.equal(resultado.datos.categoria, 'Delivery')
   assert.equal(resultado.datos.categoriaSrc, 'item')
@@ -79,7 +79,7 @@ test('una categoría vacía se infiere del item', () => {
 })
 
 test('una categoría desconocida advierte y cae al item', () => {
-  const resultado = parsearGasto('5000, sushi rappi, gadgets, hoy, tc')
+  const resultado = parsearMovimiento('5000, sushi rappi, gadgets, hoy, tc')
   assert.ok(resultado.ok)
   assert.equal(resultado.datos.categoria, 'Delivery')
   assert.equal(resultado.datos.categoriaSrc, 'item')
@@ -87,7 +87,7 @@ test('una categoría desconocida advierte y cae al item', () => {
 })
 
 test('si no se puede inferir nada queda Sin categoría con advertencia', () => {
-  const resultado = parsearGasto('5000, cosa rara')
+  const resultado = parsearMovimiento('5000, cosa rara')
   assert.ok(resultado.ok)
   assert.equal(resultado.datos.categoria, 'Sin categoría')
   assert.equal(resultado.datos.categoriaSrc, 'ninguna')
@@ -95,7 +95,7 @@ test('si no se puede inferir nada queda Sin categoría con advertencia', () => {
 })
 
 test('el método por defecto es TC y avisa', () => {
-  const resultado = parsearGasto('5000, netflix, suscripciones')
+  const resultado = parsearMovimiento('5000, netflix, suscripciones')
   assert.equal(resultado.datos.metodo, 'TC')
   assert.ok(resultado.advertencias.some((a) => /se asumió TC/.test(a)))
 })
@@ -109,39 +109,39 @@ test('normaliza los alias de método de pago', () => {
 })
 
 test('un método desconocido avisa y cae a TC', () => {
-  const resultado = parsearGasto('5000, netflix, , hoy, bitcoin')
+  const resultado = parsearMovimiento('5000, netflix, , hoy, bitcoin')
   assert.equal(resultado.datos.metodo, 'TC')
   assert.ok(resultado.advertencias.some((a) => /no reconocido/.test(a)))
 })
 
-test('una fecha inválida es un error del gasto completo', () => {
-  const resultado = parsearGasto('5000, netflix, suscripciones, 31/02, tc')
+test('una fecha inválida es un error del movimiento completo', () => {
+  const resultado = parsearMovimiento('5000, netflix, suscripciones, 31/02, tc')
   assert.equal(resultado.ok, false)
   assert.equal(resultado.datos, null)
   assert.ok(resultado.errores.some((e) => /Fecha inválida/.test(e)))
 })
 
 test('una fecha que no se entiende solo advierte', () => {
-  const resultado = parsearGasto('5000, netflix, suscripciones, cuando sea, tc')
+  const resultado = parsearMovimiento('5000, netflix, suscripciones, cuando sea, tc')
   assert.ok(resultado.ok)
   assert.ok(resultado.advertencias.some((a) => /No se reconoció la fecha/.test(a)))
 })
 
 test('faltan campos obligatorios', () => {
-  assert.deepEqual(parsearGasto('').errores, ['Input vacío'])
-  assert.deepEqual(parsearGasto('   ').errores, ['Input vacío'])
+  assert.deepEqual(parsearMovimiento('').errores, ['Input vacío'])
+  assert.deepEqual(parsearMovimiento('   ').errores, ['Input vacío'])
 
-  const sinDelimitador = parsearGasto('solocampo')
+  const sinDelimitador = parsearMovimiento('solocampo')
   assert.equal(sinDelimitador.ok, false)
   assert.ok(sinDelimitador.errores.some((e) => /al menos 2 campos/.test(e)))
 
-  const sinItem = parsearGasto('5000, ')
+  const sinItem = parsearMovimiento('5000, ')
   assert.equal(sinItem.ok, false)
   assert.ok(sinItem.errores.some((e) => /Item vacío/.test(e)))
 })
 
 test('acumula todos los errores en vez de cortar en el primero', () => {
-  const resultado = parsearGasto('abc, , suscripciones, 31/02, tc')
+  const resultado = parsearMovimiento('abc, , suscripciones, 31/02, tc')
   assert.equal(resultado.ok, false)
   assert.equal(resultado.errores.length, 3)
 })

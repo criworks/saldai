@@ -7,7 +7,7 @@ const {
   validarId,
   validarInput,
   validarMes,
-} = require('../src/gastos/validacion')
+} = require('../src/movimientos/validacion')
 
 test('el input tiene que ser un string con algo', () => {
   assert.strictEqual(validarInput('45000, uber').ok, true)
@@ -56,7 +56,7 @@ test('el id de un movimiento tiene que ser un uuid', () => {
   assert.strictEqual(validarId(uuid).valor, uuid)
   assert.strictEqual(validarId(` ${uuid} `).valor, uuid)
 
-  // Sin esto un `/gastos/hola` llega a Supabase y vuelve como 500 de base,
+  // Sin esto un `/movimientos/hola` llega a Supabase y vuelve como 500 de base,
   // cuando es un 400 del cliente.
   for (const invalido of [undefined, '', 'hola', '123', uuid + 'f']) {
     const { ok, errores } = validarId(invalido)

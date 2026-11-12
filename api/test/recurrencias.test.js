@@ -52,7 +52,7 @@ test('todas las rutas de recurrencias piden sesión', async () => {
 })
 
 test('el id de un plan se valida después de la sesión y no antes', async () => {
-  // Mismo orden que en gastos y en preferencias: con la validación primero, un
+  // Mismo orden que en movimientos y en preferencias: con la validación primero, un
   // id mal escrito le diría a cualquiera sin token qué forma tiene uno válido.
   const res = await request(app).patch('/recurrencias/no-es-un-uuid').send({ desde: '2026-05-01' })
 
@@ -79,7 +79,7 @@ test('"propuestas" no se lee como el id de un plan', async () => {
   assert.strictEqual(res.body.error, 'Token requerido')
 })
 
-// ── La validación, sin servidor ─────────────────────────────────────────────
+// ── La validación, sin servidor ────────────────────────────────────────────
 
 test('el id de una recurrencia tiene que ser un uuid', () => {
   assert.strictEqual(validarIdDeRecurrencia(UUID).ok, true)

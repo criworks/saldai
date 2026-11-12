@@ -1,36 +1,36 @@
 const { createSupabaseClient } = require('../supabase')
 
 /**
- * Las consultas a la tabla `gastos`, atadas a la sesión del usuario.
+ * Las consultas a la tabla `movimientos`, atadas a la sesión del usuario.
  *
  * Están acá y no dentro de las rutas para que un handler no mezcle el contrato
  * HTTP con la forma de la tabla: la ruta habla de `fecha` y `montoFormateado`,
  * la tabla de `fecha` y `monto_formateado`, y la traducción es este archivo.
  * Cada método devuelve `{ data, error }`, igual que supabase-js.
  */
-function repositorioDeGastos(token) {
+function repositorioDeMovimientos(token) {
   const supabase = createSupabaseClient(token)
 
   return {
     /**
-     * Inserta el gasto parseado y devuelve la fila creada.
+     * Inserta el movimiento parseado y devuelve la fila creada.
      *
      * `contexto` es la zona y el día de referencia con los que se resolvió la
      * fecha. Se guardan para que el movimiento se pueda volver a derivar desde
      * `input_original`: sin ellos, re-correr el parser cambia la fecha de todo
      * lo que se escribió como "hoy" o "ayer".
      */
-    insertar(gasto, { userId, inputOriginal, contexto }) {
+    insertar(movimiento, { userId, inputOriginal, contexto }) {
       return supabase
-        .from('gastos')
+        .from('movimientos')
         .insert({
-          monto: gasto.monto,
-          monto_formateado: gasto.montoFormateado,
-          item: gasto.item,
-          categoria: gasto.categoria,
-          categoria_src: gasto.categoriaSrc,
-          metodo: gasto.metodo,
-          fecha: gasto.fecha,
+          monto: movimiento.monto,
+          monto_formateado: movimiento.montoFormateado,
+          item: movimiento.item,
+          categoria: movimiento.categoria,
+          categoria_src: movimiento.categoriaSrc,
+          metodo: movimiento.metodo,
+          fecha: movimiento.fecha,
           input_original: inputOriginal,
           user_id: userId,
           zona: contexto?.zona,
@@ -51,7 +51,7 @@ function repositorioDeGastos(token) {
      */
     buscar(id, { userId }) {
       return supabase
-        .from('gastos')
+        .from('movimientos')
         .select('*')
         .eq('id', id)
         .eq('user_id', userId)
@@ -88,7 +88,7 @@ function repositorioDeGastos(token) {
       // describiendo lo que la persona escribió y con qué contexto se derivó.
       // Lo que cambia es el movimiento, y eso queda dicho en `campos_editados`.
       return supabase
-        .from('gastos')
+        .from('movimientos')
         .update(fila)
         .eq('id', id)
         .eq('user_id', userId)
@@ -99,7 +99,7 @@ function repositorioDeGastos(token) {
     /** Borra un movimiento del usuario y devuelve la fila que borró. */
     eliminar(id, { userId }) {
       return supabase
-        .from('gastos')
+        .from('movimientos')
         .delete()
         .eq('id', id)
         .eq('user_id', userId)
@@ -107,10 +107,10 @@ function repositorioDeGastos(token) {
         .maybeSingle()
     },
 
-    /** Los gastos del usuario, opcionalmente de un mes y una categoría. */
+    /** Los movimientos del usuario, opcionalmente de un mes y una categoría. */
     listar({ userId, rango, categoria }) {
       let query = supabase
-        .from('gastos')
+        .from('movimientos')
         .select('*')
         .eq('user_id', userId)
         .order('creado_en', { ascending: false })
@@ -128,4 +128,4 @@ function repositorioDeGastos(token) {
   }
 }
 
-module.exports = { repositorioDeGastos }
+module.exports = { repositorioDeMovimientos }

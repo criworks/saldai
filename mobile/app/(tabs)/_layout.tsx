@@ -1,12 +1,12 @@
 import { Tabs } from 'expo-router';
-import { GradientFooter } from '@/features/gastos';
-import { FilterProvider } from '@/features/gastos';
-import { GastosProvider } from '@/features/gastos';
+import { GradientFooter } from '@/features/movimientos';
+import { FilterProvider } from '@/features/movimientos';
+import { MovimientosProvider } from '@/features/movimientos';
 
 export default function TabLayout() {
   return (
     <FilterProvider>
-      <GastosProvider>
+      <MovimientosProvider>
         <Tabs
           // Hacemos que React Navigation use nuestro componente en lugar de su barra nativa
           tabBar={(props) => <GradientFooter {...props} />}
@@ -27,7 +27,7 @@ export default function TabLayout() {
           <Tabs.Screen name="zona-horaria" options={{ href: null }} />
           <Tabs.Screen name="recurrencias" options={{ href: null }} />
         </Tabs>
-      </GastosProvider>
+      </MovimientosProvider>
     </FilterProvider>
   )
 }

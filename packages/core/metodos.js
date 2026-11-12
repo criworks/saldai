@@ -11,7 +11,7 @@ const TARJETA = 'TC'
 
 const METODO_DEFAULT = TARJETA
 
-/** Los métodos que un gasto puede tener guardados, en el orden en que se muestran. */
+/** Los métodos que un movimiento puede tener guardados, en el orden en que se muestran. */
 const METODOS_VALIDOS = Object.freeze([EFECTIVO, TARJETA])
 
 /** Cómo puede escribirlos el usuario al capturar en texto. */
@@ -36,7 +36,7 @@ const NOMBRES_METODOS = {
 /**
  * Normaliza lo que escribió el usuario. Nunca falla: si no se reconoce, asume
  * el default y devuelve una advertencia, porque el método es el campo menos
- * importante del gasto y no vale la pena rechazarlo entero por eso.
+ * importante del movimiento y no vale la pena rechazarlo entero por eso.
  *
  * @returns {{ metodo: string, advertencia?: string }}
  */

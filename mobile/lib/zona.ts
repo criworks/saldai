@@ -5,7 +5,7 @@ import { nombreDeZona } from '@saldai/core'
  *
  * El core no lee el entorno: la zona se le pasa. Hasta ahora mobile no le
  * pasaba ninguna, así que el parser caía a su default (`America/Santiago`) y un
- * usuario fuera de Chile registraba un gasto con el día de Chile.
+ * usuario fuera de Chile registraba un movimiento con el día de Chile.
  *
  * `Intl` con `timeZone` ya se usa dentro del bundle (`hoyCivil` del core), así
  * que no agrega nada nuevo. El `try` es por si un dispositivo devuelve algo

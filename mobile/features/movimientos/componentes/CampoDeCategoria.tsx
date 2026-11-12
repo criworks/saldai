@@ -27,7 +27,7 @@ export interface CampoDeCategoriaProps {
  * lista no se reacomoda al confirmar. Por eso el nombre usa la variante `chip`
  * de `Input` y no la de formulario.
  *
- * Vive en `features/gastos` y no en `components/ui` porque sabe de categorías,
+ * Vive en `features/movimientos` y no en `components/ui` porque sabe de categorías,
  * que es dominio: en `components/ui` quedan los primitivos, y los dos que usa
  * (`Input` y `BotonLimpiar`) salen de ahí.
  *

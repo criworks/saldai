@@ -29,12 +29,12 @@ import type {
   CambioDeMovimiento,
   CambioDeRecurrencia,
   CampoEditable,
-  Gasto,
+  Movimiento,
   NuevaRecurrencia,
   Recurrencia,
 } from '@saldai/core'
 import { mockFeedConfig } from './config'
-import { GASTOS, GASTOS_MUCHOS, gastoDeMentira } from './datos'
+import { MOVIMIENTOS, MOVIMIENTOS_MUCHOS, movimientoDeMentira } from './datos'
 
 const esperar = (ms: number) => new Promise(res => setTimeout(res, ms))
 
@@ -50,22 +50,22 @@ async function esperarSegunEstado() {
   await esperar(mockFeedConfig.state === 'loading' ? 10000 : 800)
 }
 
-export async function fetchGastosPorMes() {
+export async function fetchMovimientosPorMes() {
   await esperarSegunEstado()
 
   if (mockFeedConfig.state === 'error') {
-    throw new Error('Error simulado al obtener los gastos del mes')
+    throw new Error('Error simulado al obtener los movimientos del mes')
   }
 
   const datos =
-    mockFeedConfig.state === 'empty' ? [] : mockFeedConfig.state === 'huge' ? GASTOS_MUCHOS : GASTOS
+    mockFeedConfig.state === 'empty' ? [] : mockFeedConfig.state === 'huge' ? MOVIMIENTOS_MUCHOS : MOVIMIENTOS
 
   const total = datos.reduce((acc, g) => acc + g.monto, 0)
 
   return { ok: true as const, cantidad: datos.length, total, totalFormateado: formatearMonto(total), datos }
 }
 
-export async function fetchGastosAnuales(anio: number | string) {
+export async function fetchMovimientosAnuales(anio: number | string) {
   await esperarSegunEstado()
 
   if (mockFeedConfig.state === 'error') {
@@ -92,7 +92,7 @@ const ERRORES_POR_ITEM: { prefijo: string; espera: number; mensaje: string }[] =
   { prefijo: 'error token', espera: 300, mensaje: 'Error simulado: Token de sesión expirado o inválido' },
 ]
 
-export async function crearGasto(input: string) {
+export async function crearMovimiento(input: string) {
   const partes = input.split(',').map(p => p.trim())
   const item = partes[1] || input
   const monto = parseInt(partes[0].replace(/[^0-9]/g, ''), 10) || 9999
@@ -107,10 +107,10 @@ export async function crearGasto(input: string) {
 
   // La categoría se infiere con la misma regla que usa la API, así el mock
   // responde como responde producción.
-  const nuevo = gastoDeMentira(Date.now().toString(), monto, item, categorizar(item))
-  GASTOS.unshift(nuevo)
+  const nuevo = movimientoDeMentira(Date.now().toString(), monto, item, categorizar(item))
+  MOVIMIENTOS.unshift(nuevo)
 
-  // `POST /gastos` devuelve lo que armó el parser, no la fila cruda: de ahí
+  // `POST /movimientos` devuelve lo que armó el parser, no la fila cruda: de ahí
   // salen `montoFormateado`, `categoriaSrc` y `fechaFormateada`. El mock las
   // faltaba y el tipo del contrato lo cacheó.
   return {
@@ -127,21 +127,21 @@ export async function crearGasto(input: string) {
 /**
  * Edita un movimiento del arreglo de mentira, en el lugar.
  *
- * Muta `GASTOS` igual que `crearGasto`: el mock tiene que comportarse como la
- * base, o sea que después de editar, el siguiente `fetchGastosPorMes` devuelve
+ * Muta `MOVIMIENTOS` igual que `crearMovimiento`: el mock tiene que comportarse como la
+ * base, o sea que después de editar, el siguiente `fetchMovimientosPorMes` devuelve
  * lo editado. Si devolviera la fila cambiada sin guardarla, la lista volvería
  * sola al valor viejo en el refetch y parecería un bug de la app.
  */
 export async function editarMovimiento(id: string, cambio: CambioDeMovimiento) {
   await esperar(500)
 
-  const indice = GASTOS.findIndex(g => String(g.id) === String(id))
+  const indice = MOVIMIENTOS.findIndex(g => String(g.id) === String(id))
   if (indice === -1) throw new Error('Error simulado: ese movimiento no existe')
 
-  const previo = GASTOS[indice]
+  const previo = MOVIMIENTOS[indice]
   const editados = Object.keys(cambio) as CampoEditable[]
 
-  const actualizado: Gasto = {
+  const actualizado: Movimiento = {
     ...previo,
     ...cambio,
     notas: cambio.notas === '' ? null : (cambio.notas ?? previo.notas ?? null),
@@ -151,7 +151,7 @@ export async function editarMovimiento(id: string, cambio: CambioDeMovimiento) {
     campos_editados: unirCamposEditados(previo.campos_editados, editados),
   }
 
-  GASTOS[indice] = actualizado
+  MOVIMIENTOS[indice] = actualizado
 
   return { ok: true as const, errores: [] as [], datos: actualizado }
 }
@@ -160,15 +160,15 @@ export async function editarMovimiento(id: string, cambio: CambioDeMovimiento) {
 export async function eliminarMovimiento(id: string) {
   await esperar(500)
 
-  const indice = GASTOS.findIndex(g => String(g.id) === String(id))
+  const indice = MOVIMIENTOS.findIndex(g => String(g.id) === String(id))
   if (indice === -1) throw new Error('Error simulado: ese movimiento no existe')
 
-  const [borrado] = GASTOS.splice(indice, 1)
+  const [borrado] = MOVIMIENTOS.splice(indice, 1)
 
   return { ok: true as const, errores: [] as [], datos: borrado }
 }
 
-// ── Recurrencia con confirmación ────────────────────────────────────────────
+// ── Recurrencia con confirmación ───────────────────────────────────────────
 //
 // Los planes y las decisiones viven en dos arreglos de mentira y las propuestas
 // **se derivan**, con las mismas funciones del core que usa la API: así el mock
@@ -301,8 +301,8 @@ export async function confirmarPropuesta(
     (cambio ?? {}) as Record<string, unknown>
   )
 
-  const nuevo: Gasto = {
-    id: `gasto-${Date.now()}`,
+  const nuevo: Movimiento = {
+    id: `movimiento-${Date.now()}`,
     monto: movimiento.monto,
     monto_formateado: formatearMonto(movimiento.monto),
     item: movimiento.item,
@@ -314,7 +314,7 @@ export async function confirmarPropuesta(
     editado_en: camposEditados.length > 0 ? new Date().toISOString() : null,
   }
 
-  GASTOS.unshift(nuevo)
+  MOVIMIENTOS.unshift(nuevo)
   DECISIONES.push({ recurrenciaId, fecha })
 
   return { ok: true as const, errores: [] as [], datos: nuevo }

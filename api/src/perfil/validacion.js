@@ -4,7 +4,7 @@ const { esZonaValida } = require('@saldai/core')
  * Validación del cuerpo de `PATCH /perfil/preferencias`.
  *
  * Funciones puras que devuelven `{ ok, errores, valor }`, igual que las de
- * gastos, para poder probarlas sin levantar el servidor.
+ * movimientos, para poder probarlas sin levantar el servidor.
  */
 
 const bien = (valor) => ({ ok: true, errores: [], valor })
@@ -58,7 +58,7 @@ function validarPreferencias(cuerpo) {
     } else if (typeof cuerpo.zona !== 'string' || !esZonaValida(cuerpo.zona)) {
       // Acá sí se rechaza, al revés que al registrar un movimiento, donde una
       // zona desconocida advierte y cae al default. Son dos situaciones
-      // distintas: allá el usuario quiere guardar un gasto y la zona es un
+      // distintas: allá el usuario quiere guardar un movimiento y la zona es un
       // detalle del aparato, acá la zona *es* lo que pidió cambiar, y guardar
       // en silencio otra cosa es peor que decirle que no se pudo.
       errores.push(`La zona '${cuerpo.zona}' no es una zona horaria IANA válida`)

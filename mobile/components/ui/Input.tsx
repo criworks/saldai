@@ -10,7 +10,7 @@ import { TextInput, TextInputProps, View } from 'react-native';
  * - `con-fondo`: caja gris, borde que responde al foco y, si hace falta, un
  *   icono a la derecha. Es la de login, la de cuenta y —con las mismas clases,
  *   ver `cajaConFondo`— la del código de 6 dígitos.
- * - `sin-fondo`: solo el texto. Es la de la captura de gastos, donde el campo
+ * - `sin-fondo`: solo el texto. Es la de la captura de movimientos, donde el campo
  *   va dentro de una fila que ya tiene su propio contorno. **No lleva icono**:
  *   sin caja no hay dónde apoyarlo.
  * - `chip`: una píldora del ancho de lo que se escribe. Es la de crear una

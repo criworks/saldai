@@ -72,7 +72,7 @@ export default function FakeDoorCategoriasScreen() {
                 
                 <View className="flex-col items-center gap-sm w-full">
                   <Text className="text-muted-foreground text-center font-['Inter'] text-body font-normal leading-[19.6px]">
-                    Organiza tus gastos en diferentes categorías.
+                    Organiza tus movimientos en diferentes categorías.
                   </Text>
                 </View>
 

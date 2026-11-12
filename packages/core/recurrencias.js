@@ -261,7 +261,7 @@ function validarPlanDeRecurrencia(entrada, opciones = {}) {
 
   // `errorDeLectura` separa "el cuerpo está mal" de "la línea no se pudo
   // leer": lo primero es un 400 y lo segundo un 422, igual que en `POST
-  // /gastos`. Sin el dato, la ruta tendría que adivinar mirando los mensajes.
+  // /movimientos`. Sin el dato, la ruta tendría que adivinar mirando los mensajes.
   if (errores.length > 0) {
     return {
       ok: false,
@@ -307,7 +307,7 @@ const CAMPOS_DEL_PLAN = Object.freeze([
  * propuestas viejas con el valor nuevo y la otra reescribe el plan entero.
  *
  * Lo ya confirmado no se toca nunca, y eso no es una regla de esta función:
- * las ocurrencias confirmadas son filas de `gastos` y acá no se mira ninguna.
+ * las ocurrencias confirmadas son filas de `movimientos` y acá no se mira ninguna.
  *
  * @param {object} plan - la fila del plan como está.
  * @param {Record<string, unknown>} cambio

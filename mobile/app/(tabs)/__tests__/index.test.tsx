@@ -1,16 +1,16 @@
-import type { GastosDelMes, Preferencias } from '@saldai/core'
+import type { MovimientosDelMes, Preferencias } from '@saldai/core'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import React, { ReactNode } from 'react'
 import { Pressable, Text } from 'react-native'
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context'
 
-import { fetchGastosPorMes } from '@/features/gastos/api'
-import { FilterProvider, GastosProvider, useFilter } from '@/features/gastos'
+import { fetchMovimientosPorMes } from '@/features/movimientos/api'
+import { FilterProvider, MovimientosProvider, useFilter } from '@/features/movimientos'
 import { fetchPreferencias } from '@/features/perfil/api'
 import DashboardScreen from '../index'
 
-const gastosMock = fetchGastosPorMes as jest.MockedFunction<typeof fetchGastosPorMes>
+const movimientosMock = fetchMovimientosPorMes as jest.MockedFunction<typeof fetchMovimientosPorMes>
 const preferenciasMock = fetchPreferencias as jest.MockedFunction<typeof fetchPreferencias>
 
 const METRICAS = {
@@ -21,7 +21,7 @@ const METRICAS = {
 const hoy = new Date()
 const fechaDeHoy = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`
 
-const DEL_MES: GastosDelMes = {
+const DEL_MES: MovimientosDelMes = {
   ok: true,
   cantidad: 3,
   total: 6000,
@@ -62,10 +62,10 @@ function montar(categoria: string | null = null) {
     <SafeAreaProvider initialMetrics={initialWindowMetrics ?? METRICAS}>
       <QueryClientProvider client={cliente}>
         <FilterProvider>
-          <GastosProvider>
+          <MovimientosProvider>
             {children}
             <ElegirCategoria categoria={categoria} />
-          </GastosProvider>
+          </MovimientosProvider>
         </FilterProvider>
       </QueryClientProvider>
     </SafeAreaProvider>
@@ -76,11 +76,11 @@ function montar(categoria: string | null = null) {
 
 beforeEach(() => {
   jest.clearAllMocks()
-  gastosMock.mockResolvedValue(DEL_MES)
+  movimientosMock.mockResolvedValue(DEL_MES)
   preferenciasMock.mockResolvedValue(PREFERENCIAS(true))
 })
 
-test('sin filtro muestra todos los gastos del mes y su total', async () => {
+test('sin filtro muestra todos los movimientos del mes y su total', async () => {
   montar()
 
   await waitFor(() => expect(screen.getByText('pan')).toBeTruthy())
@@ -89,7 +89,7 @@ test('sin filtro muestra todos los gastos del mes y su total', async () => {
   expect(screen.getByText('$6.000')).toBeTruthy()
 })
 
-test('con una categoría elegida quedan solo sus gastos', async () => {
+test('con una categoría elegida quedan solo sus movimientos', async () => {
   montar('Mercado')
   await waitFor(() => expect(screen.getByText('pan')).toBeTruthy())
 
@@ -112,14 +112,14 @@ test('el total de arriba es el de lo filtrado y no el del mes', async () => {
   expect(screen.queryByText('$6.000')).toBeNull()
 })
 
-test('una categoría sin gastos en el mes se dice distinto de un mes vacío', async () => {
+test('una categoría sin movimientos en el mes se dice distinto de un mes vacío', async () => {
   montar('Ocio')
   await waitFor(() => expect(screen.getByText('pan')).toBeTruthy())
 
   fireEvent.press(screen.getByTestId('elegir'))
 
-  await waitFor(() => expect(screen.getByText('No hay gastos de Ocio este mes')).toBeTruthy())
-  expect(screen.queryByText('No hay gastos este mes')).toBeNull()
+  await waitFor(() => expect(screen.getByText('No hay movimientos de Ocio este mes')).toBeTruthy())
+  expect(screen.queryByText('No hay movimientos este mes')).toBeNull()
 })
 
 test('con las categorías apagadas el filtro no se aplica', async () => {

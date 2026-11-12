@@ -1,4 +1,4 @@
-import { SIN_CATEGORIA, type CambioDeMovimiento, type Gasto, type Metodo } from '@saldai/core'
+import { SIN_CATEGORIA, type CambioDeMovimiento, type Movimiento, type Metodo } from '@saldai/core'
 
 /** Lo que el editor tiene en pantalla. Todo texto, como lo escribe el usuario. */
 export interface BorradorDeMovimiento {
@@ -14,7 +14,7 @@ export interface BorradorDeMovimiento {
 }
 
 /** El borrador con el que abre el editor: el movimiento tal como está. */
-export function borradorDe(movimiento: Gasto): BorradorDeMovimiento {
+export function borradorDe(movimiento: Movimiento): BorradorDeMovimiento {
   return {
     monto: String(movimiento.monto),
     item: movimiento.item,
@@ -38,7 +38,7 @@ export function borradorDe(movimiento: Gasto): BorradorDeMovimiento {
  * rechazar por vacío.
  */
 export function cambioPendiente(
-  movimiento: Gasto,
+  movimiento: Movimiento,
   borrador: BorradorDeMovimiento
 ): CambioDeMovimiento {
   const cambio: CambioDeMovimiento = {}
@@ -70,7 +70,7 @@ export function cambioPendiente(
 }
 
 /** `true` si el borrador se puede guardar: hay algo que cambió y el monto sirve. */
-export function hayAlgoQueGuardar(movimiento: Gasto, borrador: BorradorDeMovimiento): boolean {
+export function hayAlgoQueGuardar(movimiento: Movimiento, borrador: BorradorDeMovimiento): boolean {
   const monto = parseInt(borrador.monto, 10)
   if (!Number.isInteger(monto) || monto <= 0) return false
   if (!borrador.item.trim()) return false

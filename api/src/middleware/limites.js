@@ -3,7 +3,7 @@ const { rateLimit } = require('express-rate-limit')
 /**
  * Límite de pedidos por IP.
  *
- * El endpoint que de verdad queda expuesto es `POST /gastos/parsear`: no pide
+ * El endpoint que de verdad queda expuesto es `POST /movimientos/parsear`: no pide
  * sesión, así que cualquiera puede llamarlo en loop. No toca la base, pero sí
  * quema el CPU del plan gratis de Render, que es compartido y se estrangula.
  * Las rutas con sesión se limitan más suelto, porque ahí una request de más la

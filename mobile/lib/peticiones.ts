@@ -2,7 +2,7 @@
  * Lo que comparten todas las llamadas a la API: la URL base, el token de la
  * sesión y la lectura del mensaje de error.
  *
- * Vivía dentro de `features/gastos/api.ts`, que era el único que llamaba a la
+ * Vivía dentro de `features/movimientos/api.ts`, que era el único que llamaba a la
  * API. Al aparecer el segundo (el borrado de perfil) la alternativa era copiar
  * el header de autorización o que una feature importara de otra, y las dos
  * terminan igual: el día que un 401 cambie, se arregla en un lado y no en el

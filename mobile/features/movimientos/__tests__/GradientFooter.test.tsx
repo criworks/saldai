@@ -1,4 +1,4 @@
-import type { GastosDelMes, Preferencias } from '@saldai/core'
+import type { MovimientosDelMes, Preferencias } from '@saldai/core'
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
@@ -7,12 +7,12 @@ import { Text } from 'react-native'
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context'
 
 import { fetchPreferencias } from '@/features/perfil/api'
-import { fetchGastosPorMes } from '../api'
+import { fetchMovimientosPorMes } from '../api'
 import { FilterProvider, useFilter } from '../FilterContext'
-import { GastosProvider, useGastos } from '../GastosContext'
+import { MovimientosProvider, useMovimientos } from '../MovimientosContext'
 import { GradientFooter } from '../componentes/GradientFooter'
 
-const gastosMock = fetchGastosPorMes as jest.MockedFunction<typeof fetchGastosPorMes>
+const movimientosMock = fetchMovimientosPorMes as jest.MockedFunction<typeof fetchMovimientosPorMes>
 const preferenciasMock = fetchPreferencias as jest.MockedFunction<typeof fetchPreferencias>
 
 const METRICAS = {
@@ -20,7 +20,7 @@ const METRICAS = {
   insets: { top: 24, left: 0, right: 0, bottom: 24 },
 }
 
-const DEL_MES: GastosDelMes = {
+const DEL_MES: MovimientosDelMes = {
   ok: true,
   cantidad: 2,
   total: 3000,
@@ -54,7 +54,7 @@ function propsDeTabBar(ruta: string) {
 /** El estado del filtro y un botón para cambiar de mes, a la vista del test. */
 function Sonda() {
   const { selectedCategory } = useFilter()
-  const { setMes } = useGastos()
+  const { setMes } = useMovimientos()
   return (
     <>
       <Text testID="elegida">{selectedCategory ?? 'ninguna'}</Text>
@@ -74,10 +74,10 @@ function montar(ruta = 'index') {
     <SafeAreaProvider initialMetrics={initialWindowMetrics ?? METRICAS}>
       <QueryClientProvider client={cliente}>
         <FilterProvider>
-          <GastosProvider>
+          <MovimientosProvider>
             {children}
             <Sonda />
-          </GastosProvider>
+          </MovimientosProvider>
         </FilterProvider>
       </QueryClientProvider>
     </SafeAreaProvider>
@@ -88,13 +88,13 @@ function montar(ruta = 'index') {
 
 beforeEach(() => {
   jest.clearAllMocks()
-  gastosMock.mockResolvedValue(DEL_MES)
+  movimientosMock.mockResolvedValue(DEL_MES)
   preferenciasMock.mockResolvedValue(PREFERENCIAS(true))
 })
 
 test('dibuja una burbuja por categoría que el mes tiene, y ninguna más', async () => {
   // Esta fila estuvo muerta: las categorías venían de un segundo estado que
-  // nadie llenaba, así que nunca se dibujaba. Ahora salen de los gastos.
+  // nadie llenaba, así que nunca se dibujaba. Ahora salen de los movimientos.
   montar()
 
   await waitFor(() => expect(screen.getByLabelText('Mercado')).toBeTruthy())

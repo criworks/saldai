@@ -49,6 +49,33 @@ https://claude.ai/artifact/6H1LTgBbkuVTwSTDFuUR5G
 
 ---
 
+## Renombrar una tabla deja rotas las funciones plpgsql, y ninguna lo dice
+
+PR del renombre de `gastos` a `movimientos` · noviembre 2026
+
+- **Síntoma**: nada. El `alter table ... rename` corre sin una sola advertencia,
+  el resto del esquema sigue funcionando y la base queda aparentemente sana.
+- **Causa**: Postgres guarda por OID lo que apunta a una tabla —las vistas, las
+  foreign keys, los índices, el cuerpo de una función `language sql`— y todo eso
+  sigue a la tabla sola al renombrarla. El cuerpo de una función **plpgsql** no:
+  es texto y se vuelve a parsear en cada ejecución, así que `delete_user()` y
+  `confirmar_ocurrencia_recurrente()` quedaron diciendo `public.gastos`, una
+  relación que ya no existía.
+- **Por qué no se notaba**: la migración sale en verde y las dos funciones solo
+  fallan **cuando alguien las llama**, o sea al borrar una cuenta o al confirmar
+  una propuesta. CI no corre el SQL, y ningún test de la API las ejecuta contra
+  una base de verdad: el error aparece recién en producción, en la cara del
+  usuario y con un mensaje que no menciona el renombre.
+- **Arreglo**: la misma migración reescribe todas las funciones plpgsql que
+  nombran la tabla, aunque su lógica no cambie, y se verificó aplicando las doce
+  migraciones contra un Postgres 16 local con un stub de `auth` y llamando a
+  cada función.
+- **Regla**: después de renombrar algo en la base, buscar su nombre en el texto
+  de las funciones (`pg_get_functiondef`), no confiar en que la migración haya
+  corrido limpia. Y lo mismo vale para la otra punta del rename: el nombre viejo
+  sigue vivo en los clientes que ya están instalados, así que mientras alguno le
+  hable hay que dejarle una vista y una ruta por donde entrar.
+
 ## Un check obligatorio tiene que ser un job, no un paso
 
 PR #72 · noviembre 2026

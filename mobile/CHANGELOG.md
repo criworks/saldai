@@ -19,6 +19,8 @@ del formato; el texto de cada entrada es el original.
 
 
 ## [Unreleased]
+### Changed
+- **La app habla de movimientos y no de gastos**: `features/gastos/` pasa a `features/movimientos/`, y con ella el contexto, el hook de mutación, las llamadas y los tipos del contrato (`MovimientosDelMes`, `MovimientoCreado`). Las rutas de la API que consume pasan de `/gastos` a `/movimientos`. Es un renombre: ninguna pantalla cambia de aspecto ni de comportamiento. El nombre viejo sigue respondiendo del lado de la API, así que un build anterior instalado en un teléfono no se rompe con el deploy.
 
 ## [1.7.0] - 2026-11-12
 ### Added

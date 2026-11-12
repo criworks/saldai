@@ -1,21 +1,21 @@
-import type { GastosDelMes } from '@saldai/core'
+import type { MovimientosDelMes } from '@saldai/core'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, renderHook, waitFor } from '@testing-library/react-native'
 import React, { ReactNode } from 'react'
 
-import { fetchGastosPorMes } from '../api'
-import { GastosProvider, useGastos } from '../GastosContext'
+import { fetchMovimientosPorMes } from '../api'
+import { MovimientosProvider, useMovimientos } from '../MovimientosContext'
 
-const fetchMock = fetchGastosPorMes as jest.MockedFunction<typeof fetchGastosPorMes>
+const fetchMock = fetchMovimientosPorMes as jest.MockedFunction<typeof fetchMovimientosPorMes>
 
-const respuesta = (mes: number): GastosDelMes => ({
+const respuesta = (mes: number): MovimientosDelMes => ({
   ok: true,
   cantidad: 1,
   total: mes * 1000,
   totalFormateado: `$${mes}.000`,
   datos: [
     {
-      id: `gasto-${mes}`,
+      id: `movimiento-${mes}`,
       monto: mes * 1000,
       monto_formateado: `$${mes}.000`,
       item: 'pan',
@@ -40,11 +40,11 @@ function montar() {
 
   const envoltorio = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={cliente}>
-      <GastosProvider>{children}</GastosProvider>
+      <MovimientosProvider>{children}</MovimientosProvider>
     </QueryClientProvider>
   )
 
-  return renderHook(() => useGastos(), { wrapper: envoltorio })
+  return renderHook(() => useMovimientos(), { wrapper: envoltorio })
 }
 
 beforeEach(() => {

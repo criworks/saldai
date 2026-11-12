@@ -24,7 +24,7 @@ function rutasDeSalud({ limites }) {
   router.get('/db', limites.salud, async (req, res) => {
     try {
       const supabase = createAnonClient()
-      const { error } = await supabase.from('gastos').select('id').limit(1)
+      const { error } = await supabase.from('movimientos').select('id').limit(1)
 
       if (error) throw error
       res.status(200).json({ status: 'ok', db: 'connected' })
