@@ -76,6 +76,14 @@ export declare function rangoDelAnio(anio: number): { desde: FechaISO; hasta: Fe
 export declare const ZONA_DEFECTO: 'America/Santiago'
 /** El día de hoy en `zona`, como fecha civil anclada a medianoche UTC. */
 export declare function hoyCivil(zona?: string): Date
+/** Una fecha civil (anclada a medianoche UTC) a AAAA-MM-DD. */
+export declare function aIsoCivil(fecha: Date): FechaISO
+/** AAAA-MM-DD a fecha civil, o `null` si esa fecha no existe. */
+export declare function desdeIsoCivil(iso: string | null | undefined): Date | null
+/** Fecha civil anclada a medianoche UTC. `mes` va de 1 a 12. */
+export declare function civil(anio: number, mes: number, dia: number): Date
+export declare function sumarDias(fecha: Date, dias: number): Date
+export declare function diasEnMes(anio: number, mes: number): number
 export declare function parsearFecha(
   input: string | null | undefined,
   hoy?: Date
@@ -145,6 +153,196 @@ export declare function registrarMovimiento(
   opciones?: { zona?: string; hoy?: Date }
 ): ResultadoDeRegistro
 
+// ── Edición a mano de un movimiento ────────────────────────────────────────
+
+/** Los campos que el usuario puede corregir después de registrar. */
+export type CampoEditable = 'monto' | 'item' | 'categoria' | 'metodo' | 'fecha' | 'notas'
+
+export declare const CAMPOS_EDITABLES: readonly CampoEditable[]
+export declare const LARGO_MAXIMO_ITEM: number
+export declare const LARGO_MAXIMO_NOTAS: number
+
+/** `true` si es una fecha real en AAAA-MM-DD: el 31/02 no pasa. */
+export declare function esFechaIso(valor: unknown): boolean
+
+/**
+ * El cuerpo de `PATCH /gastos/:id`: solo los campos que cambian. `notas` en
+ * `null` o en `''` borra la nota.
+ */
+export interface CambioDeMovimiento {
+  monto?: number
+  item?: string
+  categoria?: CategoriaDeGasto
+  metodo?: Metodo
+  fecha?: FechaISO
+  notas?: string | null
+}
+
+export interface ResultadoDeCambio {
+  ok: boolean
+  errores: string[]
+  /** Los campos a guardar, con los nombres del dominio. Vacío si `ok` es false. */
+  campos: Record<string, unknown>
+  /** Los campos que este cambio toca, para `campos_editados`. */
+  editados: CampoEditable[]
+}
+
+/**
+ * Valida una edición a mano y la deja lista para guardar. Acá **no corre el
+ * parser**: el usuario corrige campos sueltos, no escribe una línea.
+ */
+export declare function validarCambioDeMovimiento(cambio: unknown): ResultadoDeCambio
+
+/** La unión de lo ya marcado con lo que cambia ahora, sin duplicados. */
+export declare function unirCamposEditados(
+  previos: readonly string[] | null | undefined,
+  nuevos: readonly string[]
+): CampoEditable[]
+
+/** `true` si ese campo del movimiento lo corrigió el usuario a mano. */
+export declare function fueEditadoAMano(movimiento: unknown, campo: CampoEditable): boolean
+
+// ── Recurrencia con confirmación ────────────────────────────────────────────
+
+/** Cada cuánto propone un plan. */
+export type Frecuencia = 'semanal' | 'mensual' | 'anual'
+
+export declare const FRECUENCIAS: readonly Frecuencia[]
+export declare const CAMPOS_DEL_PLAN: readonly string[]
+/** Tope de fechas que se derivan de un plan en una sola pasada. */
+export declare const MAXIMO_DE_OCURRENCIAS: number
+
+/**
+ * Un plan de recurrencia como lo guarda y lo devuelve la API.
+ *
+ * Viaja con la forma de la fila porque es la misma que consumen el core y la
+ * app: un solo nombre por campo es un lugar menos donde equivocarse.
+ */
+export interface Recurrencia {
+  id: string
+  monto: number
+  monto_formateado: string | null
+  item: string
+  categoria: CategoriaDeGasto | null
+  categoria_src: FuenteCategoria | null
+  metodo: Metodo | null
+  notas: string | null
+  frecuencia: Frecuencia
+  /** La primera ocurrencia y el ancla de las siguientes. */
+  vigente_desde: FechaISO
+  /** Último día en que propone, inclusive. `null` = sin fin. */
+  vigente_hasta: FechaISO | null
+  input_original: string | null
+  zona: string | null
+  hoy_resuelto: FechaISO | null
+  /** El plan que este reemplazó, si salió de un "editar de aquí en adelante". */
+  plan_anterior_id?: string | null
+  creado_en?: string
+  actualizado_en?: string
+}
+
+/** El movimiento que crearía confirmar una propuesta sin tocar nada. */
+export interface MovimientoPropuesto {
+  monto: number
+  montoFormateado: string | null
+  item: string
+  categoria: CategoriaDeGasto
+  categoriaSrc: FuenteCategoria
+  metodo: Metodo
+  fecha: FechaISO
+  notas: string | null
+}
+
+/** Una propuesta pendiente: un plan y una fecha que el usuario no decidió. */
+export interface PropuestaPendiente {
+  recurrenciaId: string
+  /** La fecha que el plan proponía. */
+  fecha: FechaISO
+  movimiento: MovimientoPropuesto
+  recurrencia: Recurrencia
+}
+
+/** Las fechas que el plan propone hasta `hasta` inclusive. */
+export declare function ocurrenciasDelPlan(
+  plan: Recurrencia,
+  opciones: { hasta: FechaISO }
+): FechaISO[]
+
+/** La ocurrencia número `n` del plan, contando la primera como 0. */
+export declare function ocurrenciaNumero(plan: Recurrencia, n: number): Date | null
+
+/** `true` si esa fecha es una de las que el plan propone. */
+export declare function esOcurrenciaDelPlan(plan: Recurrencia, fecha: unknown): boolean
+
+/** Las propuestas sin decidir, de la más vieja a la más nueva. */
+export declare function propuestasPendientes(
+  planes: readonly Recurrencia[],
+  decisiones: readonly { recurrenciaId: string; fecha: FechaISO }[],
+  opciones: { hasta: FechaISO }
+): { recurrenciaId: string; fecha: FechaISO; plan: Recurrencia }[]
+
+/**
+ * El movimiento que crearía confirmar, y qué campos difieren del plan. Lo
+ * segundo es lo que se guarda en `campos_editados`: un campo igual al del plan
+ * no es una corrección.
+ */
+export declare function movimientoDeLaPropuesta(
+  plan: Recurrencia,
+  fechaPrevista: FechaISO,
+  campos?: Record<string, unknown>
+): { movimiento: MovimientoPropuesto; camposEditados: CampoEditable[] }
+
+export declare function validarFrecuencia(frecuencia: unknown): boolean
+
+/** `true` si el plan sigue proponiendo fechas al día `hoy`. */
+export declare function planVigente(plan: Recurrencia, hoy: FechaISO): boolean
+
+/** El cuerpo de `POST /recurrencias`. */
+export interface NuevaRecurrencia {
+  /** La línea, igual que la de un movimiento. Su fecha es el ancla. */
+  input: string
+  frecuencia: Frecuencia
+  /** Ancla explícita, si el plan no empieza el día que dice la línea. */
+  desde?: FechaISO
+  /** Último día en que propone. Sin esto, el plan no termina. */
+  hasta?: FechaISO | null
+  notas?: string | null
+  zona?: string
+}
+
+export interface ResultadoDePlan {
+  ok: boolean
+  errores: string[]
+  advertencias: string[]
+  /** Con los nombres del dominio; lo traduce a columnas el repositorio. */
+  plan: Record<string, unknown> | null
+  /** `true` si lo que falló fue leer la línea: la ruta responde 422 y no 400. */
+  errorDeLectura: boolean
+}
+
+export declare function validarPlanDeRecurrencia(
+  entrada: unknown,
+  opciones?: { zona?: string; hoy?: Date }
+): ResultadoDePlan
+
+/** El cuerpo de `PATCH /recurrencias/:id`: "editar de aquí en adelante". */
+export interface CambioDeRecurrencia {
+  /** Obligatorio: desde qué fecha vale el cambio. */
+  desde: FechaISO
+  monto?: number
+  item?: string
+  categoria?: CategoriaDeGasto
+  metodo?: Metodo
+  notas?: string | null
+  frecuencia?: Frecuencia
+  hasta?: FechaISO | null
+}
+
+export declare function validarCambioDePlan(
+  plan: Recurrencia,
+  cambio: unknown
+): { ok: boolean; errores: string[]; plan: Record<string, unknown> | null; desde: FechaISO | null }
+
 // ── Zonas horarias ──────────────────────────────────────────────────────────
 
 /** Una zona del catálogo, lista para mostrar. */
@@ -189,6 +387,22 @@ export interface Gasto {
   /** AAAA-MM-DD: la columna es `date`. */
   fecha: FechaISO
   metodo: Metodo
+  /** Detalle libre del usuario. `null` mientras no escribió ninguno. */
+  notas?: string | null
+  /** Cuándo se editó a mano por última vez. `null` = nunca se editó. */
+  editado_en?: string | null
+  /**
+   * Los campos que el usuario corrigió a mano. Un reclasificar masivo tiene
+   * que saltearse los que estén acá, o le pisa la corrección.
+   */
+  campos_editados?: CampoEditable[]
+  /**
+   * La cuenta del perfil a la que pertenece el movimiento. La llena la base
+   * (trigger `gastos_asignar_cuenta`), así que la app no la manda al crear.
+   * Todavía no hay pantalla de cuentas: viaja porque la API devuelve la fila
+   * entera, y está acá para que el día que se use no se declare de nuevo.
+   */
+  cuenta_id?: string | null
 }
 
 /**
@@ -216,6 +430,50 @@ export interface GastosDelMes {
 export interface GastoCreado {
   ok: true
   datos: GastoParseado & { id: string | number }
+}
+
+/** `PATCH /gastos/:id` y `DELETE /gastos/:id` */
+export interface MovimientoCambiado {
+  ok: true
+  errores: []
+  /** La fila como quedó, o —en el borrado— como estaba antes de borrarse. */
+  datos: Gasto
+}
+
+/** `GET /recurrencias` */
+export interface RecurrenciasDelPerfil {
+  ok: true
+  errores: []
+  advertencias: string[]
+  datos: Recurrencia[]
+}
+
+/** `GET /recurrencias/propuestas` */
+export interface PropuestasPendientes {
+  ok: true
+  errores: []
+  advertencias: string[]
+  cantidad: number
+  datos: PropuestaPendiente[]
+}
+
+/** `POST /recurrencias` y `PATCH /recurrencias/:id` */
+export interface RecurrenciaGuardada {
+  ok: true
+  errores: []
+  datos: Recurrencia
+}
+
+/**
+ * `POST /recurrencias/propuestas/confirmar`
+ *
+ * Devuelve el movimiento que se creó, no la propuesta: lo que la app tiene que
+ * mostrar y sumar es el gasto.
+ */
+export interface PropuestaConfirmada {
+  ok: true
+  errores: []
+  datos: Gasto
 }
 
 /** `GET /gastos/anuales` */

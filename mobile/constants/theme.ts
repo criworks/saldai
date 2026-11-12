@@ -4,7 +4,7 @@ import { KeyboardTypeOptions } from 'react-native'
 // @saldai/core; acá solo se reexportan para que las pantallas tengan un solo
 // import. El color y el emoji de cada categoría son diseño y vienen de los
 // tokens.
-export { MESES, NOMBRES_CATEGORIAS, SIN_CATEGORIA } from '@saldai/core'
+export { LARGO_MAXIMO_NOTAS, MESES, NOMBRES_CATEGORIAS, SIN_CATEGORIA } from '@saldai/core'
 export {
   categoryColor,
   categoryEmoji,

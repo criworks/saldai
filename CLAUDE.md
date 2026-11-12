@@ -52,6 +52,9 @@ el contexto, re-correr el parser cambia la fecha de todo lo que se escribió com
 (`require('@saldai/core/parser')`) y los tipos del contrato de la API en
 `index.d.ts`. Tests con `node --test`.
 
+`ediciones.js` hace lo propio para la edición a mano de un movimiento: qué
+campos se pueden corregir, sus topes, y qué queda marcado como editado.
+
 Si una regla significa lo mismo en la API y en la app, va acá y no duplicada en
 las dos.
 
@@ -83,9 +86,18 @@ Endpoints:
 |------|--------|
 | `POST /gastos/parsear` | no |
 | `POST /gastos` | sí |
+| `PATCH /gastos/:id` | sí |
+| `DELETE /gastos/:id` | sí |
 | `GET /gastos?mes=&anio=` | sí |
 | `GET /gastos/anuales?anio=` | sí |
 | `DELETE /perfil` | sí |
+| `GET /recurrencias` | sí |
+| `POST /recurrencias` | sí |
+| `PATCH /recurrencias/:id` | sí |
+| `GET /recurrencias/propuestas` | sí |
+| `POST /recurrencias/propuestas/confirmar` | sí |
+| `POST /recurrencias/propuestas/omitir` | sí |
+| `DELETE /recurrencias/propuestas/omitida` | sí |
 | `GET /perfil/preferencias` | sí |
 | `PATCH /perfil/preferencias` | sí |
 | `GET /health` | no (keep-alive de Render) |
@@ -95,11 +107,35 @@ Endpoints:
 `delete_user()`. **Es el único camino**: mobile no le habla a Supabase
 directamente para escribir.
 
+**Recurrencia con confirmación.** Un plan (`public.recurrencias`) propone;
+confirmar es lo que **crea** el movimiento. Las propuestas **no se guardan**:
+una pendiente es la ausencia de una fila en `public.ocurrencias_recurrentes`,
+que es donde van las decisiones ya tomadas (`confirmada` u `omitida`). Las
+fechas se derivan del plan en `packages/core/recurrencias.js`, y por eso no hay
+ningún proceso que corra solo. Confirmar y editar-de-aquí-en-adelante pasan por
+dos funciones de Postgres (`confirmar_ocurrencia_recurrente`,
+`editar_recurrencia_desde`) porque cada una escribe dos tablas y a medias
+dejan, respectivamente, un gasto duplicable y un perfil sin recurrencia.
+`recurrencias` no tiene política de DELETE: terminar un plan es escribir
+`vigente_hasta`.
+
 Las preferencias del perfil (`public.preferencias`) llevan **dos campos por
 flag**: `habilitado` es el entitlement, que decide el plan, y `activo` la
 preferencia, que decide el usuario. El `PATCH` solo acepta `activo` y `zona`.
 Hasta el primer guardado no hay fila y el `GET` devuelve los defaults, que están
 en `api/src/perfil/preferencias.js` y en el schema.
+
+`PATCH /gastos/:id` es la **edición a mano**, y ahí **no corre el parser**: el
+usuario corrige campos sueltos, no escribe una línea. `input_original`, `zona` y
+`hoy_resuelto` quedan como están —siguen describiendo lo que la persona
+escribió— y lo que cambia es el movimiento derivado de eso. Por eso la fila
+lleva `campos_editados`: los nombres de los campos que el usuario corrigió él
+mismo. **Un reclasificar masivo tiene que saltearse los campos que estén ahí**,
+o le pisa la corrección, y después no hay forma de distinguir "quedó así porque
+la puso el parser" de "quedó así porque la arreglé". Es un arreglo de nombres y
+no un booleano por la misma razón que las preferencias llevan dos campos por
+flag. Las reglas de qué se puede editar están en `packages/core/ediciones.js`
+(`validarCambioDeMovimiento`), porque valen igual en la API y en la app.
 
 Las dos rutas de `POST` aceptan `zona` (IANA) en el cuerpo y caen a
 `APP_TIMEZONE` si no viene. El contexto que se usó se guarda en la fila pero

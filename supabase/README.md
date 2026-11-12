@@ -20,6 +20,8 @@ UTC (`AAAAMMDDHHMMSS_descripcion.sql`).
 | `20261030000000_totales_por_mes.sql` | Crea `public.totales_por_mes(anio)`, que suma por mes en la base en vez de traer el año entero a la API. |
 | `20261105000000_contexto_en_gastos.sql` | Agrega `zona` y `hoy_resuelto` a `public.gastos`, con backfill de lo existente. Sin ellas la fecha no se podía volver a derivar desde `input_original`. |
 | `20261105010000_preferencias.sql` | Crea `public.preferencias`, con RLS: los flags por perfil (`habilitado` + `activo` por cada uno) y la zona elegida. La fila nace en el primer guardado; si no hay, valen los defaults de las columnas. |
+| `20261106000000_edicion_de_gastos.sql` | Agrega `notas`, `editado_en` y `campos_editados` a `public.gastos`. Las políticas de UPDATE y DELETE ya estaban; lo que faltaba era dónde guardar la nota y **qué campos tocó el usuario a mano**. |
+| `20261106010000_cuentas.sql` | Crea `public.cuentas`, con RLS, y agrega `gastos.cuenta_id`. Prepara perfil → varias cuentas: la cuenta por defecto nace con el primer movimiento (trigger), el histórico se backfillea, y una foreign key compuesta `(user_id, cuenta_id)` hace imposible colgar un movimiento de la cuenta de otro perfil. |
 
 ## Cómo aplicarlas
 
@@ -31,10 +33,17 @@ npx supabase link --project-ref <project-ref>
 npx supabase db push --linked
 ```
 
-Sin CLI, se pueden pegar en orden en el SQL Editor del dashboard. Son todas
-idempotentes (`if not exists`, `drop policy if exists`, `create or replace`, y
-la de `fecha` revisa el tipo actual antes de convertir), así que correr una dos
-veces no rompe nada.
+Sin CLI, se pueden pegar en orden en el SQL Editor del dashboard. Casi todas
+son idempotentes (`if not exists`, `drop policy if exists`, `create or
+replace`, y la de `fecha` revisa el tipo actual antes de convertir), así que
+correr una dos veces no rompe nada.
+
+La excepción es `20261027000100_rls_gastos.sql`: hace `drop policy if exists`
+de los **dos nombres viejos** y después crea los cuatro nuevos sin dropearlos
+antes, así que correrla de nuevo falla con *policy already exists* (comprobado
+corriendo la carpeta entera dos veces contra un Postgres local). No se corrige
+acá porque ya está aplicada y editar una migración aplicada deja el archivo con
+otro hash que el que la base registró.
 
 `20261028000000_fecha_a_date.sql` cambia el tipo de una columna que la API lee,
 así que va junto con el deploy del API, no antes: con la columna ya en `date` y

@@ -158,4 +158,36 @@ function formatear(date, raw) {
   };
 }
 
-module.exports = { parsearFecha, hoyCivil, ZONA_DEFECTO };
+/** Una fecha civil a AAAA-MM-DD, el formato de la columna `date`. */
+function aIsoCivil(fecha) {
+  const dd = String(fecha.getUTCDate()).padStart(2, "0");
+  const mm = String(fecha.getUTCMonth() + 1).padStart(2, "0");
+  return `${fecha.getUTCFullYear()}-${mm}-${dd}`;
+}
+
+/**
+ * AAAA-MM-DD a fecha civil, o `null` si el texto no es una fecha que exista.
+ *
+ * Se arma con `Date.UTC` y no con `new Date(iso)` por lo mismo que el resto de
+ * este archivo: la fecha civil se ancla a medianoche UTC para que sumar y
+ * restar días no dependa del horario de verano de ninguna zona.
+ */
+function desdeIsoCivil(iso) {
+  const partes = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso ?? "").trim());
+  if (!partes) return null;
+
+  const [, anio, mes, dia] = partes.map(Number);
+  if (!existe(anio, mes, dia)) return null;
+  return civil(anio, mes, dia);
+}
+
+module.exports = {
+  parsearFecha,
+  hoyCivil,
+  ZONA_DEFECTO,
+  civil,
+  sumarDias,
+  diasEnMes,
+  aIsoCivil,
+  desdeIsoCivil,
+};

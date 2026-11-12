@@ -25,6 +25,7 @@ export default function TabLayout() {
           <Tabs.Screen name="captura" />
           <Tabs.Screen name="cuenta" options={{ href: null }} />
           <Tabs.Screen name="zona-horaria" options={{ href: null }} />
+          <Tabs.Screen name="recurrencias" options={{ href: null }} />
         </Tabs>
       </GastosProvider>
     </FilterProvider>

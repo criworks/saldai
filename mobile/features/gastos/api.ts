@@ -1,4 +1,4 @@
-import type { GastoCreado, GastosDelMes, TotalesAnuales } from '@saldai/core'
+import type { CambioDeMovimiento, GastoCreado, GastosDelMes, MovimientoCambiado, TotalesAnuales } from '@saldai/core'
 import * as mocks from '@/services/mocks'
 import { enModoMock } from '@/services/mocks'
 import { API_URL, getAuthHeaders, leerError, mensajeDeError } from '@/lib/peticiones'
@@ -57,6 +57,56 @@ export async function crearGasto(inputStr: string, zona?: string): Promise<Gasto
   // La API puede fallar por HTTP status o por `ok: false` en el cuerpo.
   if (!res.ok || !json?.ok) {
     throw new Error(mensajeDeError(json, 'Error al guardar el gasto'))
+  }
+
+  return json
+}
+
+/**
+ * Edita un movimiento ya registrado.
+ *
+ * Se manda **solo lo que cambia**: la API marca como editados a mano los
+ * campos que recibe, y mandar el movimiento completo marcaría los seis aunque
+ * el usuario haya tocado uno. Esa marca es la que después hace que un
+ * reclasificar masivo no le pise la corrección.
+ */
+export async function editarMovimiento(
+  id: string,
+  cambio: CambioDeMovimiento
+): Promise<MovimientoCambiado> {
+  if (enModoMock) return mocks.editarMovimiento(id, cambio)
+
+  const res = await fetch(`${API_URL}/gastos/${id}`, {
+    method: 'PATCH',
+    headers: await getAuthHeaders(),
+    body: JSON.stringify(cambio),
+  })
+
+  const json = await res.json().catch(() => null)
+
+  if (!res.ok || !json?.ok) {
+    throw new Error(mensajeDeError(json, 'Error al guardar los cambios'))
+  }
+
+  return json
+}
+
+/**
+ * Elimina un movimiento. La respuesta trae la fila que se borró, así que quien
+ * llama sabe de qué mes era: no siempre es el mes que se está mirando.
+ */
+export async function eliminarMovimiento(id: string): Promise<MovimientoCambiado> {
+  if (enModoMock) return mocks.eliminarMovimiento(id)
+
+  const res = await fetch(`${API_URL}/gastos/${id}`, {
+    method: 'DELETE',
+    headers: await getAuthHeaders(),
+  })
+
+  const json = await res.json().catch(() => null)
+
+  if (!res.ok || !json?.ok) {
+    throw new Error(mensajeDeError(json, 'Error al eliminar el movimiento'))
   }
 
   return json

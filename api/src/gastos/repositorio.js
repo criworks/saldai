@@ -40,6 +40,73 @@ function repositorioDeGastos(token) {
         .single()
     },
 
+    /**
+     * Un movimiento del usuario, o `null` si no existe o no es suyo.
+     *
+     * `maybeSingle()` y no `single()`: pedir un id que no está no es un error
+     * de base, es un 404 de la ruta. El `eq('user_id')` está además de la RLS
+     * porque la RLS devuelve cero filas en silencio, y eso se ve igual que un
+     * id inexistente: así la pertenencia se decide en una condición escrita y
+     * no en la ausencia de resultado.
+     */
+    buscar(id, { userId }) {
+      return supabase
+        .from('gastos')
+        .select('*')
+        .eq('id', id)
+        .eq('user_id', userId)
+        .maybeSingle()
+    },
+
+    /**
+     * Cambia los campos que vengan y devuelve la fila como quedó.
+     *
+     * `campos` llega con los nombres del dominio y la traducción a columnas la
+     * hace este archivo, igual que en `insertar`: así la ruta y el core no
+     * saben de `monto_formateado` ni de `categoria_src`.
+     *
+     * `camposEditados` se escribe completo y no se le agrega acá: quien llama
+     * lo armó uniendo lo que ya estaba marcado con lo que cambia ahora, porque
+     * la unión es una regla del dominio (`unirCamposEditados`) y no de la tabla.
+     */
+    actualizar(id, { userId, campos, camposEditados }) {
+      const fila = {
+        editado_en: new Date().toISOString(),
+        campos_editados: camposEditados,
+      }
+
+      if ('monto' in campos) fila.monto = campos.monto
+      if ('montoFormateado' in campos) fila.monto_formateado = campos.montoFormateado
+      if ('item' in campos) fila.item = campos.item
+      if ('categoria' in campos) fila.categoria = campos.categoria
+      if ('categoriaSrc' in campos) fila.categoria_src = campos.categoriaSrc
+      if ('metodo' in campos) fila.metodo = campos.metodo
+      if ('fecha' in campos) fila.fecha = campos.fecha
+      if ('notas' in campos) fila.notas = campos.notas
+
+      // `input_original`, `zona` y `hoy_resuelto` no se tocan nunca: siguen
+      // describiendo lo que la persona escribió y con qué contexto se derivó.
+      // Lo que cambia es el movimiento, y eso queda dicho en `campos_editados`.
+      return supabase
+        .from('gastos')
+        .update(fila)
+        .eq('id', id)
+        .eq('user_id', userId)
+        .select()
+        .maybeSingle()
+    },
+
+    /** Borra un movimiento del usuario y devuelve la fila que borró. */
+    eliminar(id, { userId }) {
+      return supabase
+        .from('gastos')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', userId)
+        .select()
+        .maybeSingle()
+    },
+
     /** Los gastos del usuario, opcionalmente de un mes y una categoría. */
     listar({ userId, rango, categoria }) {
       let query = supabase

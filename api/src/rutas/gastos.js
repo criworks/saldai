@@ -1,15 +1,22 @@
 const express = require('express')
-const { registrarMovimiento, hoyCivil, rangoDelMes } = require('@saldai/core')
+const {
+  registrarMovimiento,
+  hoyCivil,
+  rangoDelMes,
+  unirCamposEditados,
+  validarCambioDeMovimiento,
+} = require('@saldai/core')
 
 const { requireAuth } = require('../middleware/auth.js')
 const { repositorioDeGastos } = require('../gastos/repositorio')
 const {
   validarAnio,
   validarAnioRequerido,
+  validarId,
   validarInput,
   validarMes,
 } = require('../gastos/validacion')
-const { errorDeBase, errorDeEntrada } = require('../respuestas')
+const { errorDeBase, errorDeEntrada, noEncontrado } = require('../respuestas')
 const { arregloDeTotales } = require('../gastos/totales')
 
 /**
@@ -113,6 +120,67 @@ function rutasDeGastos({ zona, limites }) {
       anio: req.query.anio,
       totales: arregloDeTotales(data),
     })
+  })
+
+  // ── PATCH /gastos/:id ────────────────────────────────────────────────────
+  //
+  // La edición a mano de un movimiento. No corre el parser: el usuario ya no
+  // está escribiendo una línea, está corrigiendo campos sueltos, así que
+  // `input_original` queda como estaba y lo que se anota es **qué campos ya no
+  // se pueden volver a derivar de él** (`campos_editados`). Sin eso, el primer
+  // reclasificar masivo le pisa la corrección al usuario.
+  router.patch('/:id', limites.conSesion, requireAuth, async (req, res) => {
+    const id = validarId(req.params.id)
+    if (!id.ok) return errorDeEntrada(res, id.errores)
+
+    const cambio = validarCambioDeMovimiento(req.body)
+    if (!cambio.ok) return errorDeEntrada(res, cambio.errores)
+
+    const repositorio = repositorioDeGastos(req.token)
+
+    // Se lee antes de escribir por dos razones, y las dos importan: `editados`
+    // es una unión con lo que ya estaba marcado (si corrigió la categoría en
+    // marzo y el monto hoy, las dos correcciones son suyas), y un id que no
+    // existe tiene que dar 404 y no un 200 sobre cero filas, que es lo que
+    // devuelve un UPDATE que la RLS no deja ver.
+    const actual = await repositorio.buscar(id.valor, { userId: req.userId })
+    if (actual.error) return errorDeBase(res, 'Error al leer el movimiento', actual.error)
+    if (!actual.data) return noEncontrado(res, 'No existe ese movimiento')
+
+    const { data, error } = await repositorio.actualizar(id.valor, {
+      userId: req.userId,
+      campos: cambio.campos,
+      camposEditados: unirCamposEditados(actual.data.campos_editados, cambio.editados),
+    })
+
+    if (error) return errorDeBase(res, 'Error al guardar el movimiento', error)
+    // Entre la lectura y la escritura el movimiento se pudo borrar desde otro
+    // dispositivo. No es un error: ya no está.
+    if (!data) return noEncontrado(res, 'No existe ese movimiento')
+
+    return res.status(200).json({ ok: true, errores: [], datos: data })
+  })
+
+  // ── DELETE /gastos/:id ───────────────────────────────────────────────────
+  //
+  // Devuelve la fila que borró y no solo el id: la app tiene que saber de qué
+  // mes era para invalidar ese mes, y el movimiento que se borra no siempre es
+  // del mes que se está mirando.
+  router.delete('/:id', limites.conSesion, requireAuth, async (req, res) => {
+    const id = validarId(req.params.id)
+    if (!id.ok) return errorDeEntrada(res, id.errores)
+
+    const { data, error } = await repositorioDeGastos(req.token).eliminar(id.valor, {
+      userId: req.userId,
+    })
+
+    if (error) return errorDeBase(res, 'Error al eliminar el movimiento', error)
+    // Borrar algo que no está no es un error del cliente ni del servidor, pero
+    // tampoco es un borrado: si la app mostrara "eliminado" ante un 200 vacío,
+    // taparía el caso de un id de otro usuario.
+    if (!data) return noEncontrado(res, 'No existe ese movimiento')
+
+    return res.status(200).json({ ok: true, errores: [], datos: data })
   })
 
   return router

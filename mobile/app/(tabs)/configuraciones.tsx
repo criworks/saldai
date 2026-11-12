@@ -190,6 +190,16 @@ export default function ConfigurationsScreen() {
                 hideChevron
               />
             )}
+            {/*
+              Recurrencias va en Funcionamiento y sin switch: no es una función
+              conmutable del plan sino una pantalla donde se crean y se editan
+              los planes. Lo que el usuario tiene que confirmar aparece arriba
+              del listado del mes, no acá.
+            */}
+            <MenuItem
+              title="Recurrencias"
+              onPress={() => router.push('/recurrencias')}
+            />
             <MenuItem
               title="Zona horaria"
               value={nombreDeZonaMostrada(zonaElegida)}
