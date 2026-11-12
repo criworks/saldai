@@ -15,7 +15,7 @@ import {
 } from 'react-native'
 import { Alert } from '@/components/ui/Alert'
 import { Input } from '@/components/ui/Input'
-import { CategorySelector, PaymentMethodSelector } from '@/features/gastos'
+import { CategorySelector, PaymentMethodSelector } from '@/features/movimientos'
 import { usePreferencias } from '@/features/perfil'
 import { colors, LARGO_MAXIMO_NOTAS } from '@/constants/theme'
 import {

@@ -10,19 +10,19 @@ import { TODAS_LAS_CATEGORIAS } from '@saldai/core';
 import { categoryEmoji, colors, withAlpha } from '@/constants/theme';
 import { usePreferencias } from '@/features/perfil';
 import { useFilter } from '../FilterContext';
-import { useGastos } from '../GastosContext';
+import { useMovimientos } from '../MovimientosContext';
 
 export function GradientFooter(props: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const safePaddingBottom = 24 + insets.bottom;
 
-  const { mes, setMes, categorias } = useGastos();
+  const { mes, setMes, categorias } = useMovimientos();
   const { categoriasVisibles } = usePreferencias();
   const { selectedCategory, setSelectedCategory } = useFilter();
 
   // Las categorías que de verdad tiene el mes, en el orden del catálogo y no
   // por monto: ordenadas por lo gastado, las burbujas se reacomodan debajo del
-  // dedo cada vez que entra un gasto.
+  // dedo cada vez que entra un movimiento.
   const categoriasDelMes = useMemo(
     () => TODAS_LAS_CATEGORIAS.filter((cat) => categorias.some(([nombre]) => nombre === cat)),
     [categorias],
@@ -54,7 +54,7 @@ export function GradientFooter(props: BottomTabBarProps) {
   const isPorCategoriaActive = routeName === 'por-categoria';
   // Las tres son la misma sección: el mes que se está mirando. El footer les
   // deja el icono encendido y el degradado.
-  const isGastosActive = isListaActive || isMesesViewActive || isPorCategoriaActive;
+  const isMovimientosActive = isListaActive || isMesesViewActive || isPorCategoriaActive;
   const isCapturaActive = routeName === 'captura';
   const isConfiguracionesActive = routeName === 'configuraciones';
   const isCuentaActive = routeName === 'cuenta';
@@ -75,7 +75,7 @@ export function GradientFooter(props: BottomTabBarProps) {
   // El gradiente (fade) solo es necesario si estamos en la vista principal (index)
   // ya que es la única que tiene scroll largo con items que necesitan el efecto fade-out
   // y que tiene filas extras (categorías, filtro "En curso").
-  const hasSubmenus = isGastosActive;
+  const hasSubmenus = isMovimientosActive;
 
   const content = (
     <View className="flex-col gap-sm px-xl">
@@ -192,12 +192,12 @@ export function GradientFooter(props: BottomTabBarProps) {
             <Nut size={24} className={isConfiguracionesActive ? "text-foreground" : "text-muted-foreground"} weight="fill" />
           </Pressable>
 
-          {/* Gastos Item */}
+          {/* Movimientos Item */}
           <Pressable
-            className={`w-4xl h-4xl items-center justify-center rounded-full active:opacity-80 ${isGastosActive ? 'bg-secondary' : ''}`}
+            className={`w-4xl h-4xl items-center justify-center rounded-full active:opacity-80 ${isMovimientosActive ? 'bg-secondary' : ''}`}
             onPress={() => props.navigation.navigate('index')}
           >
-            <CardsThree size={24} className={isGastosActive ? "text-foreground" : "text-muted-foreground"} weight="fill" />
+            <CardsThree size={24} className={isMovimientosActive ? "text-foreground" : "text-muted-foreground"} weight="fill" />
           </Pressable>
 
         </View>

@@ -1,7 +1,7 @@
 /**
  * Los doce totales del año, en orden de enero a diciembre.
  *
- * La base devuelve una fila por mes con movimiento, así que un mes sin gastos
+ * La base devuelve una fila por mes con movimiento, así que un mes sin movimientos
  * simplemente no viene y acá queda en 0. Se separa de `server.js` porque es la
  * única parte de la ruta anual que tiene algo que probar.
  */

@@ -20,6 +20,10 @@ del formato; el texto de cada entrada es el original.
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-11-12
+### Changed
+- **La app habla de movimientos y no de gastos**: `features/gastos/` pasa a `features/movimientos/`, y con ella el contexto, el hook de mutación, las llamadas y los tipos del contrato (`MovimientosDelMes`, `MovimientoCreado`). Las rutas de la API que consume pasan de `/gastos` a `/movimientos`. Es un renombre: ninguna pantalla cambia de aspecto ni de comportamiento. El nombre viejo sigue respondiendo del lado de la API, así que un build anterior instalado en un teléfono no se rompe con el deploy.
+
 ## [1.7.0] - 2026-11-12
 ### Added
 - **Editar y eliminar un movimiento**: tocar una fila del mes abre el movimiento y deja cambiarle el monto, la descripción, la fecha, la categoría y el método de pago, escribirle una nota, o eliminarlo. El borrado pide confirmación y dice qué se va a eliminar. La categoría y el método aparecen con la misma cuenta que en la captura: solo si el perfil los tiene prendidos, porque editar una categoría que no se ve en ningún otro lado no tendría dónde mostrarse.

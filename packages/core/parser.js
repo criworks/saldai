@@ -1,5 +1,5 @@
 /**
- * Gasto Parser
+ * Parser de movimientos
  *
  * Formato esperado (delimitadores: , | - / ):
  *   MONTO, ITEM, CATEGORIA, FECHA, METODO
@@ -120,7 +120,7 @@ function dividir(input) {
  * @param {string} input
  * @param {{ zona?: string, hoy?: Date }} [opciones]
  */
-function parsearGasto(input, opciones = {}) {
+function parsearMovimiento(input, opciones = {}) {
   const advertencias = []
   const errores = []
 
@@ -143,15 +143,15 @@ function parsearGasto(input, opciones = {}) {
     }
   }
 
-  // ── [0] MONTO ───────────────────────────────────────────────────
+  // ── [0] MONTO ────────────────────────────────────────────────────────────
   const { valor: monto, error: errorMonto } = parsearMonto(partes[0])
   if (errorMonto) errores.push(errorMonto)
 
-  // ── [1] ITEM ────────────────────────────────────────────────────
+  // ── [1] ITEM ─────────────────────────────────────────────────────────────
   const item = partes[1]?.trim() || ''
   if (!item) errores.push('Item vacío')
 
-  // ── [2] CATEGORIA (opcional) ────────────────────────────────────
+  // ── [2] CATEGORIA (opcional) ─────────────────────────────────────────────
   const categoriaRaw = partes[2]?.trim() || ''
   const {
     categoria,
@@ -160,13 +160,13 @@ function parsearGasto(input, opciones = {}) {
   } = resolverCategoria(categoriaRaw, item)
   if (advCat) advertencias.push(advCat)
 
-  // ── [3] FECHA (opcional) ────────────────────────────────────────
+  // ── [3] FECHA (opcional) ─────────────────────────────────────────────────
   const hoy = opciones.hoy ?? hoyCivil(opciones.zona)
   const { fechaISO, fechaStr, advertencia: advFecha, error: errorFecha } = parsearFecha(partes[3], hoy)
   if (errorFecha) errores.push(errorFecha)
   if (advFecha) advertencias.push(advFecha)
 
-  // ── [4] METODO (opcional) ───────────────────────────────────────
+  // ── [4] METODO (opcional) ────────────────────────────────────────────────
   const { metodo, advertencia: advMetodo } = normalizarMetodo(partes[4])
   if (advMetodo) advertencias.push(advMetodo)
 
@@ -191,4 +191,4 @@ function parsearGasto(input, opciones = {}) {
   }
 }
 
-module.exports = { parsearGasto }
+module.exports = { parsearMovimiento }

@@ -15,7 +15,7 @@ import DateTimePicker from '@react-native-community/datetimepicker'
 import Animated, { useAnimatedStyle } from 'react-native-reanimated'
 import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { CategorySelector, PaymentMethodSelector, useGastoMutation } from '@/features/gastos'
+import { CategorySelector, PaymentMethodSelector, useMovimientoMutation } from '@/features/movimientos'
 import { Input } from '@/components/ui/Input'
 import { Notification } from '@/components/ui/Notification'
 import { Alert } from '@/components/ui/Alert'
@@ -35,11 +35,11 @@ export default function CapturaScreen() {
     estado,
     mensaje,
     handleChange,
-    guardarGasto,
+    guardarMovimiento,
     listo,
     lastSaved,
     categoriaInferida,
-  } = useGastoMutation()
+  } = useMovimientoMutation()
 
   const montoRef = useRef<TextInput>(null)
   const descripcionRef = useRef<TextInput>(null)
@@ -69,9 +69,9 @@ export default function CapturaScreen() {
   }
 
   const handleGuardar = () => {
-    // La lista no se recarga desde acá: el gasto entra en la caché del mes al
-    // guardarlo y la mutación invalida ese mes sola (ver useGastoMutation).
-    guardarGasto(() => {
+    // La lista no se recarga desde acá: el movimiento entra en la caché del mes al
+    // guardarlo y la mutación invalida ese mes sola (ver useMovimientoMutation).
+    guardarMovimiento(() => {
       setTimeout(() => montoRef.current?.focus(), 100)
     })
   }

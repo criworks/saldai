@@ -3,7 +3,7 @@ const { createSupabaseClient } = require('../supabase')
 /**
  * Las operaciones sobre el perfil del usuario, atadas a la sesión.
  *
- * Está separado de `gastos/repositorio.js` porque son dos cosas distintas: una
+ * Está separado de `movimientos/repositorio.js` porque son dos cosas distintas: una
  * habla de la tabla de movimientos y la otra de la cuenta que los contiene.
  */
 function repositorioDePerfil(token) {
@@ -11,7 +11,7 @@ function repositorioDePerfil(token) {
 
   return {
     /**
-     * Borra el perfil del usuario de la sesión: sus gastos y su fila de
+     * Borra el perfil del usuario de la sesión: sus movimientos y su fila de
      * `auth.users`.
      *
      * Va por `delete_user()` y no por un `delete` directo porque borrar de

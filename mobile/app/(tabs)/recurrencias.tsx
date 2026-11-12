@@ -29,7 +29,7 @@ import {
  * la entiende `@saldai/core`.
  *
  * Lo que esta pantalla **no** hace es registrar movimientos: un plan propone, y
- * confirmar —en el feed— es lo que crea el gasto.
+ * confirmar —en el feed— es lo que crea el movimiento.
  */
 export default function RecurrenciasScreen() {
   const { recurrencias, cargando, error, crear, creando } = useRecurrencias();

@@ -1,7 +1,7 @@
-import type { Gasto } from '@saldai/core'
+import type { Movimiento } from '@saldai/core'
 import { borradorDe, cambioPendiente, hayAlgoQueGuardar } from '../edicion'
 
-const MOVIMIENTO: Gasto = {
+const MOVIMIENTO: Movimiento = {
   id: 'abc',
   monto: 45000,
   monto_formateado: '$45.000',

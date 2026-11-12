@@ -1,5 +1,5 @@
 /**
- * Validación de los parámetros de las rutas de gastos.
+ * Validación de los parámetros de las rutas de movimientos.
  *
  * Son funciones puras que devuelven `{ ok, errores, valor }` en vez de escribir
  * en la respuesta: así se pueden probar sin levantar el servidor, que es lo que
@@ -20,7 +20,7 @@ function validarInput(input) {
 /**
  * El `id` de un movimiento, tal como viene en la ruta.
  *
- * Es uuid porque la columna es uuid: sin esta comprobación, un `/gastos/hola`
+ * Es uuid porque la columna es uuid: sin esta comprobación, un `/movimientos/hola`
  * llega a Supabase y vuelve como error 500 de base ("invalid input syntax"),
  * cuando es un 400 del cliente.
  */

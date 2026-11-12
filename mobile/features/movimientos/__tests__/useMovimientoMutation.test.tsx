@@ -1,20 +1,20 @@
-import type { GastoCreado, GastosDelMes } from '@saldai/core'
+import type { MovimientoCreado, MovimientosDelMes } from '@saldai/core'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, renderHook, waitFor } from '@testing-library/react-native'
 import React, { ReactNode } from 'react'
 
 import { llaves } from '@/lib/consultas'
-import { crearGasto } from '../api'
-import { useGastoMutation } from '../useGastoMutation'
+import { crearMovimiento } from '../api'
+import { useMovimientoMutation } from '../useMovimientoMutation'
 
-const crearGastoMock = crearGasto as jest.MockedFunction<typeof crearGasto>
+const crearMovimientoMock = crearMovimiento as jest.MockedFunction<typeof crearMovimiento>
 
-// El gasto de prueba trae la fecha completa a propósito: así el mes al que
+// El movimiento de prueba trae la fecha completa a propósito: así el mes al que
 // pertenece no depende del día en que corran los tests.
 const CAMPOS = { monto: '45000', item: 'uber', categoria: 'transporte', fecha: '15/02/2026' }
-const LLAVE_FEBRERO = llaves.gastosDelMes(2, 2026)
+const LLAVE_FEBRERO = llaves.movimientosDelMes(2, 2026)
 
-const mesEnCache = (): GastosDelMes => ({
+const mesEnCache = (): MovimientosDelMes => ({
   ok: true,
   cantidad: 1,
   total: 5000,
@@ -48,15 +48,15 @@ function montar() {
     <QueryClientProvider client={cliente}>{children}</QueryClientProvider>
   )
 
-  const { result } = renderHook(() => useGastoMutation(), { wrapper: envoltorio })
+  const { result } = renderHook(() => useMovimientoMutation(), { wrapper: envoltorio })
   return { cliente, result }
 }
 
 function enCache(cliente: QueryClient) {
-  return cliente.getQueryData<GastosDelMes>(LLAVE_FEBRERO)!
+  return cliente.getQueryData<MovimientosDelMes>(LLAVE_FEBRERO)!
 }
 
-async function llenarCampos(result: { current: ReturnType<typeof useGastoMutation> }) {
+async function llenarCampos(result: { current: ReturnType<typeof useMovimientoMutation> }) {
   await act(async () => {
     for (const [campo, valor] of Object.entries(CAMPOS)) {
       result.current.handleChange(campo as keyof typeof CAMPOS, valor)
@@ -68,17 +68,17 @@ afterEach(() => {
   jest.clearAllMocks()
 })
 
-test('el gasto entra en la lista antes de que la API responda', async () => {
+test('el movimiento entra en la lista antes de que la API responda', async () => {
   // La promesa se resuelve a mano, para mirar la caché mientras la mutación
   // está en vuelo.
-  let responder: (json: GastoCreado) => void = () => {}
-  crearGastoMock.mockReturnValue(new Promise((resolve) => { responder = resolve }))
+  let responder: (json: MovimientoCreado) => void = () => {}
+  crearMovimientoMock.mockReturnValue(new Promise((resolve) => { responder = resolve }))
 
   const { cliente, result } = montar()
   await llenarCampos(result)
 
   act(() => {
-    result.current.guardarGasto()
+    result.current.guardarMovimiento()
   })
 
   await waitFor(() => expect(result.current.estado).toBe('loading'))
@@ -113,18 +113,18 @@ test('el gasto entra en la lista antes de que la API responda', async () => {
   })
 
   await waitFor(() => expect(result.current.estado).toBe('ok'))
-  // El formulario queda limpio para el gasto siguiente.
+  // El formulario queda limpio para el movimiento siguiente.
   expect(result.current.valores).toEqual({ monto: '', item: '', categoria: '', fecha: '' })
 })
 
-test('si la API rechaza el gasto, la lista vuelve a como estaba', async () => {
-  crearGastoMock.mockRejectedValue(new Error('El monto es obligatorio'))
+test('si la API rechaza el movimiento, la lista vuelve a como estaba', async () => {
+  crearMovimientoMock.mockRejectedValue(new Error('El monto es obligatorio'))
 
   const { cliente, result } = montar()
   await llenarCampos(result)
 
   await act(async () => {
-    await result.current.guardarGasto()
+    await result.current.guardarMovimiento()
   })
 
   await waitFor(() => expect(result.current.estado).toBe('error'))
@@ -142,10 +142,10 @@ test('no llama a la API sin monto ni item', async () => {
   const { result } = montar()
 
   await act(async () => {
-    await result.current.guardarGasto()
+    await result.current.guardarMovimiento()
   })
 
-  expect(crearGastoMock).not.toHaveBeenCalled()
+  expect(crearMovimientoMock).not.toHaveBeenCalled()
   expect(result.current.estado).toBe('idle')
 })
 
@@ -165,7 +165,7 @@ test('la categoría se infiere de la descripción mientras se escribe', async ()
 })
 
 test('la categoría confirmada es la que viaja a la API, aunque la inferida sea otra', async () => {
-  crearGastoMock.mockReturnValue(new Promise(() => {}))
+  crearMovimientoMock.mockReturnValue(new Promise(() => {}))
   const { result } = montar()
 
   await act(async () => {
@@ -174,9 +174,9 @@ test('la categoría confirmada es la que viaja a la API, aunque la inferida sea 
     result.current.handleChange('categoria', 'Ocio')
   })
   act(() => {
-    result.current.guardarGasto()
+    result.current.guardarMovimiento()
   })
 
-  await waitFor(() => expect(crearGastoMock).toHaveBeenCalled())
-  expect(crearGastoMock.mock.calls[0][0]).toBe('5000, uber, Ocio, , TC')
+  await waitFor(() => expect(crearMovimientoMock).toHaveBeenCalled())
+  expect(crearMovimientoMock.mock.calls[0][0]).toBe('5000, uber, Ocio, , TC')
 })

@@ -10,7 +10,7 @@ corregirlo es parte del cambio.
 
 ## Qué es
 
-Registrar un gasto escribiéndolo en lenguaje casi natural, en una línea:
+Registrar un movimiento escribiéndolo en lenguaje casi natural, en una línea:
 
 ```
 monto, item, categoría, fecha, método
@@ -77,19 +77,19 @@ solo le asigna color y emoji, así una categoría nueva no puede quedar a medias
 `server.js` solo carga la config y abre el puerto; la app se arma en
 `src/app.js`, que es lo que permite montarla en un test con supertest sin
 levantar un proceso. Rutas en `src/rutas/`, consultas a Supabase en
-`src/gastos/repositorio.js` y `src/perfil/repositorio.js`, validación de
-parámetros como funciones puras en `src/gastos/validacion.js`.
+`src/movimientos/repositorio.js` y `src/perfil/repositorio.js`, validación de
+parámetros como funciones puras en `src/movimientos/validacion.js`.
 
 Endpoints:
 
 | Ruta | Sesión |
 |------|--------|
-| `POST /gastos/parsear` | no |
-| `POST /gastos` | sí |
-| `PATCH /gastos/:id` | sí |
-| `DELETE /gastos/:id` | sí |
-| `GET /gastos?mes=&anio=` | sí |
-| `GET /gastos/anuales?anio=` | sí |
+| `POST /movimientos/parsear` | no |
+| `POST /movimientos` | sí |
+| `PATCH /movimientos/:id` | sí |
+| `DELETE /movimientos/:id` | sí |
+| `GET /movimientos?mes=&anio=` | sí |
+| `GET /movimientos/anuales?anio=` | sí |
 | `DELETE /perfil` | sí |
 | `GET /recurrencias` | sí |
 | `POST /recurrencias` | sí |
@@ -103,6 +103,13 @@ Endpoints:
 | `GET /health` | no (keep-alive de Render) |
 | `GET /health/db` | no |
 
+**`/gastos` sigue montado, y es temporal.** `app.js` monta el mismo router en
+`/movimientos` y en `/gastos`, con el mismo juego de limitadores, porque un
+build de la app que ya está instalado en un teléfono le habla al nombre viejo y
+no se actualiza con el deploy de la API. Lo mismo hace la vista `public.gastos`
+del lado de la base. Los dos se sacan juntos, cuando ningún cliente le hable más
+a `/gastos`; lo cubre un test en `api/test/app.test.js`.
+
 `DELETE /perfil` borra los movimientos del usuario y su cuenta, llamando a
 `delete_user()`. **Es el único camino**: mobile no le habla a Supabase
 directamente para escribir.
@@ -115,7 +122,7 @@ fechas se derivan del plan en `packages/core/recurrencias.js`, y por eso no hay
 ningún proceso que corra solo. Confirmar y editar-de-aquí-en-adelante pasan por
 dos funciones de Postgres (`confirmar_ocurrencia_recurrente`,
 `editar_recurrencia_desde`) porque cada una escribe dos tablas y a medias
-dejan, respectivamente, un gasto duplicable y un perfil sin recurrencia.
+dejan, respectivamente, un movimiento duplicable y un perfil sin recurrencia.
 `recurrencias` no tiene política de DELETE: terminar un plan es escribir
 `vigente_hasta`.
 
@@ -125,7 +132,7 @@ preferencia, que decide el usuario. El `PATCH` solo acepta `activo` y `zona`.
 Hasta el primer guardado no hay fila y el `GET` devuelve los defaults, que están
 en `api/src/perfil/preferencias.js` y en el schema.
 
-`PATCH /gastos/:id` es la **edición a mano**, y ahí **no corre el parser**: el
+`PATCH /movimientos/:id` es la **edición a mano**, y ahí **no corre el parser**: el
 usuario corrige campos sueltos, no escribe una línea. `input_original`, `zona` y
 `hoy_resuelto` quedan como están —siguen describiendo lo que la persona
 escribió— y lo que cambia es el movimiento derivado de eso. Por eso la fila

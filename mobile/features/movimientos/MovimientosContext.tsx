@@ -1,21 +1,21 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import React, { createContext, useContext, useEffect, useState, ReactNode, useMemo } from 'react';
-import type { Gasto, GastosDelMes } from '@saldai/core';
+import type { Movimiento, MovimientosDelMes } from '@saldai/core';
 import { consultaDelMes } from './consultaDelMes';
 
 // El contrato de la API vive en @saldai/core, para que mobile y la API no se
 // desincronicen. Antes estaba declarado acá a mano y por eso `fecha` y
 // `categoria` eran `string` suelto.
-export type { Gasto } from '@saldai/core'
+export type { Movimiento } from '@saldai/core'
 
 export interface CategoriaInfo {
   total: number
   cantidad: number
 }
 
-export type DatosResponse = GastosDelMes
+export type DatosResponse = MovimientosDelMes
 
-type GastosContextType = {
+type MovimientosContextType = {
   mes: number;
   anio: number;
   setMes: (mes: number) => void;
@@ -24,22 +24,22 @@ type GastosContextType = {
   refreshing: boolean;
   error: string | null;
   /** Vuelve a pedir el mes que se está mirando (pull to refresh, reintento). */
-  fetchGastos: () => Promise<void>;
+  fetchMovimientos: () => Promise<void>;
   categorias: [string, CategoriaInfo][];
   totalMes: number;
 };
 
-const GastosContext = createContext<GastosContextType | undefined>(undefined);
+const MovimientosContext = createContext<MovimientosContextType | undefined>(undefined);
 
 /**
- * El mes que se está mirando, y sus gastos.
+ * El mes que se está mirando, y sus movimientos.
  *
- * Los gastos los trae react-query: el mes que ya se cargó se muestra al toque
+ * Los movimientos los trae react-query: el mes que ya se cargó se muestra al toque
  * al volver a él, en vez de dejar la pantalla en esqueleto mientras se vuelve a
  * pedir lo mismo, y un error de red se reintenta solo (ver `lib/consultas`).
  * El contexto queda con lo que es estado de la app de verdad: qué mes se mira.
  */
-export function GastosProvider({ children }: { children: ReactNode }) {
+export function MovimientosProvider({ children }: { children: ReactNode }) {
   const [mes, setMes] = useState(new Date().getMonth() + 1);
   const [anio] = useState(new Date().getFullYear());
 
@@ -47,7 +47,7 @@ export function GastosProvider({ children }: { children: ReactNode }) {
   const consulta = useQuery(consultaDelMes(mes, anio));
 
   // Cuando el mes que se mira ya llegó, se pide por detrás el anterior, que es
-  // a donde se va casi siempre al revisar gastos: así abrirlo no muestra el
+  // a donde se va casi siempre al revisar movimientos: así abrirlo no muestra el
   // esqueleto. Si ya está en caché y fresco, `prefetchQuery` no va a la red.
   // Enero no adelanta diciembre porque la app todavía no cruza de año.
   const mesListo = consulta.isSuccess;
@@ -64,12 +64,12 @@ export function GastosProvider({ children }: { children: ReactNode }) {
   // Un refetch con datos ya en pantalla, que es lo que pide el pull to refresh.
   const refreshing = consulta.isFetching && !consulta.isPending;
 
-  const fetchGastos = async () => {
+  const fetchMovimientos = async () => {
     await consulta.refetch();
   };
 
   const categorias = useMemo(() => {
-    const porCategoria = datos?.datos?.reduce((acc: Record<string, CategoriaInfo>, g: Gasto) => {
+    const porCategoria = datos?.datos?.reduce((acc: Record<string, CategoriaInfo>, g: Movimiento) => {
       const cat = g.categoria || 'Sin categoría';
       if (!acc[cat]) acc[cat] = { total: 0, cantidad: 0 };
       acc[cat].total += g.monto;
@@ -83,7 +83,7 @@ export function GastosProvider({ children }: { children: ReactNode }) {
   const totalMes = datos?.total ?? 0;
 
   return (
-    <GastosContext.Provider value={{
+    <MovimientosContext.Provider value={{
       mes,
       anio,
       setMes,
@@ -91,19 +91,19 @@ export function GastosProvider({ children }: { children: ReactNode }) {
       loading,
       refreshing,
       error: consulta.error instanceof Error ? consulta.error.message : null,
-      fetchGastos,
+      fetchMovimientos,
       categorias,
       totalMes,
     }}>
       {children}
-    </GastosContext.Provider>
+    </MovimientosContext.Provider>
   );
 }
 
-export function useGastos() {
-  const context = useContext(GastosContext);
+export function useMovimientos() {
+  const context = useContext(MovimientosContext);
   if (context === undefined) {
-    throw new Error('useGastos must be used within a GastosProvider');
+    throw new Error('useMovimientos must be used within a MovimientosProvider');
   }
   return context;
 }

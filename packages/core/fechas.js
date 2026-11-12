@@ -1,5 +1,5 @@
 /**
- * Fechas de un gasto.
+ * Fechas de un movimiento.
  *
  * La columna `fecha` es un `date` y la API la devuelve en ISO (AAAA-MM-DD). Lo
  * que se le muestra al usuario es DD/MM/AAAA. Acá viven las dos conversiones y

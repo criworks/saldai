@@ -8,29 +8,29 @@ const {
 } = require('@saldai/core')
 
 const { requireAuth } = require('../middleware/auth.js')
-const { repositorioDeGastos } = require('../gastos/repositorio')
+const { repositorioDeMovimientos } = require('../movimientos/repositorio')
 const {
   validarAnio,
   validarAnioRequerido,
   validarId,
   validarInput,
   validarMes,
-} = require('../gastos/validacion')
+} = require('../movimientos/validacion')
 const { errorDeBase, errorDeEntrada, noEncontrado } = require('../respuestas')
-const { arregloDeTotales } = require('../gastos/totales')
+const { arregloDeTotales } = require('../movimientos/totales')
 
 /**
- * Las rutas de gastos. `zona` es la zona horaria **por defecto** con la que se
+ * Las rutas de movimientos. `zona` es la zona horaria **por defecto** con la que se
  * resuelve el "hoy": la resuelve `cargarConfig()` y se inyecta acá, así el
  * router no lee variables de entorno por su cuenta. El cliente puede mandar la
  * suya en el cuerpo, que es lo que hace mobile con la del dispositivo; sin eso
  * un usuario fuera de Chile registraba con el día de Chile. `limites` son los limitadores de pedidos:
  * el flojo para las rutas con sesión y el estricto para la que no la pide.
  */
-function rutasDeGastos({ zona, limites }) {
+function rutasDeMovimientos({ zona, limites }) {
   const router = express.Router()
 
-  // ── POST /gastos/parsear ─ Sin auth: solo lee el input ────────────────────
+  // ── POST /movimientos/parsear ─ Sin auth: solo lee el input ──────────────
   router.post('/parsear', limites.sinSesion, (req, res) => {
     const entrada = validarInput(req.body?.input)
     if (!entrada.ok) return errorDeEntrada(res, entrada.errores, { advertencias: [] })
@@ -41,7 +41,7 @@ function rutasDeGastos({ zona, limites }) {
     return res.status(resultado.ok ? 200 : 422).json(resultado)
   })
 
-  // ── POST /gastos ─────────────────────────────────────────────────────────
+  // ── POST /movimientos ────────────────────────────────────────────────────
   router.post('/', limites.conSesion, requireAuth, async (req, res) => {
     const entrada = validarInput(req.body?.input)
     if (!entrada.ok) return errorDeEntrada(res, entrada.errores, { advertencias: [] })
@@ -51,7 +51,7 @@ function rutasDeGastos({ zona, limites }) {
     })
     if (!resultado.ok) return res.status(422).json(resultado)
 
-    const { data, error } = await repositorioDeGastos(req.token).insertar(resultado.datos, {
+    const { data, error } = await repositorioDeMovimientos(req.token).insertar(resultado.datos, {
       userId: req.userId,
       inputOriginal: entrada.valor,
       contexto,
@@ -71,7 +71,7 @@ function rutasDeGastos({ zona, limites }) {
     })
   })
 
-  // ── GET /gastos ──────────────────────────────────────────────────────────
+  // ── GET /movimientos ─────────────────────────────────────────────────────
   router.get('/', limites.conSesion, requireAuth, async (req, res) => {
     const { mes, anio, categoria } = req.query
     let rango
@@ -88,7 +88,7 @@ function rutasDeGastos({ zona, limites }) {
       rango = rangoDelMes(anioValido.valor, mesValido.valor)
     }
 
-    const { data, error } = await repositorioDeGastos(req.token).listar({
+    const { data, error } = await repositorioDeMovimientos(req.token).listar({
       userId: req.userId,
       rango,
       categoria,
@@ -107,12 +107,12 @@ function rutasDeGastos({ zona, limites }) {
     })
   })
 
-  // ── GET /gastos/anuales ──────────────────────────────────────────────────
+  // ── GET /movimientos/anuales ─────────────────────────────────────────────
   router.get('/anuales', limites.conSesion, requireAuth, async (req, res) => {
     const anioValido = validarAnioRequerido(req.query.anio)
     if (!anioValido.ok) return errorDeEntrada(res, anioValido.errores)
 
-    const { data, error } = await repositorioDeGastos(req.token).totalesDelAnio(anioValido.valor)
+    const { data, error } = await repositorioDeMovimientos(req.token).totalesDelAnio(anioValido.valor)
     if (error) return errorDeBase(res, 'Error al leer de base de datos', error)
 
     return res.status(200).json({
@@ -122,7 +122,7 @@ function rutasDeGastos({ zona, limites }) {
     })
   })
 
-  // ── PATCH /gastos/:id ────────────────────────────────────────────────────
+  // ── PATCH /movimientos/:id ───────────────────────────────────────────────
   //
   // La edición a mano de un movimiento. No corre el parser: el usuario ya no
   // está escribiendo una línea, está corrigiendo campos sueltos, así que
@@ -136,7 +136,7 @@ function rutasDeGastos({ zona, limites }) {
     const cambio = validarCambioDeMovimiento(req.body)
     if (!cambio.ok) return errorDeEntrada(res, cambio.errores)
 
-    const repositorio = repositorioDeGastos(req.token)
+    const repositorio = repositorioDeMovimientos(req.token)
 
     // Se lee antes de escribir por dos razones, y las dos importan: `editados`
     // es una unión con lo que ya estaba marcado (si corrigió la categoría en
@@ -161,7 +161,7 @@ function rutasDeGastos({ zona, limites }) {
     return res.status(200).json({ ok: true, errores: [], datos: data })
   })
 
-  // ── DELETE /gastos/:id ───────────────────────────────────────────────────
+  // ── DELETE /movimientos/:id ──────────────────────────────────────────────
   //
   // Devuelve la fila que borró y no solo el id: la app tiene que saber de qué
   // mes era para invalidar ese mes, y el movimiento que se borra no siempre es
@@ -170,7 +170,7 @@ function rutasDeGastos({ zona, limites }) {
     const id = validarId(req.params.id)
     if (!id.ok) return errorDeEntrada(res, id.errores)
 
-    const { data, error } = await repositorioDeGastos(req.token).eliminar(id.valor, {
+    const { data, error } = await repositorioDeMovimientos(req.token).eliminar(id.valor, {
       userId: req.userId,
     })
 
@@ -186,4 +186,4 @@ function rutasDeGastos({ zona, limites }) {
   return router
 }
 
-module.exports = { rutasDeGastos }
+module.exports = { rutasDeMovimientos }

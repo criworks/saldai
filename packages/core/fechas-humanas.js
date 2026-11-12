@@ -2,7 +2,7 @@
  * Fechas escritas por una persona: "hoy", "ayer", "lunes", "15", "15/02/2025".
  *
  * El "hoy" de referencia es el de una zona horaria, no el del servidor: Render
- * corre en UTC, así que un gasto cargado a las 22:00 en Chile quedaba con la
+ * corre en UTC, así que un movimiento cargado a las 22:00 en Chile quedaba con la
  * fecha del día siguiente.
  *
  * La zona se recibe como argumento y no se lee del entorno, porque este paquete
@@ -112,7 +112,7 @@ function parsearFecha(input, hoy = hoyCivil()) {
     const mes = parseInt(matchDM[2], 10);
     let anio = hoy.getUTCFullYear();
 
-    // Un gasto se registra después de ocurrir: si la fecha queda en el futuro,
+    // Un movimiento se registra después de ocurrir: si la fecha queda en el futuro,
     // se asume el año pasado.
     if (existe(anio, mes, dia) && civil(anio, mes, dia) > hoy) anio -= 1;
 

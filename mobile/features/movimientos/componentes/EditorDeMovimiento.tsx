@@ -1,5 +1,5 @@
 import { Portal } from '@rn-primitives/portal'
-import { formatearNumero, type Gasto } from '@saldai/core'
+import { formatearNumero, type Movimiento } from '@saldai/core'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { Calendar, CaretDown, Trash, X } from 'phosphor-react-native'
 import React, { useEffect, useMemo, useState } from 'react'
@@ -25,7 +25,7 @@ import { useMovimiento } from '../useMovimiento'
 
 export interface EditorDeMovimientoProps {
   /** El movimiento a editar. `null` tiene el editor cerrado. */
-  movimiento: Gasto | null
+  movimiento: Movimiento | null
   onCerrar: () => void
 }
 
