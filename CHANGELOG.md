@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+
+## [1.10.0] - 2026-11-12
 ### Changed
 - **`public.gastos` pasa a llamarse `public.movimientos`, y con ella todo el código.** El nombre dejó de ser cierto: al sistema no le importa si un monto es un gasto, y el día que entren ingresos o traspasos van a ser filas de esta misma tabla, porque los diferencia la aritmética y no sus campos. Con 73 filas, un solo escritor y ningún log de eventos, el renombre no iba a ser más barato después. Cambian la tabla, sus índices, sus políticas, su trigger y la columna `ocurrencias_recurrentes.gasto_id` (ahora `movimiento_id`), más `parsearGasto`, `repositorioDeGastos`, `api/src/gastos/`, `mobile/features/gastos/` y los tipos del contrato.
 - **Las funciones plpgsql se reescriben aunque su lógica no cambie**: `alter table ... rename` arrastra todo lo que apuntaba a la tabla por OID —las vistas, las foreign keys, los cuerpos de las funciones `language sql`—, pero el cuerpo de una función plpgsql es texto y se vuelve a parsear en cada ejecución. Sin reescribirlas, `delete_user()` y `confirmar_ocurrencia_recurrente()` seguían diciendo `gastos` y la primera llamada después del rename fallaba con "relation does not exist", sin que nada lo anunciara antes. La migración se verificó aplicando las doce contra un Postgres 16 local con un stub de `auth`, porque CI no corre el SQL.
