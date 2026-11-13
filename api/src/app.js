@@ -43,14 +43,6 @@ function crearApp({ origenesPermitidos, zona, limites }) {
   const limitadoresDePedidos = limitadores(limites)
 
   app.use('/movimientos', rutasDeMovimientos({ zona, limites: limitadoresDePedidos }))
-
-  // `/gastos` es el nombre viejo de la misma ruta, y sigue montado a propósito.
-  // La app no se actualiza sola: un build que ya está instalado en un teléfono
-  // le habla a `/gastos` y seguiría haciéndolo después del deploy, así que
-  // sacarlo hoy rompe la app de quien no rebuildeó. `web/` también lo usa.
-  // Se saca cuando no quede ningún build apuntando acá, junto con la vista
-  // `public.gastos` que la migración del renombre dejó por la misma razón.
-  app.use('/gastos', rutasDeMovimientos({ zona, limites: limitadoresDePedidos }))
   app.use('/perfil', rutasDePerfil({ limites: limitadoresDePedidos }))
   app.use('/recurrencias', rutasDeRecurrencias({ zona, limites: limitadoresDePedidos }))
   app.use('/health', rutasDeSalud({ limites: limitadoresDePedidos }))

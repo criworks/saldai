@@ -49,6 +49,29 @@ https://claude.ai/artifact/6H1LTgBbkuVTwSTDFuUR5G
 
 ---
 
+## Lo único que leía la vista de compatibilidad era el keep-alive, y no está en el repo
+
+- **Síntoma**: ninguno todavía. Se iba a borrar la vista `public.gastos` del
+  renombre, dando por hecho que ya nadie la leía: la API consulta
+  `movimientos`, mobile no le habla a Supabase, y un `grep` del repo no
+  devuelve nada.
+- **Causa**: el cron que mantiene despierto el proyecto de Supabase le pegaba
+  justo a esa vista, `GET /rest/v1/gastos?select=id&limit=1`, una vez por día.
+  Vive en cron-job.org, no en el repo, así que ningún `grep` lo iba a
+  encontrar. Apareció en los logs del propio proyecto, contando pedidos por
+  ruta.
+- **Por qué no se notaba**: nada hubiera fallado al borrarla. El cron habría
+  empezado a dar error en un panel que nadie mira, y el síntoma —el proyecto
+  pausado por inactividad y la app sin base— habría llegado **siete días
+  después**, cuando ya nadie lo asocia con la migración.
+- **Arreglo**: apuntar el cron a `/rest/v1/movimientos` antes de aplicar la
+  migración, y dejarlo escrito en la migración misma, que es lo que se lee al
+  aplicarla.
+- **Regla**: antes de borrar algo "que ya nadie usa", contar quién lo usa en los
+  logs del proveedor y no en el código. Lo que vive fuera del repo —crons,
+  monitores, env vars de un dashboard, un APK ya instalado— es justamente lo
+  que un cambio en el repo no puede alcanzar y lo que falla en silencio.
+
 ## Producción tenía una foreign key que el repo no solo no declaraba, sino que negaba
 
 - **Síntoma**: ninguno. Se encontró de casualidad, mirando producción para
