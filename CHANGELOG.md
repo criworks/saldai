@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+
+## [2.0.0] - 2026-11-13
 ### Removed
 - **Se van las dos compatibilidades del renombre: la ruta `/gastos` y la vista `public.gastos`.** Existían porque una app ya instalada en un teléfono no se actualiza con el deploy de la API, y se sacan ahora que ningún build instalado le habla al nombre viejo. `app.js` monta solo `/movimientos`, y el test que comprobaba que el alias respondiera lo mismo queda dado vuelta: ahora comprueba que `/gastos` responda 404, para que el nombre no vuelva de casualidad en un montaje copiado de otra ruta. **`web/` sigue llamando a `/gastos` y por lo tanto recibe 404**, lo que no cambia nada en la práctica: está en pausa y tampoco tiene auth, así que sus dos páginas ya respondían 401. Apuntarla a `/movimientos` es parte de retomarla.
 - **La vista `public.gastos`, con una trampa que casi se cobra el proyecto entero.** El keep-alive que mantiene despierto Supabase —un cron de cron-job.org, fuera del repo— le pegaba justo a la vista, `GET /rest/v1/gastos?select=id&limit=1`, y se encontró mirando los logs del proyecto antes de borrar nada. Borrar la vista sin tocar el cron lo habría dejado fallando **sin que nada lo dijera**, y el síntoma habría aparecido siete días después con el proyecto pausado por inactividad. El cron se apunta a `/rest/v1/movimientos` antes de aplicar la migración.
