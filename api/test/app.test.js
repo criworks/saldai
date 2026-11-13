@@ -194,18 +194,17 @@ test('los movimientos no se borran ni se editan sin id', async () => {
   }
 })
 
-test('`/gastos` sigue respondiendo lo mismo que `/movimientos`', async () => {
-  // El alias existe porque un build de la app que ya está instalado en un
-  // teléfono le habla a `/gastos` y no se actualiza con el deploy. Si alguien
-  // lo saca de `app.js`, esto falla antes de que lo descubra un usuario con la
-  // app rota y un 404 que no explica nada.
-  const viejo = await request(app).post('/gastos/parsear').send({ input: '45000, uber' })
-  const nuevo = await request(app).post('/movimientos/parsear').send({ input: '45000, uber' })
-
-  assert.strictEqual(viejo.status, nuevo.status)
-  assert.deepStrictEqual(viejo.body, nuevo.body)
-
-  // Y las protegidas siguen pidiendo sesión por el nombre viejo.
-  const sinToken = await request(app).get('/gastos')
-  assert.strictEqual(sinToken.status, 401)
+test('`/gastos` ya no existe', async () => {
+  // El alias del nombre viejo se sacó el 13-nov-2026, una vez que ningún build
+  // instalado le hablaba. Esto queda para que el nombre no vuelva de casualidad
+  // —por un montaje copiado de otra ruta, por ejemplo—: el renombre a
+  // `movimiento` no es un alias, es el nombre.
+  for (const pedir of [
+    () => request(app).post('/gastos/parsear').send({ input: '45000, uber' }),
+    () => request(app).get('/gastos'),
+  ]) {
+    const res = await pedir()
+    assert.strictEqual(res.status, 404)
+    assert.strictEqual(res.body.ok, false)
+  }
 })

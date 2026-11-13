@@ -103,12 +103,15 @@ Endpoints:
 | `GET /health` | no (keep-alive de Render) |
 | `GET /health/db` | no |
 
-**`/gastos` sigue montado, y es temporal.** `app.js` monta el mismo router en
-`/movimientos` y en `/gastos`, con el mismo juego de limitadores, porque un
-build de la app que ya está instalado en un teléfono le habla al nombre viejo y
-no se actualiza con el deploy de la API. Lo mismo hace la vista `public.gastos`
-del lado de la base. Los dos se sacan juntos, cuando ningún cliente le hable más
-a `/gastos`; lo cubre un test en `api/test/app.test.js`.
+**`/gastos` ya no existe, y no vuelve.** El renombre a `movimiento` dejó el
+nombre viejo montado como alias, y la base dejó una vista `public.gastos`, las
+dos por la misma razón: una app ya instalada en un teléfono no se actualiza con
+el deploy de la API. Las dos se sacaron el 13-nov-2026, una vez que ningún build
+instalado le hablaba. Queda un test en `api/test/app.test.js` que comprueba que
+`/gastos` responde 404, para que el nombre no vuelva de casualidad en un montaje
+copiado de otra ruta. **`web/` todavía le habla a `/gastos`**, y por eso da 404:
+está en pausa y hoy tampoco tiene auth, así que cuando se retome hay que
+apuntarla a `/movimientos`.
 
 `DELETE /perfil` borra los movimientos del usuario y su cuenta, llamando a
 `delete_user()`. **Es el único camino**: mobile no le habla a Supabase

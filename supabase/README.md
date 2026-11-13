@@ -25,6 +25,7 @@ UTC (`AAAAMMDDHHMMSS_descripcion.sql`).
 | `20261107000000_recurrencias.sql` | Crea `public.recurrencias` y `public.ocurrencias_recurrentes`, con RLS, más las funciones `confirmar_ocurrencia_recurrente()` y `editar_recurrencia_desde()`. Una propuesta pendiente es la **ausencia** de una ocurrencia: solo se guardan las decisiones ya tomadas. |
 | `20261112000000_renombrar_gastos_a_movimientos.sql` | `public.gastos` pasa a `public.movimientos`, con sus índices, políticas, trigger y `ocurrencias_recurrentes.gasto_id`. Reescribe las funciones plpgsql, cuyo cuerpo es texto y no sigue a la tabla. Deja una vista `public.gastos` como compatibilidad temporal. |
 | `20261112010000_fk_movimientos_user_id.sql` | Declara `movimientos.user_id → auth.users(id)`, que producción tenía desde antes del baseline con el nombre `gastos_user_id_fkey` y ninguna migración del repo creaba. No cambia producción: la renombra donde ya está y la crea donde no. |
+| `20261113000000_borrar_vista_gastos.sql` | Borra la vista de compatibilidad `public.gastos`. Su motivo —una API que nombraba `gastos` contra una base ya renombrada— se cerró con el release del 12-nov. **El keep-alive de Supabase le pegaba a esta vista**: hay que apuntarlo a `/rest/v1/movimientos` antes de aplicarla. |
 
 ## Cómo aplicarlas
 
