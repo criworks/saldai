@@ -20,6 +20,10 @@ del formato; el texto de cada entrada es el original.
 
 ## [Unreleased]
 
+## [1.8.1] - 2026-11-13
+### Changed
+- **`mobile/.env.example` muestra las dos formas válidas de `EXPO_PUBLIC_API_URL`**: la URL que da Render y un dominio propio apuntado a ese servicio. El placeholder nombraba solo la primera, y después de mudar la API a un dominio propio el ejemplo sugería el único de los dos valores que ya no es el que se usa. También queda escrito que va sin barra final, porque las llamadas concatenan la ruta directo (`${API_URL}/movimientos`) y una barra de más deja un `//` en el path.
+
 ## [1.8.0] - 2026-11-12
 ### Changed
 - **La app habla de movimientos y no de gastos**: `features/gastos/` pasa a `features/movimientos/`, y con ella el contexto, el hook de mutación, las llamadas y los tipos del contrato (`MovimientosDelMes`, `MovimientoCreado`). Las rutas de la API que consume pasan de `/gastos` a `/movimientos`. Es un renombre: ninguna pantalla cambia de aspecto ni de comportamiento. El nombre viejo sigue respondiendo del lado de la API, así que un build anterior instalado en un teléfono no se rompe con el deploy.

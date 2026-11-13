@@ -49,6 +49,73 @@ https://claude.ai/artifact/6H1LTgBbkuVTwSTDFuUR5G
 
 ---
 
+## Lo único que leía la vista de compatibilidad era el keep-alive, y no está en el repo
+
+- **Síntoma**: ninguno todavía. Se iba a borrar la vista `public.gastos` del
+  renombre, dando por hecho que ya nadie la leía: la API consulta
+  `movimientos`, mobile no le habla a Supabase, y un `grep` del repo no
+  devuelve nada.
+- **Causa**: el cron que mantiene despierto el proyecto de Supabase le pegaba
+  justo a esa vista, `GET /rest/v1/gastos?select=id&limit=1`, una vez por día.
+  Vive en cron-job.org, no en el repo, así que ningún `grep` lo iba a
+  encontrar. Apareció en los logs del propio proyecto, contando pedidos por
+  ruta.
+- **Por qué no se notaba**: nada hubiera fallado al borrarla. El cron habría
+  empezado a dar error en un panel que nadie mira, y el síntoma —el proyecto
+  pausado por inactividad y la app sin base— habría llegado **siete días
+  después**, cuando ya nadie lo asocia con la migración.
+- **Arreglo**: apuntar el cron a `/rest/v1/movimientos` antes de aplicar la
+  migración, y dejarlo escrito en la migración misma, que es lo que se lee al
+  aplicarla.
+- **Regla**: antes de borrar algo "que ya nadie usa", contar quién lo usa en los
+  logs del proveedor y no en el código. Lo que vive fuera del repo —crons,
+  monitores, env vars de un dashboard, un APK ya instalado— es justamente lo
+  que un cambio en el repo no puede alcanzar y lo que falla en silencio.
+
+## Producción tenía una foreign key que el repo no solo no declaraba, sino que negaba
+
+- **Síntoma**: ninguno. Se encontró de casualidad, mirando producción para
+  verificar otra migración: la tabla tenía una constraint
+  `gastos_user_id_fkey` que no aparece en ninguna migración del repo.
+- **Causa**: la tabla se había creado a mano, antes de que existieran las
+  migraciones, y el baseline se escribió mirando algunas cosas y no todas. Lo
+  grave no es la constraint de más: es que un comentario del repo afirmaba lo
+  contrario —que `user_id` no tenía foreign key— y otro código razonaba sobre
+  esa afirmación, filtrando movimientos "huérfanos" que la base nunca pudo
+  tener.
+- **Por qué no se notaba**: nada compara el repo con producción. Las
+  migraciones se aplican hacia adelante y ninguna lee lo que ya está, así que
+  una base levantada desde el repo y producción pueden diferir para siempre sin
+  que falle nada. Y CI no corre el SQL, así que ni siquiera existe la base
+  "según el repo" contra la que notar la diferencia.
+- **Arreglo**: una migración que declara la foreign key de forma idempotente
+  —la renombra donde ya está, la crea donde no— y la corrección del comentario
+  falso. Verificada en los dos sentidos contra un Postgres 16 local.
+- **Regla**: un baseline escrito sobre una base que ya existía no es el estado
+  de esa base, es lo que alguien se acordó de mirar. Al tocar una tabla vieja,
+  comparar contra `pg_constraint` y `pg_indexes` de producción antes de escribir
+  un comentario que afirme qué no tiene.
+
+## Los logs de Render no sirven para saber si alguien llama a una ruta
+
+- **Síntoma**: para sacar la ruta de compatibilidad `/gastos` había que
+  comprobar que nadie le hablara, y la forma acordada era mirar los logs de
+  pedidos de Render. La consulta devuelve cero pedidos a `/gastos`. También
+  devuelve cero pedidos a `/movimientos`, y cero pedidos a todo.
+- **Causa**: el servicio está en el plan free, que solo emite logs de
+  aplicación. Los logs de request —los que traen método, path y status— no
+  existen ahí, así que el filtro por `path` no filtra nada: no hay nada que
+  filtrar.
+- **Por qué no se notaba**: una consulta vacía se lee igual que "no pasó" y que
+  "no se mide". Filtrar por una ruta que con seguridad sí se usa es lo que
+  separa las dos cosas, y es la comprobación que faltaba.
+- **Arreglo**: ninguno en el código. Queda escrito que esa verificación no
+  existe en este plan, y que si hace falta medir tráfico por ruta hay que
+  instrumentarlo en la API (Sentry ya está) o subir de plan.
+- **Regla**: antes de concluir algo de un filtro que no devolvió nada, correr el
+  mismo filtro sobre un caso que tiene que aparecer. Si tampoco aparece, lo que
+  está vacío es la fuente.
+
 ## Renombrar una tabla deja rotas las funciones plpgsql, y ninguna lo dice
 
 PR del renombre de `gastos` a `movimientos` · noviembre 2026
