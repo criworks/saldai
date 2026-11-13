@@ -19,6 +19,8 @@ del formato; el texto de cada entrada es el original.
 
 
 ## [Unreleased]
+### Changed
+- **`mobile/.env.example` muestra las dos formas válidas de `EXPO_PUBLIC_API_URL`**: la URL que da Render y un dominio propio apuntado a ese servicio. El placeholder nombraba solo la primera, y después de mudar la API a un dominio propio el ejemplo sugería el único de los dos valores que ya no es el que se usa. También queda escrito que va sin barra final, porque las llamadas concatenan la ruta directo (`${API_URL}/movimientos`) y una barra de más deja un `//` en el path.
 
 ## [1.8.0] - 2026-11-12
 ### Changed
