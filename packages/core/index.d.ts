@@ -504,6 +504,7 @@ export interface Preferencias {
   datos: {
     categorias: FlagDePerfil
     metodos: FlagDePerfil
+    recurrencias: FlagDePerfil
     /** Zona IANA elegida. En `null`, se usa la del dispositivo. */
     zona: string | null
   }
@@ -516,6 +517,7 @@ export interface Preferencias {
 export interface CambioDePreferencias {
   categoriasActivo?: boolean
   metodosActivo?: boolean
+  recurrenciasActivo?: boolean
   zona?: string | null
 }
 

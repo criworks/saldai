@@ -63,7 +63,7 @@ export default function DashboardScreen() {
 
   // Las dos funciones conmutables del perfil: deciden si la fila del listado
   // muestra la burbuja de categoría y la de método.
-  const { categoriasVisibles, metodosVisibles } = usePreferencias()
+  const { categoriasVisibles, metodosVisibles, recurrenciasVisibles } = usePreferencias()
 
   // La categoría elegida en el footer. Si la función está apagada el filtro no
   // se aplica: el footer no muestra las burbujas para soltarlo, así que una
@@ -211,7 +211,12 @@ export default function DashboardScreen() {
         ListHeaderComponent={
           <View className="w-full flex-col">
             <EncabezadoDelMes mes={mes} total={totalMostrado} loading={loading} />
-            {!filtro && (
+            {/*
+              Con las recurrencias apagadas no hay bloque por confirmar: es lo
+              único que la función le pide a la persona, así que apagarla sin
+              sacarlo de acá no apagaría nada.
+            */}
+            {recurrenciasVisibles && !filtro && (
               <ListaDePropuestas propuestas={propuestas} onElegir={setPropuestaElegida} />
             )}
           </View>

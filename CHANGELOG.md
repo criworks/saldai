@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+### Added
+- **Un flag de perfil más: `recurrencias`.** Migración aditiva sobre `public.preferencias` (`recurrencias_habilitado`, `recurrencias_activo`), los dos campos en `conDefaults()` y en el contrato de `@saldai/core`, y `recurrenciasActivo` aceptado por `PATCH /perfil/preferencias`. A diferencia de los otros dos, **`activo` nace en `true`**: la función ya estaba en uso cuando se le agregó el flag, así que un default apagado se la habría apagado a quien ya tenía planes creados.
 
 ## [2.0.0] - 2026-11-13
 ### Removed

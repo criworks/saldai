@@ -28,6 +28,7 @@ const respuesta = (zona: string | null): Preferencias => ({
   datos: {
     categorias: { habilitado: true, activo: false },
     metodos: { habilitado: true, activo: false },
+    recurrencias: { habilitado: true, activo: true },
     zona,
   },
 })

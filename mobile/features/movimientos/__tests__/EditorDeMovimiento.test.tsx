@@ -39,6 +39,7 @@ const PREFERENCIAS: Preferencias = {
     // selectores de categoría ni de método.
     categorias: { habilitado: true, activo: false },
     metodos: { habilitado: true, activo: false },
+    recurrencias: { habilitado: true, activo: true },
     zona: null,
   },
 }

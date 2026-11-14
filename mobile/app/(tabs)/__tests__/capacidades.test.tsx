@@ -18,10 +18,11 @@ const METRICAS = {
 const respuesta = (
   categorias: { habilitado: boolean; activo: boolean },
   metodos: { habilitado: boolean; activo: boolean },
+  recurrencias = { habilitado: true, activo: true },
 ): Preferencias => ({
   ok: true,
   errores: [],
-  datos: { categorias, metodos, zona: null },
+  datos: { categorias, metodos, recurrencias, zona: null },
 })
 
 function montar() {
@@ -80,4 +81,21 @@ test('prender una capacidad la guarda como activa', async () => {
   fireEvent(screen.getByTestId('switch-Categorías'), 'valueChange', true)
 
   await waitFor(() => expect(guardarMock).toHaveBeenCalledWith({ categoriasActivo: true }))
+})
+
+test('prender las recurrencias las guarda como activas', async () => {
+  fetchMock.mockResolvedValue(
+    respuesta({ habilitado: true, activo: false }, { habilitado: true, activo: false }, {
+      habilitado: true,
+      activo: false,
+    }),
+  )
+  montar()
+
+  await waitFor(() => expect(screen.getByTestId('switch-Recurrencias')).toBeTruthy())
+  expect(screen.getByText('Programa la repetición de tus movimientos recurrentes.')).toBeTruthy()
+
+  fireEvent(screen.getByTestId('switch-Recurrencias'), 'valueChange', true)
+
+  await waitFor(() => expect(guardarMock).toHaveBeenCalledWith({ recurrenciasActivo: true }))
 })

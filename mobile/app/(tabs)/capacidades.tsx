@@ -15,8 +15,15 @@ import { usePreferencias } from '@/features/perfil';
 export default function CapacidadesScreen() {
   // Mientras carga los switches se ven apagados, que es el estado de la v1: al
   // revés aparecerían prendidos y se apagarían solos al llegar la respuesta.
-  const { preferencias, categoriasVisibles, metodosVisibles, guardar, guardando, error } =
-    usePreferencias();
+  const {
+    preferencias,
+    categoriasVisibles,
+    metodosVisibles,
+    recurrenciasVisibles,
+    guardar,
+    guardando,
+    error,
+  } = usePreferencias();
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
@@ -59,6 +66,16 @@ export default function CapacidadesScreen() {
               title="Métodos de pago"
               switchValue={metodosVisibles}
               onSwitchChange={(activo) => guardar({ metodosActivo: activo })}
+              switchDisabled={guardando}
+              hideChevron
+            />
+          )}
+          {preferencias.recurrencias.habilitado && (
+            <MenuItem
+              title="Recurrencias"
+              descripcion="Programa la repetición de tus movimientos recurrentes."
+              switchValue={recurrenciasVisibles}
+              onSwitchChange={(activo) => guardar({ recurrenciasActivo: activo })}
               switchDisabled={guardando}
               hideChevron
             />

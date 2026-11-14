@@ -18,12 +18,13 @@ const mal = (errores) => ({ ok: false, errores, valor: null })
  * PATCH. El día que haya plan pago lo escribe quien procese el pago, no esta
  * ruta.
  */
-const CAMPOS_BOOLEANOS = ['categoriasActivo', 'metodosActivo']
+const CAMPOS_BOOLEANOS = ['categoriasActivo', 'metodosActivo', 'recurrenciasActivo']
 
 /** De camelCase (el contrato HTTP) a snake_case (la tabla). */
 const COLUMNA = {
   categoriasActivo: 'categorias_activo',
   metodosActivo: 'metodos_activo',
+  recurrenciasActivo: 'recurrencias_activo',
   zona: 'zona',
 }
 

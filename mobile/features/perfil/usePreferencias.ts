@@ -17,15 +17,21 @@ type Datos = Preferencias['datos']
 export const PREFERENCIAS_POR_DEFECTO: Datos = {
   categorias: { habilitado: true, activo: false },
   metodos: { habilitado: true, activo: false },
+  // Las recurrencias arrancan prendidas y no apagadas como las otras dos: la
+  // función ya estaba en uso cuando se agregó el flag, así que mostrarla
+  // apagada mientras carga le escondería las propuestas por confirmar a quien
+  // ya tiene planes.
+  recurrencias: { habilitado: true, activo: true },
   zona: null,
 }
 
 /**
  * Las preferencias del perfil, para leerlas y cambiarlas.
  *
- * `categoriasVisibles` y `metodosVisibles` ya vienen resueltos: una función se
- * ve cuando el perfil **puede** y el usuario **quiere**. Esa cuenta se hace una
- * vez acá y no en cada pantalla, que es como terminarían difiriendo.
+ * `categoriasVisibles`, `metodosVisibles` y `recurrenciasVisibles` ya vienen
+ * resueltos: una función se ve cuando el perfil **puede** y el usuario
+ * **quiere**. Esa cuenta se hace una vez acá y no en cada pantalla, que es
+ * como terminarían difiriendo.
  *
  * Reemplaza a las constantes `CATEGORIAS_VISIBLES` y `METODOS_VISIBLES` que
  * estaban en `lib/funciones.ts`: eran de compilación e iguales para todos, así
@@ -53,12 +59,25 @@ export function usePreferencias() {
     },
   })
 
-  const datos = consulta.data?.datos ?? PREFERENCIAS_POR_DEFECTO
+  // Los defaults se aplican flag por flag y no reemplazando el objeto entero:
+  // una API más vieja que esta versión de la app responde sin el flag que se
+  // agregó después, y `datos.recurrencias.habilitado` sobre un `undefined`
+  // rompe la pantalla. Pasa de verdad, porque la app se actualiza por la
+  // store y la API por un deploy, y no en ese orden.
+  const respuesta = consulta.data?.datos
+  const datos: Datos = {
+    ...PREFERENCIAS_POR_DEFECTO,
+    ...respuesta,
+    categorias: { ...PREFERENCIAS_POR_DEFECTO.categorias, ...respuesta?.categorias },
+    metodos: { ...PREFERENCIAS_POR_DEFECTO.metodos, ...respuesta?.metodos },
+    recurrencias: { ...PREFERENCIAS_POR_DEFECTO.recurrencias, ...respuesta?.recurrencias },
+  }
 
   return {
     preferencias: datos,
     categoriasVisibles: datos.categorias.habilitado && datos.categorias.activo,
     metodosVisibles: datos.metodos.habilitado && datos.metodos.activo,
+    recurrenciasVisibles: datos.recurrencias.habilitado && datos.recurrencias.activo,
     /** La zona elegida, o `undefined` para que se use la del dispositivo. */
     zonaElegida: datos.zona ?? undefined,
     cargando: consulta.isPending,
