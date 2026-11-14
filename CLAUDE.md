@@ -133,7 +133,11 @@ Las preferencias del perfil (`public.preferencias`) llevan **dos campos por
 flag**: `habilitado` es el entitlement, que decide el plan, y `activo` la
 preferencia, que decide el usuario. El `PATCH` solo acepta `activo` y `zona`.
 Hasta el primer guardado no hay fila y el `GET` devuelve los defaults, que están
-en `api/src/perfil/preferencias.js` y en el schema.
+en `api/src/perfil/preferencias.js` y en el schema. Los flags son tres:
+`categorias`, `metodos` y `recurrencias`. Los dos primeros nacen en
+`activo: false` porque la v1 sale sin ellos; **`recurrencias` nace en `true`**,
+porque la función ya estaba en uso cuando se le agregó el flag y un default
+apagado se la habría apagado a quien ya tenía planes creados.
 
 `PATCH /movimientos/:id` es la **edición a mano**, y ahí **no corre el parser**: el
 usuario corrige campos sueltos, no escribe una línea. `input_original`, `zona` y

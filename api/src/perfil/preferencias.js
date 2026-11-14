@@ -14,6 +14,11 @@ const DEFAULTS = {
   categorias_activo: false,
   metodos_habilitado: true,
   metodos_activo: false,
+  // Las recurrencias nacen prendidas y no apagadas como las otras dos: la
+  // función ya estaba en uso cuando se agregó el flag, así que un default en
+  // false se la apagaría a quien ya tiene planes creados.
+  recurrencias_habilitado: true,
+  recurrencias_activo: true,
   zona: null,
 }
 
@@ -31,6 +36,7 @@ function conDefaults(fila) {
   return {
     categorias: { habilitado: f.categorias_habilitado, activo: f.categorias_activo },
     metodos: { habilitado: f.metodos_habilitado, activo: f.metodos_activo },
+    recurrencias: { habilitado: f.recurrencias_habilitado, activo: f.recurrencias_activo },
     zona: f.zona ?? null,
   }
 }
