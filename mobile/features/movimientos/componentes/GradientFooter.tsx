@@ -61,7 +61,7 @@ export function GradientFooter(props: BottomTabBarProps) {
   // Las pantallas a las que solo se entra desde configuraciones: el footer les
   // cambia los tres iconos por una flecha de volver, porque desde ahí la única
   // navegación que tiene sentido es salir.
-  const esPantallaDeAjuste = routeName === 'zona-horaria';
+  const esPantallaDeAjuste = routeName === 'zona-horaria' || routeName === 'capacidades';
   const isEnCursoActive = routeName === 'index' && mes === currentCalendarMonth;
 
   const handleCategoryPress = (category: string) => {

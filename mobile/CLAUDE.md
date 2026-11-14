@@ -54,6 +54,7 @@ app/                        # Rutas (Expo Router)
   (tabs)/mes-contable.tsx
   (tabs)/categorias.tsx
   (tabs)/configuraciones.tsx
+  (tabs)/capacidades.tsx    # General > Capacidades: los switches de las funciones
   (tabs)/recurrencias.tsx   # Crear y editar planes de recurrencia
   (tabs)/cuenta.tsx
   playground.tsx            # Pruebas de UI (solo en dev con mocks)
@@ -193,8 +194,9 @@ Las dos funciones conmutables —categorías y métodos de pago— salen de las
 **preferencias del perfil**, que trae `usePreferencias()` de `features/perfil`:
 `categoriasVisibles` y `metodosVisibles` ya vienen resueltos, porque una función
 se ve cuando el perfil **puede** (`habilitado`, lo decide el plan) y el usuario
-**quiere** (`activo`, lo decide él en configuraciones). Esa cuenta se hace una
-vez en el hook y no en cada pantalla, que es como terminarían difiriendo.
+**quiere** (`activo`, lo decide él en Configuraciones → General → Capacidades).
+Esa cuenta se hace una vez en el hook y no en cada pantalla, que es como
+terminarían difiriendo.
 
 Antes eran `CATEGORIAS_VISIBLES` y `METODOS_VISIBLES`, constantes de
 `lib/funciones.ts`: de compilación e iguales para todos, así que prender una
