@@ -21,6 +21,7 @@ del formato; el texto de cada entrada es el original.
 ## [Unreleased]
 ### Changed
 - **Las funciones conmutables se agrupan en Configuraciones → General → Capacidades**: la sección "Funcionamiento" ya no existe. General queda con Perfil, Zona horaria y una fila "Capacidades" con chevron, y dentro de esa pantalla están Categorías, Métodos de pago y Recurrencias con los switches que ya tenían. La zona horaria pasó a General porque no es algo que se prenda o se apague, es un dato del perfil. Qué filas se ven no cambia: una función que el perfil no tiene habilitada sigue sin aparecer.
+- **La vista de Capacidades queda como el diseño**: cada fila es solo el interruptor, con una línea debajo que dice para qué sirve la capacidad, y ya no navega a ninguna pantalla. La configuración de Categorías y de Recurrencias se va a otro lado; hasta entonces, a Recurrencias no se entra desde acá.
 
 ## [1.8.1] - 2026-11-13
 ### Changed
