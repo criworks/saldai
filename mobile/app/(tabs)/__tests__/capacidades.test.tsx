@@ -54,8 +54,8 @@ test('muestra las capacidades que el perfil tiene habilitadas', async () => {
 
   await waitFor(() => expect(screen.getByText('Categorías')).toBeTruthy())
   expect(screen.getByText('Métodos de pago')).toBeTruthy()
-  // Recurrencias no es una función conmutable del plan: va siempre.
-  expect(screen.getByText('Recurrencias')).toBeTruthy()
+  // La descripción es parte de la fila, no un texto suelto de la pantalla.
+  expect(screen.getByText('Organiza tus gastos en diferentes categorías.')).toBeTruthy()
 })
 
 test('una capacidad que el perfil no tiene habilitada no aparece', async () => {
