@@ -8,12 +8,13 @@ const { validarPreferencias } = require('../src/perfil/validacion')
 // ni piden sesión, así que se prueban sin levantar nada. Las rutas que las usan
 // se prueban en `app.test.js`.
 
-test('sin fila guardada devuelve los defaults, con las categorías apagadas', () => {
+test('sin fila guardada devuelve los defaults', () => {
   const datos = conDefaults(null)
 
   assert.deepStrictEqual(datos, {
     categorias: { habilitado: true, activo: false },
     metodos: { habilitado: true, activo: false },
+    recurrencias: { habilitado: true, activo: true },
     zona: null,
   })
 })
@@ -26,6 +27,11 @@ test('los defaults dejan todo habilitado y nada activo', () => {
   assert.strictEqual(DEFAULTS.categorias_activo, false)
   assert.strictEqual(DEFAULTS.metodos_habilitado, true)
   assert.strictEqual(DEFAULTS.metodos_activo, false)
+  // Las recurrencias son la excepción: nacen activas porque la función ya
+  // estaba en uso cuando se le agregó el flag, y un default en false se la
+  // habría apagado a quien ya tenía planes creados.
+  assert.strictEqual(DEFAULTS.recurrencias_habilitado, true)
+  assert.strictEqual(DEFAULTS.recurrencias_activo, true)
   assert.strictEqual(DEFAULTS.zona, null)
 })
 
@@ -36,14 +42,23 @@ test('la fila guardada pisa a los defaults, campo por campo', () => {
   // Lo que la fila no trae sigue viniendo del default.
   assert.strictEqual(datos.categorias.habilitado, true)
   assert.strictEqual(datos.metodos.activo, false)
+  assert.strictEqual(datos.recurrencias.activo, true)
   assert.strictEqual(datos.zona, 'Europe/Madrid')
 })
 
 test('acepta los flags y los traduce a las columnas', () => {
-  const r = validarPreferencias({ categoriasActivo: true, metodosActivo: false })
+  const r = validarPreferencias({
+    categoriasActivo: true,
+    metodosActivo: false,
+    recurrenciasActivo: false,
+  })
 
   assert.strictEqual(r.ok, true)
-  assert.deepStrictEqual(r.valor, { categorias_activo: true, metodos_activo: false })
+  assert.deepStrictEqual(r.valor, {
+    categorias_activo: true,
+    metodos_activo: false,
+    recurrencias_activo: false,
+  })
 })
 
 test('acepta una zona IANA válida', () => {

@@ -15,6 +15,7 @@ const respuesta = (datos: Partial<Preferencias['datos']>): Preferencias => ({
   datos: {
     categorias: { habilitado: true, activo: false },
     metodos: { habilitado: true, activo: false },
+    recurrencias: { habilitado: true, activo: true },
     zona: null,
     ...datos,
   },
@@ -122,4 +123,28 @@ test('guardar deja la respuesta en la caché sin volver a pedir', async () => {
   // La API ya devuelve el estado completo, así que un segundo GET sería un
   // viaje de más y un parpadeo en el toggle.
   expect(fetchMock).toHaveBeenCalledTimes(1)
+})
+
+test('una API más vieja, sin el flag de recurrencias, no rompe la pantalla', async () => {
+  // La app se actualiza por la store y la API por un deploy, así que una
+  // versión instalada puede hablarle a una API que todavía no conoce el flag
+  // que se agregó después. Sin el default por flag, leer
+  // `datos.recurrencias.habilitado` sobre un `undefined` tira.
+  const vieja = respuesta({})
+  const { recurrencias: _sacado, ...sinRecurrencias } = vieja.datos
+  fetchMock.mockResolvedValue({ ...vieja, datos: sinRecurrencias } as typeof vieja)
+
+  const { result } = montar()
+
+  await waitFor(() => expect(result.current.cargando).toBe(false))
+  expect(result.current.recurrenciasVisibles).toBe(true)
+})
+
+test('las recurrencias apagadas por el usuario dejan de verse', async () => {
+  fetchMock.mockResolvedValue(respuesta({ recurrencias: { habilitado: true, activo: false } }))
+
+  const { result } = montar()
+
+  await waitFor(() => expect(result.current.cargando).toBe(false))
+  expect(result.current.recurrenciasVisibles).toBe(false)
 })

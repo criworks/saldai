@@ -37,6 +37,7 @@ const PREFERENCIAS = (activo: boolean): Preferencias => ({
   datos: {
     categorias: { habilitado: true, activo },
     metodos: { habilitado: true, activo: false },
+    recurrencias: { habilitado: true, activo: true },
     zona: null,
   },
 })

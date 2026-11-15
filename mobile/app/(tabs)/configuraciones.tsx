@@ -18,17 +18,9 @@ export default function ConfigurationsScreen() {
   const { signOut, session } = useAuth();
   const router = useRouter();
 
-  // Las dos funciones conmutables y la zona salen de la misma lectura. Mientras
-  // carga los switches se ven apagados, que es el estado de la v1: al revés
-  // aparecerían prendidos y se apagarían solos al llegar la respuesta.
-  const {
-    preferencias,
-    categoriasVisibles,
-    metodosVisibles,
-    zonaElegida,
-    guardar,
-    guardando,
-  } = usePreferencias();
+  // De las preferencias acá solo se muestra la zona: los switches de las
+  // funciones conmutables se fueron a General > Capacidades.
+  const { zonaElegida } = usePreferencias();
 
   // Loading States
   const [isProcessing, setIsProcessing] = useState(false);
@@ -143,67 +135,27 @@ export default function ConfigurationsScreen() {
         {/* Main Card Contenedor */}
         <View className="w-full flex-col items-start bg-transparent">
 
-          {/* General Section */}
+          {/*
+            General Section
+
+            Las funciones conmutables ya no son una sección acá: viven en
+            General > Capacidades. La zona horaria se quedó porque no es una
+            capacidad que se prenda o se apague, es un dato del perfil.
+          */}
           <View className="w-full flex-col">
             <SectionHeader title="General" />
             <MenuItem
               title="Perfil"
               onPress={() => router.push('/cuenta')}
             />
-          </View>
-
-          {/* Funcionamiento Section */}
-          <View className="w-full flex-col">
-            <SectionHeader title="Funcionamiento" />
-            {/*
-              El switch prende la función y el chevron entra a configurarla. La
-              fila se muestra siempre que el perfil tenga la función habilitada,
-              aunque el usuario la tenga apagada: si desapareciera al apagarla
-              no habría forma de volver a prenderla.
-
-              `habilitado` es del plan y `activo` del usuario, así que una fila
-              que no está habilitada no se muestra: no es algo que el usuario
-              pueda prender.
-            */}
-            {preferencias.categorias.habilitado && (
-              <MenuItem
-                title="Categorías"
-                switchValue={categoriasVisibles}
-                onSwitchChange={(activo) => guardar({ categoriasActivo: activo })}
-                switchDisabled={guardando}
-                onPress={() => router.push('/categorias')}
-              />
-            )}
-            {/*
-              Métodos de pago va sin chevron: el diseño de esa pantalla es para
-              crear y editar métodos propios, y hoy los métodos son los dos del
-              catálogo de `@saldai/core` (EF y TC), iguales para todos. El
-              switch prende el selector de la captura, que es lo que ya existe;
-              la pantalla entra cuando exista el modelo de métodos por usuario.
-            */}
-            {preferencias.metodos.habilitado && (
-              <MenuItem
-                title="Métodos de pago"
-                switchValue={metodosVisibles}
-                onSwitchChange={(activo) => guardar({ metodosActivo: activo })}
-                switchDisabled={guardando}
-                hideChevron
-              />
-            )}
-            {/*
-              Recurrencias va en Funcionamiento y sin switch: no es una función
-              conmutable del plan sino una pantalla donde se crean y se editan
-              los planes. Lo que el usuario tiene que confirmar aparece arriba
-              del listado del mes, no acá.
-            */}
-            <MenuItem
-              title="Recurrencias"
-              onPress={() => router.push('/recurrencias')}
-            />
             <MenuItem
               title="Zona horaria"
               value={nombreDeZonaMostrada(zonaElegida)}
               onPress={() => router.push('/zona-horaria')}
+            />
+            <MenuItem
+              title="Capacidades"
+              onPress={() => router.push('/capacidades')}
             />
           </View>
 

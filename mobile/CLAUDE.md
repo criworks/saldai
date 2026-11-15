@@ -54,6 +54,7 @@ app/                        # Rutas (Expo Router)
   (tabs)/mes-contable.tsx
   (tabs)/categorias.tsx
   (tabs)/configuraciones.tsx
+  (tabs)/capacidades.tsx    # General > Capacidades: los switches de las funciones
   (tabs)/recurrencias.tsx   # Crear y editar planes de recurrencia
   (tabs)/cuenta.tsx
   playground.tsx            # Pruebas de UI (solo en dev con mocks)
@@ -189,19 +190,33 @@ client de un dispositivo y para los APK de `preview`.
 
 ## Flags de producto
 
-Las dos funciones conmutables —categorías y métodos de pago— salen de las
-**preferencias del perfil**, que trae `usePreferencias()` de `features/perfil`:
-`categoriasVisibles` y `metodosVisibles` ya vienen resueltos, porque una función
-se ve cuando el perfil **puede** (`habilitado`, lo decide el plan) y el usuario
-**quiere** (`activo`, lo decide él en configuraciones). Esa cuenta se hace una
-vez en el hook y no en cada pantalla, que es como terminarían difiriendo.
+Las tres funciones conmutables —categorías, métodos de pago y recurrencias—
+salen de las **preferencias del perfil**, que trae `usePreferencias()` de
+`features/perfil`: `categoriasVisibles`, `metodosVisibles` y
+`recurrenciasVisibles` ya vienen resueltos, porque una función se ve cuando el
+perfil **puede** (`habilitado`, lo decide el plan) y el usuario **quiere**
+(`activo`, lo decide él en Configuraciones → General → Capacidades). Esa cuenta
+se hace una vez en el hook y no en cada pantalla, que es como terminarían
+difiriendo.
+
+Los defaults del hook se aplican **flag por flag** y no reemplazando el objeto
+entero: una API más vieja que la app responde sin el flag que se agregó
+después, y leer `datos.recurrencias.habilitado` sobre un `undefined` rompe la
+pantalla. Pasa de verdad, porque la app se actualiza por la store y la API por
+un deploy, y no en ese orden.
 
 Antes eran `CATEGORIAS_VISIBLES` y `METODOS_VISIBLES`, constantes de
 `lib/funciones.ts`: de compilación e iguales para todos, así que prender una
 función pedía publicar una versión nueva en las stores. Ese archivo ya no existe.
 
-El default sigue siendo apagado, y por dentro todo sigue funcionando: la API
-guarda la categoría igual. **No prenderlas de paso.**
+El default de categorías y métodos sigue siendo apagado, y por dentro todo
+sigue funcionando: la API guarda la categoría igual. **No prenderlas de paso.**
+
+**Recurrencias es la excepción y nace en `activo: true`**: la función ya estaba
+en uso cuando se le agregó el flag, así que un default apagado se la habría
+apagado a quien ya tenía planes creados. Lo que apaga es el bloque de
+propuestas por confirmar de `app/(tabs)/index.tsx`, que es lo único que la
+función le pide a la persona.
 
 ---
 

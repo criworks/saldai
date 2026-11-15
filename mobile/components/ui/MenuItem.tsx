@@ -6,6 +6,12 @@ import { Switch } from './Switch';
 
 interface MenuItemProps {
   title: string;
+  /**
+   * Una línea debajo del título que dice para qué sirve la fila. Va acá y no
+   * en un componente aparte porque es la misma fila: el switch tiene que
+   * quedar alineado con el título y no con el bloque entero.
+   */
+  descripcion?: string;
   value?: string;
   onPress?: () => void;
   hideChevron?: boolean;
@@ -30,6 +36,7 @@ interface MenuItemProps {
  */
 export function MenuItem({
   title,
+  descripcion,
   value,
   onPress,
   hideChevron = false,
@@ -37,11 +44,8 @@ export function MenuItem({
   onSwitchChange,
   switchDisabled,
 }: MenuItemProps) {
-  return (
-    <Pressable
-      onPress={onPress}
-      className="flex-row items-center justify-between py-md w-full active:opacity-80"
-    >
+  const fila = (
+    <View className="flex-row items-center justify-between py-md w-full">
       <Text className="text-muted-foreground text-md font-normal leading-[normal]">
         {title}
       </Text>
@@ -62,6 +66,30 @@ export function MenuItem({
         ) : null}
         {!hideChevron && <CaretRight size={18} color={colors.textMuted} weight="regular" />}
       </View>
+    </View>
+  );
+
+  const contenido = (
+    <>
+      {fila}
+      {descripcion ? (
+        <Text className="text-muted-foreground text-detail font-normal leading-[normal] w-full">
+          {descripcion}
+        </Text>
+      ) : null}
+    </>
+  );
+
+  // Sin `onPress` la fila no navega a ningún lado, así que tampoco se pinta al
+  // tocarla: un `active:opacity-80` que no lleva a nada se lee como un botón
+  // roto. El switch, cuando va, sigue teniendo su propio tap.
+  if (!onPress) {
+    return <View className="w-full">{contenido}</View>;
+  }
+
+  return (
+    <Pressable onPress={onPress} className="w-full active:opacity-80">
+      {contenido}
     </Pressable>
   );
 }
