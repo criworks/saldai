@@ -27,6 +27,11 @@ export default function TabLayout() {
           <Tabs.Screen name="zona-horaria" options={{ href: null }} />
           <Tabs.Screen name="capacidades" options={{ href: null }} />
           <Tabs.Screen name="recurrencias" options={{ href: null }} />
+          {/*
+            La vista de un movimiento no es una pestaña: se entra tocando una
+            fila del mes, con su id o con la propuesta en los parámetros.
+          */}
+          <Tabs.Screen name="movimiento" options={{ href: null }} />
         </Tabs>
       </MovimientosProvider>
     </FilterProvider>

@@ -13,7 +13,6 @@ export {
 } from './confirmacion'
 export type { BorradorDePropuesta } from './confirmacion'
 export { NOMBRES_FRECUENCIAS, descripcionDeFrecuencia } from './frecuencias'
-export { ConfirmarPropuesta } from './componentes/ConfirmarPropuesta'
 export { EditorDeRecurrencia } from './componentes/EditorDeRecurrencia'
 export { ListaDePropuestas, llaveDePropuesta } from './componentes/ListaDePropuestas'
 export {

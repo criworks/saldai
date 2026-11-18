@@ -3,7 +3,7 @@ import type { BottomTabBarProps } from '@react-navigation/bottom-tabs'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import React, { ReactNode } from 'react'
-import { Text } from 'react-native'
+import { DeviceEventEmitter, Text } from 'react-native'
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context'
 
 import { fetchPreferencias } from '@/features/perfil/api'
@@ -43,12 +43,13 @@ const PREFERENCIAS = (activo: boolean): Preferencias => ({
 })
 
 const navegar = jest.fn()
+const volverAtras = jest.fn()
 
 /** Lo mínimo que el footer lee de las props de la tab bar. */
 function propsDeTabBar(ruta: string) {
   return {
     state: { routeNames: [ruta], index: 0 },
-    navigation: { navigate: navegar },
+    navigation: { navigate: navegar, goBack: volverAtras },
   } as unknown as BottomTabBarProps
 }
 
@@ -152,4 +153,37 @@ test('en una pantalla de ajuste no se muestra la fila de filtros', async () => {
   await waitFor(() => expect(screen.getByLabelText('Volver a configuraciones')).toBeTruthy())
   expect(screen.queryByText('En curso')).toBeNull()
   expect(screen.queryByTestId('chip-categorias')).toBeNull()
+})
+
+describe('en la vista de un movimiento', () => {
+  test('la barra es volver, descartar y guardar, y los tres son del movimiento', async () => {
+    montar('movimiento')
+    await waitFor(() => expect(preferenciasMock).toHaveBeenCalled())
+
+    // Nada de navegación de secciones: desde un movimiento lo único que tiene
+    // sentido es resolverlo o salir.
+    expect(screen.queryByText('En curso')).toBeNull()
+
+    fireEvent.press(screen.getByLabelText('Volver sin guardar'))
+    expect(volverAtras).toHaveBeenCalled()
+  })
+
+  test('el check y el tacho avisan a la pantalla, que es la que sabe qué significan', async () => {
+    const guardar = jest.fn()
+    const descartar = jest.fn()
+    const unoDos = DeviceEventEmitter.addListener('guardarMovimiento', guardar)
+    const otro = DeviceEventEmitter.addListener('descartarMovimiento', descartar)
+
+    montar('movimiento')
+    await waitFor(() => expect(preferenciasMock).toHaveBeenCalled())
+
+    fireEvent.press(screen.getByTestId('guardar-movimiento'))
+    fireEvent.press(screen.getByTestId('descartar-movimiento'))
+
+    expect(guardar).toHaveBeenCalled()
+    expect(descartar).toHaveBeenCalled()
+
+    unoDos.remove()
+    otro.remove()
+  })
 })
