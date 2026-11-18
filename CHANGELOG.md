@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- **El movimiento dice de qué plan de recurrencia nace.** Migración aditiva: un unique parcial sobre `ocurrencias_recurrentes.movimiento_id` —sin él, dos planes podrían decir haber creado el mismo movimiento y la lectura lo devolvería duplicado, inflando el mes sin que ninguna fila esté mal— y la vista `public.movimientos_con_recurrencia`, que es la fila de siempre más `recurrencia_id`. `GET /movimientos` lee de ahí con sus filtros de mes y categoría intactos; escribir sigue siendo contra la tabla. La vista va con `security_invoker = true`: sin eso, una vista sobre dos tablas con RLS deja ver los movimientos de todos. Verificado contra un Postgres local con dos perfiles —cada uno ve solo lo suyo, el movimiento atado trae su plan y el escrito a mano trae `null`—, porque CI no corre el SQL. Los movimientos nacidos de confirmar una propuesta ya traen el dato, sin migrar ninguna fila.
 - **Un flag de perfil más: `recurrencias`.** Migración aditiva sobre `public.preferencias` (`recurrencias_habilitado`, `recurrencias_activo`), los dos campos en `conDefaults()` y en el contrato de `@saldai/core`, y `recurrenciasActivo` aceptado por `PATCH /perfil/preferencias`. A diferencia de los otros dos, **`activo` nace en `true`**: la función ya estaba en uso cuando se le agregó el flag, así que un default apagado se la habría apagado a quien ya tenía planes creados.
 
 ## [2.0.0] - 2026-11-13

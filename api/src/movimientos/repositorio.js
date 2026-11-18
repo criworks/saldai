@@ -107,10 +107,18 @@ function repositorioDeMovimientos(token) {
         .maybeSingle()
     },
 
-    /** Los movimientos del usuario, opcionalmente de un mes y una categoría. */
+    /**
+     * Los movimientos del usuario, opcionalmente de un mes y una categoría.
+     *
+     * Lee de `movimientos_con_recurrencia` y no de la tabla: es la misma fila
+     * más `recurrencia_id`, el plan del que nace el movimiento. La app lo
+     * necesita para mostrar si es recurrente, y resolverlo cruzando las dos
+     * listas del lado del cliente serían dos consultas y una regla de la base
+     * repetida afuera. Escribir sigue siendo contra la tabla.
+     */
     listar({ userId, rango, categoria }) {
       let query = supabase
-        .from('movimientos')
+        .from('movimientos_con_recurrencia')
         .select('*')
         .eq('user_id', userId)
         .order('creado_en', { ascending: false })
