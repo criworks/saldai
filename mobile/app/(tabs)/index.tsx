@@ -11,7 +11,12 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { colors, SIN_CATEGORIA } from '@/constants/theme'
 import { EditorDeMovimiento, EncabezadoDelMes, ExpenseItem, useFilter, useMovimientos, Movimiento } from '@/features/movimientos'
 import { usePreferencias } from '@/features/perfil'
-import { ConfirmarPropuesta, ListaDePropuestas, usePropuestas } from '@/features/recurrencias'
+import {
+  ConfirmarPropuesta,
+  ListaDePropuestas,
+  llaveDePropuesta,
+  usePropuestas,
+} from '@/features/recurrencias'
 import { Alert } from '@/components/ui/Alert'
 import type { PropuestaPendiente } from '@saldai/core'
 
@@ -85,8 +90,35 @@ export default function DashboardScreen() {
   // Con el filtro de categoría puesto no se muestran: el listado está recortado
   // a una categoría y las propuestas no son parte de ese recorte, así que
   // quedarían arriba de una lista que no las incluye.
-  const { propuestas } = usePropuestas()
+  const { propuestas, confirmar, omitir } = usePropuestas()
   const [propuestaElegida, setPropuestaElegida] = useState<PropuestaPendiente | null>(null)
+
+  // Cuál propuesta está esperando respuesta de la API, por llave de plan y
+  // fecha. Es una sola y no un booleano global: con el booleano, decidir una
+  // apagaría los botones de todas las demás.
+  const [decidiendo, setDecidiendo] = useState<string | null>(null)
+  const [errorAlDecidir, setErrorAlDecidir] = useState('')
+
+  // Confirmar y omitir desde la fila, sin abrir nada. Confirmar manda la
+  // propuesta **tal como el plan la propone**: corregir algo antes es tocar la
+  // fila, que abre el confirmador.
+  const decidir = async (
+    propuesta: PropuestaPendiente,
+    decision: (p: PropuestaPendiente) => Promise<unknown>,
+  ) => {
+    const llave = llaveDePropuesta(propuesta)
+    if (decidiendo) return
+
+    setDecidiendo(llave)
+    setErrorAlDecidir('')
+    try {
+      await decision(propuesta)
+    } catch (e) {
+      setErrorAlDecidir(e instanceof Error ? e.message : 'No se pudo decidir la propuesta')
+    } finally {
+      setDecidiendo(null)
+    }
+  }
 
   const insets = useSafeAreaInsets()
   const listPaddingBottom = 220 + insets.bottom;
@@ -183,7 +215,11 @@ export default function DashboardScreen() {
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} className="flex-1 bg-background">
-      <Alert visible={!!error} message={error || ''} type="error" />
+      <Alert
+        visible={!!error || !!errorAlDecidir}
+        message={errorAlDecidir || error || ''}
+        type="error"
+      />
 
       {/*
         SectionList y no un ScrollView con todos los movimientos dibujados: la lista
@@ -217,7 +253,23 @@ export default function DashboardScreen() {
               sacarlo de acá no apagaría nada.
             */}
             {recurrenciasVisibles && !filtro && (
-              <ListaDePropuestas propuestas={propuestas} onElegir={setPropuestaElegida} />
+              <ListaDePropuestas
+                propuestas={propuestas}
+                onElegir={setPropuestaElegida}
+                onConfirmar={(propuesta) =>
+                  decidir(propuesta, (p) =>
+                    confirmar({ recurrenciaId: p.recurrenciaId, fecha: p.fecha })
+                  )
+                }
+                onOmitir={(propuesta) =>
+                  decidir(propuesta, (p) =>
+                    omitir({ recurrenciaId: p.recurrenciaId, fecha: p.fecha })
+                  )
+                }
+                categoriasVisibles={categoriasVisibles}
+                metodosVisibles={metodosVisibles}
+                decidiendo={decidiendo}
+              />
             )}
           </View>
         }
@@ -260,6 +312,12 @@ export default function DashboardScreen() {
               titulo={item.item}
               categoria={categoriasVisibles ? item.categoria : undefined}
               metodo={metodosVisibles ? item.metodo : undefined}
+              // El mismo reloj que las propuestas, y por eso mismo: una
+              // propuesta de un mes viejo y el movimiento que la persona cargó
+              // a mano ese mes se ven juntos, y el reloj es lo que distingue
+              // uno de otro antes de confirmar algo repetido. Llega en la fila
+              // (`recurrencia_id`), así que no hay consulta extra.
+              recurrente={!!item.recurrencia_id && recurrenciasVisibles}
             />
           </Pressable>
         )}

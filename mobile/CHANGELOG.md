@@ -20,6 +20,8 @@ del formato; el texto de cada entrada es el original.
 
 ## [Unreleased]
 ### Added
+- **La propuesta por confirmar se ve como una fila del mes y se decide desde ahí.** El mismo formato que un movimiento —monto, categoría, método e item— con un reloj naranja adelante, y las dos decisiones al lado: el check confirma tal cual y la equis omite esta vez, sin abrir nada. Tocar la fila sigue abriendo la propuesta para corregirla, que es el caso del monto que cambia mes a mes. La fecha va corta al lado de las acciones, porque en el bloque no hay encabezados de día y dos propuestas del mismo plan se verían idénticas.
+- **El reloj también marca los movimientos ya registrados que vienen de un plan.** Es lo que deja ver, en un mes viejo, cuál fila nació de la recurrencia y cuál se cargó a mano, antes de confirmar algo que ya estaba. Llega en la fila que devuelve la API, así que no hay consulta extra.
 - **Recurrencias se puede prender y apagar** desde Capacidades, igual que categorías y métodos de pago. Apagarla saca el bloque de propuestas por confirmar de la lista del mes, que es lo único que la función le pide a la persona; los planes creados quedan como están. Arranca prendida, porque la función ya estaba en uso.
 
 ### Changed
