@@ -204,6 +204,63 @@ function validarFrecuencia(frecuencia) {
  * @param {Record<string, unknown>} entrada
  * @param {{ zona?: string, hoy?: Date }} [opciones]
  */
+/**
+ * La parte de recurrencia de un movimiento: cada cuánto se repite y hasta
+ * cuándo.
+ *
+ * Es lo mismo que un plan escrito a mano menos la línea: acá el qué y el
+ * cuándo salen del movimiento, así que lo único que el usuario elige es la
+ * frecuencia y, si quiere, una fecha de término. Vive al lado de
+ * `validarPlanDeRecurrencia` y las dos comparten estas reglas en vez de
+ * repetirlas: una regla escrita dos veces es una que se queda atrás.
+ *
+ * `desde` es el ancla contra la que se compara `hasta` —la fecha del
+ * movimiento—, y es opcional porque al crear el movimiento y el plan de una
+ * sola vez todavía no hay fila que mirar: ahí la coherencia la termina de
+ * exigir la base.
+ */
+function validarRecurrenciaDeMovimiento(entrada, { desde } = {}) {
+  const errores = []
+
+  if (!entrada || typeof entrada !== 'object' || Array.isArray(entrada)) {
+    return { ok: false, errores: ['El campo \'recurrencia\' tiene que ser un objeto'], recurrencia: null }
+  }
+
+  if (!validarFrecuencia(entrada.frecuencia)) {
+    errores.push(`El campo 'frecuencia' tiene que ser una de: ${FRECUENCIAS.join(', ')}`)
+  }
+
+  const { errores: deHasta, vigenteHasta } = leerHasta(entrada.hasta, desde)
+  errores.push(...deHasta)
+
+  if (errores.length > 0) return { ok: false, errores, recurrencia: null }
+
+  return { ok: true, errores: [], recurrencia: { frecuencia: entrada.frecuencia, vigenteHasta } }
+}
+
+/**
+ * `hasta` tal como lo escriben las dos validaciones de plan: opcional, fecha
+ * real, y nunca anterior a cuando el plan empieza.
+ */
+function leerHasta(valor, vigenteDesde) {
+  const errores = []
+  let vigenteHasta = null
+
+  if (valor !== undefined && valor !== null && valor !== '') {
+    if (!esFechaIso(valor)) {
+      errores.push("El campo 'hasta' tiene que ser una fecha real en AAAA-MM-DD")
+    } else {
+      vigenteHasta = String(valor).trim()
+    }
+  }
+
+  if (vigenteDesde && vigenteHasta && vigenteHasta < vigenteDesde) {
+    errores.push("El campo 'hasta' no puede ser anterior a cuando empieza el plan")
+  }
+
+  return { errores, vigenteHasta }
+}
+
 function validarPlanDeRecurrencia(entrada, opciones = {}) {
   const errores = []
 
@@ -235,18 +292,8 @@ function validarPlanDeRecurrencia(entrada, opciones = {}) {
     }
   }
 
-  let vigenteHasta = null
-  if (entrada.hasta !== undefined && entrada.hasta !== null && entrada.hasta !== '') {
-    if (!esFechaIso(entrada.hasta)) {
-      errores.push("El campo 'hasta' tiene que ser una fecha real en AAAA-MM-DD")
-    } else {
-      vigenteHasta = String(entrada.hasta).trim()
-    }
-  }
-
-  if (vigenteDesde && vigenteHasta && vigenteHasta < vigenteDesde) {
-    errores.push("El campo 'hasta' no puede ser anterior a cuando empieza el plan")
-  }
+  const { errores: deHasta, vigenteHasta } = leerHasta(entrada.hasta, vigenteDesde)
+  errores.push(...deHasta)
 
   let notas = null
   if (entrada.notas !== undefined && entrada.notas !== null && entrada.notas !== '') {
@@ -463,6 +510,7 @@ module.exports = {
   movimientoDeLaPropuesta,
   validarFrecuencia,
   validarPlanDeRecurrencia,
+  validarRecurrenciaDeMovimiento,
   validarCambioDePlan,
   planVigente,
 }

@@ -41,6 +41,55 @@ function repositorioDeMovimientos(token) {
     },
 
     /**
+     * Inserta el movimiento y, en la misma transacción, el plan que lo repite.
+     *
+     * Dos llamadas sueltas —insertar y después atar— dejan, cuando la segunda
+     * falla, un movimiento que la persona ve registrado y que no es
+     * recurrente, sin que nada lo diga. La función de Postgres hace las tres
+     * escrituras o ninguna.
+     *
+     * Devuelve la fila de la vista, con `recurrencia_id` ya resuelto: la
+     * pantalla muestra el movimiento como recurrente apenas se crea, sin
+     * volver a pedir el mes.
+     */
+    insertarConRecurrencia(movimiento, { userId, inputOriginal, contexto, recurrencia }) {
+      return supabase
+        .rpc('crear_movimiento_con_recurrencia', {
+          p_user_id: userId,
+          p_monto: movimiento.monto,
+          p_monto_formateado: movimiento.montoFormateado,
+          p_item: movimiento.item,
+          p_categoria: movimiento.categoria,
+          p_categoria_src: movimiento.categoriaSrc,
+          p_metodo: movimiento.metodo,
+          p_fecha: movimiento.fecha,
+          p_input_original: inputOriginal,
+          p_zona: contexto?.zona,
+          p_hoy_resuelto: contexto?.hoyResuelto,
+          p_frecuencia: recurrencia.frecuencia,
+          p_vigente_hasta: recurrencia.vigenteHasta,
+        })
+    },
+
+    /**
+     * Ata un plan a un movimiento que ya existe y devuelve el plan creado.
+     *
+     * El ancla es la fecha del movimiento y esa primera ocurrencia queda
+     * confirmada apuntando a él, así que lo que la persona ya tiene registrado
+     * no vuelve como propuesta. Lo de **después** de esa fecha sí: marcar como
+     * recurrente algo de hace tres meses deja esos meses por confirmar, y los
+     * decide el usuario.
+     */
+    atarRecurrencia(id, { recurrencia }) {
+      return supabase
+        .rpc('atar_recurrencia_a_movimiento', {
+          p_movimiento_id: id,
+          p_frecuencia: recurrencia.frecuencia,
+          p_vigente_hasta: recurrencia.vigenteHasta,
+        })
+    },
+
+    /**
      * Un movimiento del usuario, o `null` si no existe o no es suyo.
      *
      * `maybeSingle()` y no `single()`: pedir un id que no está no es un error

@@ -21,10 +21,21 @@ function noEncontrado(res, mensaje) {
   return res.status(404).json({ ok: false, errores: [mensaje], datos: null })
 }
 
+/**
+ * 409: la fila existe y la operación la duplicaría.
+ *
+ * No es un 400 —lo que mandó el cliente está bien formado— ni un 500: el
+ * estado de la base es el que no deja. Lo usa atar una recurrencia a un
+ * movimiento que ya tiene una.
+ */
+function conflicto(res, mensaje) {
+  return res.status(409).json({ ok: false, errores: [mensaje], datos: null })
+}
+
 /** 500: la base falló. El detalle va al log, no al cliente. */
 function errorDeBase(res, mensaje, error, extra = {}) {
   console.error('Supabase error:', error)
   return res.status(500).json({ ok: false, errores: [mensaje], datos: null, ...extra })
 }
 
-module.exports = { errorDeEntrada, errorDeBase, noEncontrado }
+module.exports = { conflicto, errorDeEntrada, errorDeBase, noEncontrado }

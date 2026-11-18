@@ -124,3 +124,34 @@ test('sin zona en el pedido se usa la de la config', () => {
   assert.strictEqual(res.zona, 'America/Santiago')
   assert.deepStrictEqual(res.advertencias, [])
 })
+
+// ── POST /movimientos/:id/recurrencia ──────────────────────────────────────
+//
+// Vive en este archivo y no en el de movimientos porque lo que crea es un plan:
+// la ruta cuelga del movimiento para decir sobre cuál se ata, pero el recurso
+// que nace es una recurrencia.
+
+test('marcar un movimiento como recurrente pide sesión', async () => {
+  const res = await request(app).post(`/movimientos/${UUID}/recurrencia`).send({ frecuencia: 'mensual' })
+
+  assert.strictEqual(res.status, 401)
+  assert.strictEqual(res.body.error, 'Token requerido')
+})
+
+test('el id del movimiento se valida después de la sesión y no antes', async () => {
+  // Mismo orden que el resto de la API: con la validación primero, un id mal
+  // escrito le diría a cualquiera sin token qué forma tiene uno válido.
+  const res = await request(app).post('/movimientos/no-es-un-uuid/recurrencia').send({ frecuencia: 'mensual' })
+
+  assert.strictEqual(res.status, 401)
+  assert.strictEqual(res.body.error, 'Token requerido')
+})
+
+test('la ruta del plan no se confunde con la del movimiento', async () => {
+  // `/:id/recurrencia` es POST y `/:id` no existe como POST: sin esto, un
+  // typo en la ruta podría caer en el alta de la colección y crear un
+  // movimiento vacío en vez de fallar.
+  const res = await request(app).post(`/movimientos/${UUID}`).send({ frecuencia: 'mensual' })
+
+  assert.strictEqual(res.status, 404)
+})

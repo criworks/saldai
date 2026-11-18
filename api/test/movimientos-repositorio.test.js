@@ -12,6 +12,7 @@ process.env.SUPABASE_ANON_KEY ||= 'anon-de-prueba'
 // `recurrencia_id`, nada falla y el movimiento recurrente se ve como uno
 // cualquiera.
 const consultados = []
+const funciones = []
 
 const encadenable = () => {
   const falso = {}
@@ -30,7 +31,10 @@ Module._load = function (pedido, ...resto) {
           consultados.push(objeto)
           return encadenable()
         },
-        rpc: () => encadenable(),
+        rpc: (nombre) => {
+          funciones.push(nombre)
+          return encadenable()
+        },
       }),
     }
   }
@@ -77,4 +81,35 @@ test('escribir sigue siendo contra la tabla', () => {
   repositorio.eliminar('id', { userId: USER })
 
   assert.deepStrictEqual(consultados, ['movimientos', 'movimientos', 'movimientos', 'movimientos'])
+})
+
+test('el alta con recurrencia va por la función, no por dos escrituras', () => {
+  // Insertar y después atar, con dos llamadas, deja —cuando la segunda falla—
+  // un movimiento que la persona ve registrado y que no es recurrente, sin que
+  // nada lo diga. Por eso el camino es la función de Postgres.
+  funciones.length = 0
+  consultados.length = 0
+
+  repositorioDeMovimientos('token').insertarConRecurrencia(
+    { monto: 140000, item: 'netflix', metodo: 'TC', fecha: '2026-08-10' },
+    {
+      userId: USER,
+      inputOriginal: '140000, netflix',
+      contexto: { zona: 'America/Santiago', hoyResuelto: '2026-08-10' },
+      recurrencia: { frecuencia: 'mensual', vigenteHasta: null },
+    }
+  )
+
+  assert.deepStrictEqual(funciones, ['crear_movimiento_con_recurrencia'])
+  assert.deepStrictEqual(consultados, [])
+})
+
+test('atar un plan a un movimiento que ya existe también va por la función', () => {
+  funciones.length = 0
+
+  repositorioDeMovimientos('token').atarRecurrencia('id', {
+    recurrencia: { frecuencia: 'semanal', vigenteHasta: '2027-01-01' },
+  })
+
+  assert.deepStrictEqual(funciones, ['atar_recurrencia_a_movimiento'])
 })

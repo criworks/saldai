@@ -5,6 +5,7 @@ const {
   rangoDelMes,
   unirCamposEditados,
   validarCambioDeMovimiento,
+  validarRecurrenciaDeMovimiento,
 } = require('@saldai/core')
 
 const { requireAuth } = require('../middleware/auth.js')
@@ -16,7 +17,7 @@ const {
   validarInput,
   validarMes,
 } = require('../movimientos/validacion')
-const { errorDeBase, errorDeEntrada, noEncontrado } = require('../respuestas')
+const { conflicto, errorDeBase, errorDeEntrada, noEncontrado } = require('../respuestas')
 const { arregloDeTotales } = require('../movimientos/totales')
 
 /**
@@ -51,11 +52,32 @@ function rutasDeMovimientos({ zona, limites }) {
     })
     if (!resultado.ok) return res.status(422).json(resultado)
 
-    const { data, error } = await repositorioDeMovimientos(req.token).insertar(resultado.datos, {
-      userId: req.userId,
-      inputOriginal: entrada.valor,
-      contexto,
-    })
+    // La recurrencia es opcional y viaja con el alta: el usuario indica, en la
+    // misma pantalla donde escribe el movimiento, que se repite. Va junto y no
+    // en una segunda llamada porque a medias deja un movimiento que la persona
+    // ve registrado y que no es recurrente, sin que nada lo diga.
+    let recurrencia = null
+    if (req.body?.recurrencia !== undefined && req.body?.recurrencia !== null) {
+      const pedida = validarRecurrenciaDeMovimiento(req.body.recurrencia, {
+        desde: resultado.datos.fecha,
+      })
+      if (!pedida.ok) return errorDeEntrada(res, pedida.errores, { advertencias: resultado.advertencias })
+      recurrencia = pedida.recurrencia
+    }
+
+    const repositorio = repositorioDeMovimientos(req.token)
+    const { data, error } = recurrencia
+      ? await repositorio.insertarConRecurrencia(resultado.datos, {
+          userId: req.userId,
+          inputOriginal: entrada.valor,
+          contexto,
+          recurrencia,
+        })
+      : await repositorio.insertar(resultado.datos, {
+          userId: req.userId,
+          inputOriginal: entrada.valor,
+          contexto,
+        })
 
     if (error) {
       return errorDeBase(res, 'Error al guardar en base de datos', error, {
@@ -67,8 +89,60 @@ function rutasDeMovimientos({ zona, limites }) {
       ok: true,
       errores: [],
       advertencias: resultado.advertencias,
-      datos: { ...resultado.datos, id: data.id, creadoEn: data.creado_en },
+      datos: {
+        ...resultado.datos,
+        id: data.id,
+        creadoEn: data.creado_en,
+        // Solo cuando el alta creó un plan: en un movimiento común la columna
+        // no viaja, y mandar `null` diría que se miró y no hay, que es otra
+        // cosa que no se preguntó.
+        ...(recurrencia ? { recurrenciaId: data.recurrencia_id } : {}),
+      },
     })
+  })
+
+  // ── POST /movimientos/:id/recurrencia ────────────────────────────────────
+  //
+  // Marcar como recurrente un movimiento que ya existe, de cualquier fecha. El
+  // plan se ancla en la fecha de ese movimiento, que es lo que conserva el día
+  // del mes, y esa primera ocurrencia queda confirmada apuntando a él: lo que
+  // la persona ya tiene registrado no vuelve como propuesta.
+  //
+  // Lo de **después** de esa fecha sí vuelve: marcar como recurrente el
+  // arriendo de hace tres meses deja esos tres meses por confirmar. Es a
+  // propósito, y los decide el usuario mirando si ya los tenía cargados a mano.
+  router.post('/:id/recurrencia', limites.conSesion, requireAuth, async (req, res) => {
+    const id = validarId(req.params.id)
+    if (!id.ok) return errorDeEntrada(res, id.errores)
+
+    const repositorio = repositorioDeMovimientos(req.token)
+
+    // Se lee antes de escribir para dos cosas: un id que no existe tiene que
+    // dar 404 y no el error crudo de la función, y `hasta` se compara contra la
+    // fecha del movimiento, que es el comienzo del plan.
+    const actual = await repositorio.buscar(id.valor, { userId: req.userId })
+    if (actual.error) return errorDeBase(res, 'Error al leer el movimiento', actual.error)
+    if (!actual.data) return noEncontrado(res, 'No existe ese movimiento')
+
+    const pedida = validarRecurrenciaDeMovimiento(req.body, { desde: actual.data.fecha })
+    if (!pedida.ok) return errorDeEntrada(res, pedida.errores)
+
+    const { data, error } = await repositorio.atarRecurrencia(id.valor, {
+      recurrencia: pedida.recurrencia,
+    })
+
+    if (error) {
+      // El unique sobre `movimiento_id` es lo que impide que dos planes digan
+      // haber creado el mismo movimiento. Que lo corte la base y no una
+      // comprobación previa es lo que hace que dos toques seguidos no creen
+      // dos planes.
+      if (error.code === '23505') {
+        return conflicto(res, 'Ese movimiento ya tiene una recurrencia')
+      }
+      return errorDeBase(res, 'Error al crear la recurrencia', error)
+    }
+
+    return res.status(201).json({ ok: true, errores: [], datos: data })
   })
 
   // ── GET /movimientos ─────────────────────────────────────────────────────

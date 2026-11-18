@@ -8,6 +8,7 @@ const {
   propuestasPendientes,
   movimientoDeLaPropuesta,
   validarPlanDeRecurrencia,
+  validarRecurrenciaDeMovimiento,
   validarCambioDePlan,
   planVigente,
   MAXIMO_DE_OCURRENCIAS,
@@ -249,4 +250,51 @@ test('planVigente mira la fecha de término', () => {
   assert.strictEqual(planVigente(plan(), '2030-01-01'), true)
   assert.strictEqual(planVigente(plan({ vigente_hasta: '2026-02-28' }), '2026-03-01'), false)
   assert.strictEqual(planVigente(plan({ vigente_hasta: '2026-02-28' }), '2026-02-28'), true)
+})
+
+// ── La recurrencia que se configura desde un movimiento ─────────────────────
+
+test('la recurrencia de un movimiento pide una frecuencia conocida', () => {
+  assert.strictEqual(validarRecurrenciaDeMovimiento({ frecuencia: 'mensual' }).ok, true)
+  assert.strictEqual(validarRecurrenciaDeMovimiento({ frecuencia: 'quincenal' }).ok, false)
+  assert.strictEqual(validarRecurrenciaDeMovimiento({}).ok, false)
+  assert.strictEqual(validarRecurrenciaDeMovimiento(null).ok, false)
+})
+
+test('"hasta" es opcional y no puede quedar antes del movimiento', () => {
+  const sinFin = validarRecurrenciaDeMovimiento({ frecuencia: 'mensual' })
+  assert.strictEqual(sinFin.recurrencia.vigenteHasta, null)
+
+  const conFin = validarRecurrenciaDeMovimiento(
+    { frecuencia: 'mensual', hasta: '2027-03-01' },
+    { desde: '2026-08-10' }
+  )
+  assert.strictEqual(conFin.recurrencia.vigenteHasta, '2027-03-01')
+
+  const alReves = validarRecurrenciaDeMovimiento(
+    { frecuencia: 'mensual', hasta: '2026-01-01' },
+    { desde: '2026-08-10' }
+  )
+  assert.strictEqual(alReves.ok, false)
+})
+
+test('atar un plan a un movimiento viejo deja los meses intermedios por confirmar', () => {
+  // La decisión de producto, escrita como test: el movimiento que ancla el
+  // plan no se vuelve a proponer —queda confirmado— y los meses entre esa
+  // fecha y hoy sí, uno por uno. El usuario los decide mirando si ya los tenía
+  // cargados a mano; la app no cuadra sola.
+  const plan = {
+    id: 'plan-1',
+    frecuencia: 'mensual',
+    vigente_desde: '2026-08-10',
+    vigente_hasta: null,
+  }
+
+  const decisiones = [{ recurrenciaId: 'plan-1', fecha: '2026-08-10' }]
+  const pendientes = propuestasPendientes([plan], decisiones, { hasta: '2026-11-18' })
+
+  assert.deepStrictEqual(
+    pendientes.map((p) => p.fecha),
+    ['2026-09-10', '2026-10-10', '2026-11-10']
+  )
 })
