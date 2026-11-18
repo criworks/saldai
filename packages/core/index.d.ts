@@ -397,6 +397,12 @@ export interface Movimiento {
    */
   campos_editados?: CampoEditable[]
   /**
+   * El plan de recurrencia del que nace el movimiento, si nace de uno. `null`
+   * en uno escrito a mano. Lo resuelve la vista `movimientos_con_recurrencia`,
+   * así que viaja en la lectura del mes y no en la respuesta de un alta.
+   */
+  recurrencia_id?: string | null
+  /**
    * La cuenta del perfil a la que pertenece el movimiento. La llena la base
    * (trigger `movimientos_asignar_cuenta`), así que la app no la manda al crear.
    * Todavía no hay pantalla de cuentas: viaja porque la API devuelve la fila
