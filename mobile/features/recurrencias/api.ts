@@ -4,6 +4,7 @@ import type {
   NuevaRecurrencia,
   PropuestaConfirmada,
   PropuestasPendientes,
+  RecurrenciaConCadena,
   RecurrenciaGuardada,
   RecurrenciasDelPerfil,
 } from '@saldai/core'
@@ -127,4 +128,51 @@ export async function editarRecurrencia(
   })
 
   return leerJson(res, 'Error al guardar la recurrencia')
+}
+
+/**
+ * Un plan por id, y el que sigue proponiendo de su cadena.
+ *
+ * Los dos porque un movimiento guarda **la versión del plan que lo propuso**, y
+ * un "editar de aquí en adelante" posterior la deja cerrada: con solo ese id, la
+ * app mostraría el estado de una versión que ya no propone y actuaría sobre
+ * ella. La cadena la resuelve la API, que es la que tiene todos los planes.
+ */
+export async function fetchRecurrencia(id: string): Promise<RecurrenciaConCadena> {
+  if (enModoMock) return mocks.fetchRecurrencia(id)
+
+  const res = await fetch(`${API_URL}/recurrencias/${id}`, {
+    method: 'GET',
+    headers: await getAuthHeaders(),
+  })
+
+  if (!res.ok) {
+    throw new Error(await leerError(res, 'Error en la respuesta del servidor al leer la recurrencia'))
+  }
+
+  return res.json()
+}
+
+/**
+ * Termina un plan: deja de proponer desde hoy.
+ *
+ * Es lo que en la app se llama "Eliminar la recurrencia", y no borra nada: los
+ * movimientos que ya se crearon siguen ahí y las propuestas pendientes de antes
+ * de hoy también, hasta que la persona las decida. El día del corte lo resuelve
+ * el servidor con la zona que se le manda, porque "hoy" es lo único que define
+ * el corte.
+ */
+export async function terminarRecurrencia(
+  id: string,
+  zona?: string
+): Promise<RecurrenciaGuardada> {
+  if (enModoMock) return mocks.terminarRecurrencia(id)
+
+  const res = await fetch(`${API_URL}/recurrencias/${id}/terminar`, {
+    method: 'POST',
+    headers: await getAuthHeaders(),
+    body: JSON.stringify(zona ? { zona } : {}),
+  })
+
+  return leerJson(res, 'Error al terminar la recurrencia')
 }

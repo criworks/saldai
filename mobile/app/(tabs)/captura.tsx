@@ -7,6 +7,8 @@ import {
 } from '@/features/movimientos'
 import { Notification } from '@/components/ui/Notification'
 import { Alert } from '@/components/ui/Alert'
+import { usePreferencias } from '@/features/perfil'
+import { BotonDeRecurrencia } from '@/features/recurrencias'
 
 /**
  * El texto del chip de fecha para el día que se eligió en el calendario.
@@ -52,7 +54,13 @@ export default function CapturaScreen() {
     guardarMovimiento,
     lastSaved,
     categoriaInferida,
+    recurrencia,
+    setRecurrencia,
   } = useMovimientoMutation()
+
+  // Con la función apagada el botón no aparece: un plan que después no se ve en
+  // ningún lado es peor que no poder crearlo.
+  const { recurrenciasVisibles } = usePreferencias()
 
   // El día con el que abre el calendario. El texto del chip lo lleva el hook
   // (es parte de la línea que se manda), así que el `Date` vive acá: de "Ayer"
@@ -119,6 +127,19 @@ export default function CapturaScreen() {
         categoriaInferida={categoriaInferida}
         ocupado={estado === 'loading'}
         enfocarAlEntrar
+        accionesDeLaFila={
+          recurrenciasVisibles ? (
+            // Acá todavía no hay plan: el movimiento no existe, así que la
+            // frecuencia queda elegida y viaja con el alta. Quitarla es soltar
+            // lo que se eligió, no cortar nada.
+            <BotonDeRecurrencia
+              frecuenciaElegida={recurrencia?.frecuencia ?? null}
+              onElegir={(frecuencia) => setRecurrencia({ frecuencia })}
+              onQuitar={() => setRecurrencia(null)}
+              ocupado={estado === 'loading'}
+            />
+          ) : null
+        }
       />
     </View>
   )

@@ -42,6 +42,14 @@ export const llaves = {
   preferencias: () => ['preferencias'] as const,
   recurrencias: () => ['recurrencias'] as const,
   /**
+   * Un plan suelto, el que anotó un movimiento.
+   *
+   * Lleva su propia llave y no sale de la lista de `recurrencias`: esa lista
+   * trae solo los planes que siguen proponiendo, y un movimiento viejo puede
+   * apuntar a una versión ya cerrada por un "editar de aquí en adelante".
+   */
+  recurrencia: (id: string) => ['recurrencias', id] as const,
+  /**
    * Las propuestas pendientes.
    *
    * No lleva el mes ni la zona en la llave: la respuesta son las propuestas

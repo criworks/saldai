@@ -1,5 +1,5 @@
 import { anioDeIso, categorizar, mesDeIso, METODO_DEFAULT, registrarMovimiento } from '@saldai/core'
-import type { Movimiento, MovimientosDelMes } from '@saldai/core'
+import type { Movimiento, MovimientosDelMes, RecurrenciaDeMovimiento } from '@saldai/core'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { CampoClave } from '@/constants/theme'
@@ -58,6 +58,12 @@ export function useMovimientoMutation() {
     fecha: '',
   })
   const [metodo, setMetodo] = useState(METODO_DEFAULT)
+  // La recurrencia que la persona eligió antes de guardar, si eligió alguna.
+  // Viaja **con el alta** y no en una llamada después: el plan se ancla en la
+  // fecha del movimiento y su primera ocurrencia queda confirmada, así que las
+  // dos escrituras se ven juntas o no se ven (la API lo hace en una función de
+  // Postgres).
+  const [recurrencia, setRecurrencia] = useState<RecurrenciaDeMovimiento | null>(null)
   const [mensaje, setMensaje] = useState('')
   const [lastSaved, setLastSaved] = useState<{ monto: string, descripcion: string } | null>(null)
 
@@ -85,7 +91,8 @@ export function useMovimientoMutation() {
   }
 
   const mutacion = useMutation({
-    mutationFn: (input: string) => crearMovimiento(input, zonaDelDispositivo()),
+    mutationFn: (input: string) =>
+      crearMovimiento(input, zonaDelDispositivo(), recurrencia ?? undefined),
 
     // Alta optimista: el movimiento entra en la lista del mes que le toca por fecha,
     // que no siempre es el mes que se está mirando (un movimiento de "ayer" el día 1
@@ -131,6 +138,16 @@ export function useMovimientoMutation() {
 
       setValores({ monto: '', item: '', categoria: '', fecha: '' })
       setMetodo(METODO_DEFAULT)
+      setRecurrencia(null)
+
+      // Si el alta creó un plan, lo que queda por confirmar cambió en el mismo
+      // momento: el plan se ancla en la fecha del movimiento y propone de ahí a
+      // hoy. Sin esto, el bloque "Por confirmar" no muestra nada hasta el
+      // siguiente refetch.
+      if (json.recurrenciaId) {
+        cliente.invalidateQueries({ queryKey: llaves.recurrencias() })
+        cliente.invalidateQueries({ queryKey: llaves.propuestas() })
+      }
 
       limpiarEnUnRato()
     },
@@ -181,6 +198,8 @@ export function useMovimientoMutation() {
     valores,
     metodo,
     setMetodo,
+    recurrencia,
+    setRecurrencia,
     estado,
     mensaje,
     handleChange,

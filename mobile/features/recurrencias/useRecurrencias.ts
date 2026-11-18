@@ -2,7 +2,7 @@ import type { CambioDeRecurrencia, NuevaRecurrencia } from '@saldai/core'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { llaves } from '@/lib/consultas'
 import { zonaDelDispositivo } from '@/lib/zona'
-import { crearRecurrencia, editarRecurrencia, fetchRecurrencias } from './api'
+import { crearRecurrencia, editarRecurrencia, fetchRecurrencias, terminarRecurrencia } from './api'
 
 /**
  * Los planes del perfil, crear uno y editarlo de aquí en adelante.
@@ -37,6 +37,14 @@ export function useRecurrencias() {
     onSuccess: invalidar,
   })
 
+  // Terminar deja de proponer desde hoy. Invalida lo mismo que las otras dos:
+  // las propuestas pendientes de hoy en adelante dejan de existir en el mismo
+  // momento, y las de antes siguen ahí hasta que se decidan.
+  const termino = useMutation({
+    mutationFn: (id: string) => terminarRecurrencia(id, zona),
+    onSuccess: invalidar,
+  })
+
   return {
     recurrencias: consulta.data?.datos ?? [],
     cargando: consulta.isLoading,
@@ -45,5 +53,7 @@ export function useRecurrencias() {
     creando: alta.isPending,
     editar: edicion.mutateAsync,
     editando: edicion.isPending,
+    terminar: termino.mutateAsync,
+    terminando: termino.isPending,
   }
 }

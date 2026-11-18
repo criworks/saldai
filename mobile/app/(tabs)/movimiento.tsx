@@ -1,4 +1,9 @@
-import { isoAChileno, type Movimiento, type PropuestaPendiente } from '@saldai/core'
+import {
+  isoAChileno,
+  type Frecuencia,
+  type Movimiento,
+  type PropuestaPendiente,
+} from '@saldai/core'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Trash } from 'phosphor-react-native'
 import React, { useEffect, useMemo, useState } from 'react'
@@ -16,10 +21,14 @@ import {
   useMovimientos,
   type BorradorDeMovimiento,
 } from '@/features/movimientos'
+import { usePreferencias } from '@/features/perfil'
 import {
+  BotonDeRecurrencia,
   borradorDePropuesta,
   cambioDeLaPropuesta,
   usePropuestas,
+  useRecurrenciaDeMovimiento,
+  useRecurrencias,
 } from '@/features/recurrencias'
 
 /**
@@ -58,7 +67,18 @@ export default function MovimientoScreen() {
   // solo su identidad, que es lo único que sobrevive a un refetch.
   const { datos } = useMovimientos()
   const { propuestas, confirmar, confirmando, omitir, omitiendo } = usePropuestas()
-  const { editar, editando, eliminar, eliminando } = useMovimiento()
+  const { atarRecurrencia, atando, editar, editando, eliminar, eliminando } = useMovimiento()
+
+  // La recurrencia es una función conmutable del perfil: apagada, el botón no
+  // aparece y no se consulta ningún plan. Si apareciera, se podrían crear planes
+  // que después no se ven en ningún lado.
+  const { recurrenciasVisibles } = usePreferencias()
+  const {
+    editar: editarPlan,
+    editando: editandoPlan,
+    terminar,
+    terminando,
+  } = useRecurrencias()
 
   const movimiento = useMemo<Movimiento | null>(
     () => (id ? (datos?.datos ?? []).find((m) => String(m.id) === id) ?? null : null),
@@ -94,10 +114,48 @@ export default function MovimientoScreen() {
   }, [borrador, movimiento, propuesta])
 
   const esPropuesta = !!recurrenciaId && !!fecha
-  const ocupado = editando || eliminando || confirmando || omitiendo
+
+  // De qué plan viene este movimiento. En una propuesta llega en los parámetros;
+  // en un movimiento registrado, en su fila. En los dos casos lo que importa es
+  // el plan **vivo** de la cadena, y eso lo resuelve el hook: desde un movimiento
+  // de marzo, el id que trae la fila puede ser una versión ya cerrada.
+  const idDelPlan = recurrenciaId ?? movimiento?.recurrencia_id ?? null
+  const { plan } = useRecurrenciaDeMovimiento(recurrenciasVisibles ? idDelPlan : null)
+
+  const ocupado =
+    editando || eliminando || confirmando || omitiendo || atando || editandoPlan || terminando
 
   const cambiar = (cambio: Partial<BorradorDeMovimiento>) => {
     setBorrador((previo) => (previo ? { ...previo, ...cambio } : previo))
+  }
+
+  /**
+   * Elegir la frecuencia, que según el caso crea el plan o lo cambia.
+   *
+   * Con plan es "editar de aquí en adelante" desde hoy: las propuestas
+   * pendientes de antes de hoy siguen siendo del plan como estaba, que es lo que
+   * protege la cadena. Sin plan, el movimiento queda atado a uno nuevo anclado en
+   * su fecha, y esa primera ocurrencia nace confirmada.
+   */
+  const elegirFrecuencia = async (frecuencia: Frecuencia) => {
+    try {
+      if (plan) {
+        await editarPlan({ id: plan.id, cambio: { desde: isoDelDia(new Date()), frecuencia } })
+      } else if (!esPropuesta && original) {
+        await atarRecurrencia({ id: String((original as Movimiento).id), recurrencia: { frecuencia } })
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo guardar la recurrencia')
+    }
+  }
+
+  const quitarRecurrencia = async () => {
+    if (!plan) return
+    try {
+      await terminar(plan.id)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo eliminar la recurrencia')
+    }
   }
 
   const guardar = async () => {
@@ -204,6 +262,16 @@ export default function MovimientoScreen() {
         onElegirFecha={(elegida) => cambiar({ fecha: isoDelDia(elegida) })}
         mostrarNotas
         ocupado={ocupado}
+        accionesDeLaFila={
+          recurrenciasVisibles ? (
+            <BotonDeRecurrencia
+              plan={plan}
+              onElegir={elegirFrecuencia}
+              onQuitar={quitarRecurrencia}
+              ocupado={ocupado}
+            />
+          ) : null
+        }
       />
 
       <ConfirmationModal

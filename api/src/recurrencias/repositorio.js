@@ -150,6 +150,24 @@ function repositorioDeRecurrencias(token) {
     },
 
     /**
+     * Termina un plan: escribe hasta cuándo propuso.
+     *
+     * No es un DELETE, y la tabla no tiene política de DELETE a propósito: los
+     * movimientos ya confirmados cuelgan del plan que los propuso, así que
+     * borrar la fila sería borrar de dónde salieron. Terminar es dejar escrito
+     * el último día en que propuso.
+     */
+    terminar(id, { userId, vigenteHasta }) {
+      return supabase
+        .from('recurrencias')
+        .update({ vigente_hasta: vigenteHasta, actualizado_en: new Date().toISOString() })
+        .eq('id', id)
+        .eq('user_id', userId)
+        .select()
+        .single()
+    },
+
+    /**
      * "Editar de aquí en adelante": cierra el plan el día anterior y crea el
      * que sigue, apuntando al cerrado. También en una función de Postgres,
      * porque son dos escrituras: con el plan viejo cerrado y el nuevo sin

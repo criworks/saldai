@@ -1,7 +1,7 @@
-import type { CambioDeMovimiento } from '@saldai/core'
+import type { CambioDeMovimiento, RecurrenciaDeMovimiento } from '@saldai/core'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { llaves } from '@/lib/consultas'
-import { editarMovimiento, eliminarMovimiento } from './api'
+import { atarRecurrencia, editarMovimiento, eliminarMovimiento } from './api'
 
 /**
  * Editar y eliminar un movimiento ya registrado.
@@ -32,6 +32,20 @@ export function useMovimiento() {
     onSuccess: invalidar,
   })
 
+  // Marcar como recurrente un movimiento que ya existe. Invalida también las
+  // recurrencias y las propuestas: el plan se ancla en la fecha del movimiento,
+  // así que todo lo que va de esa fecha a hoy queda por confirmar en el mismo
+  // momento. Y los movimientos, porque la fila gana su `recurrencia_id`.
+  const atado = useMutation({
+    mutationFn: ({ id, recurrencia }: { id: string; recurrencia: RecurrenciaDeMovimiento }) =>
+      atarRecurrencia(id, recurrencia),
+    onSuccess: () => {
+      invalidar()
+      cliente.invalidateQueries({ queryKey: llaves.recurrencias() })
+      cliente.invalidateQueries({ queryKey: llaves.propuestas() })
+    },
+  })
+
   const borrado = useMutation({
     mutationFn: (id: string) => eliminarMovimiento(id),
     onSuccess: invalidar,
@@ -41,6 +55,8 @@ export function useMovimiento() {
     editar: edicion.mutateAsync,
     editando: edicion.isPending,
     errorAlEditar: edicion.error instanceof Error ? edicion.error.message : null,
+    atarRecurrencia: atado.mutateAsync,
+    atando: atado.isPending,
     eliminar: borrado.mutateAsync,
     eliminando: borrado.isPending,
     errorAlEliminar: borrado.error instanceof Error ? borrado.error.message : null,

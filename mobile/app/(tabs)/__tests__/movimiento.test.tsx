@@ -11,9 +11,20 @@ import React, { ReactNode } from 'react'
 import { DeviceEventEmitter } from 'react-native'
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context'
 
-import { editarMovimiento, eliminarMovimiento, fetchMovimientosPorMes } from '@/features/movimientos/api'
+import {
+  atarRecurrencia,
+  editarMovimiento,
+  eliminarMovimiento,
+  fetchMovimientosPorMes,
+} from '@/features/movimientos/api'
 import { MovimientosProvider } from '@/features/movimientos'
-import { confirmarPropuesta, fetchPropuestas, omitirPropuesta } from '@/features/recurrencias/api'
+import {
+  confirmarPropuesta,
+  fetchPropuestas,
+  fetchRecurrencia,
+  omitirPropuesta,
+  terminarRecurrencia,
+} from '@/features/recurrencias/api'
 import { fetchPreferencias } from '@/features/perfil/api'
 import MovimientoScreen from '../movimiento'
 
@@ -43,6 +54,9 @@ const preferenciasMock = fetchPreferencias as jest.MockedFunction<typeof fetchPr
 const propuestasMock = fetchPropuestas as jest.MockedFunction<typeof fetchPropuestas>
 const confirmarMock = confirmarPropuesta as jest.MockedFunction<typeof confirmarPropuesta>
 const omitirMock = omitirPropuesta as jest.MockedFunction<typeof omitirPropuesta>
+const atarMock = atarRecurrencia as jest.MockedFunction<typeof atarRecurrencia>
+const planMock = fetchRecurrencia as jest.MockedFunction<typeof fetchRecurrencia>
+const terminarMock = terminarRecurrencia as jest.MockedFunction<typeof terminarRecurrencia>
 
 const METRICAS = {
   frame: { x: 0, y: 0, width: 412, height: 917 },
@@ -156,13 +170,21 @@ beforeEach(() => {
     errores: [],
     datos: { ...DEL_MES.datos[0], item: 'taxi' },
   })
-  eliminarMock.mockResolvedValue({ ok: true, errores: [], datos: { id: 'mov-1' } })
+  eliminarMock.mockResolvedValue({ ok: true, errores: [], datos: DEL_MES.datos[0] })
   confirmarMock.mockResolvedValue({
     ok: true,
     errores: [],
     datos: { ...DEL_MES.datos[0], id: 'mov-2', item: 'arriendo' },
   })
-  omitirMock.mockResolvedValue({ ok: true, errores: [] })
+  omitirMock.mockResolvedValue({ ok: true })
+  atarMock.mockResolvedValue({ ok: true, errores: [], datos: PROPUESTA.recurrencia })
+  terminarMock.mockResolvedValue({ ok: true, errores: [], datos: PROPUESTA.recurrencia })
+  planMock.mockResolvedValue({
+    ok: true,
+    errores: [],
+    datos: PROPUESTA.recurrencia,
+    vivo: PROPUESTA.recurrencia,
+  })
 })
 
 describe('un movimiento ya registrado', () => {
@@ -252,5 +274,51 @@ describe('una propuesta por confirmar', () => {
     await waitFor(() => expect(omitirMock).toHaveBeenCalledWith('rec-1', '2026-03-05'))
     expect(screen.queryByText('Eliminar movimiento')).toBeNull()
     expect(mockVolver).toHaveBeenCalled()
+  })
+})
+
+describe('la recurrencia desde el movimiento', () => {
+  test('un movimiento sin plan se puede marcar como recurrente, anclado en su fecha', async () => {
+    mockParametros = { id: 'mov-1' }
+    montar()
+    await screen.findByDisplayValue('uber')
+
+    // Sin plan el botón abre idle: marcarlo ata uno nuevo, y de eso se encarga
+    // la API (el plan se ancla en la fecha del movimiento).
+    await userEvent.press(await screen.findByLabelText('Hacer recurrente'))
+    await userEvent.press(screen.getByLabelText('Cada mes'))
+
+    await waitFor(() =>
+      expect(atarMock).toHaveBeenCalledWith('mov-1', { frecuencia: 'mensual' })
+    )
+    expect(mockVolver).not.toHaveBeenCalled()
+  })
+
+  test('un movimiento con plan abre activo, y eliminar corta el plan vivo', async () => {
+    movimientosMock.mockResolvedValue({
+      ...DEL_MES,
+      datos: [{ ...DEL_MES.datos[0], recurrencia_id: 'rec-1' }],
+    })
+    mockParametros = { id: 'mov-1' }
+    montar()
+
+    // El plan que se muestra es el vivo de la cadena, no el id que anotó la
+    // fila: desde un movimiento viejo puede ser una versión ya cerrada.
+    expect(await screen.findByText('Cada mes')).toBeTruthy()
+    await waitFor(() => expect(planMock).toHaveBeenCalledWith('rec-1'))
+
+    await userEvent.press(screen.getByLabelText('Recurrente'))
+    await userEvent.press(screen.getByLabelText('Eliminar la recurrencia'))
+    await userEvent.press(screen.getByText('Eliminar la recurrencia'))
+
+    // La zona va en el pedido: el día del corte lo resuelve el servidor, y es
+    // el del dispositivo y no el de Chile.
+    await waitFor(() =>
+      expect(terminarMock).toHaveBeenCalledWith('rec-1', expect.any(String))
+    )
+    // Eliminar la recurrencia no elimina el movimiento, así que la pantalla se
+    // queda donde está.
+    expect(eliminarMock).not.toHaveBeenCalled()
+    expect(mockVolver).not.toHaveBeenCalled()
   })
 })

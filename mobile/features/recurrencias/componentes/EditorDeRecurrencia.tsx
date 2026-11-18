@@ -68,7 +68,7 @@ function hoyLocal(): string {
  */
 export function EditorDeRecurrencia({ recurrencia, onCerrar }: EditorDeRecurrenciaProps) {
   const { categoriasVisibles, metodosVisibles } = usePreferencias()
-  const { editar, editando } = useRecurrencias()
+  const { editar, editando, terminar: terminarPlan, terminando } = useRecurrencias()
 
   const [borrador, setBorrador] = useState(() => borradorDe(recurrencia))
   const [mostrarPicker, setMostrarPicker] = useState(false)
@@ -110,12 +110,11 @@ export function EditorDeRecurrencia({ recurrencia, onCerrar }: EditorDeRecurrenc
 
   const terminar = async () => {
     try {
-      // `desde` es el comienzo del plan y no hoy a propósito: así el cambio es
-      // sobre este mismo plan y no crea un sucesor que viviría un solo día.
-      await editar({
-        id: recurrencia.id,
-        cambio: { desde: recurrencia.vigente_desde, hasta: hoyLocal() },
-      })
+      // Por la ruta de terminar y no por un `hasta` escrito acá: el día del
+      // corte lo resuelve el servidor con la zona del dispositivo, y así es el
+      // mismo corte que hace "Eliminar" desde el movimiento. Con dos formas de
+      // terminar un plan, una de las dos se queda vieja.
+      await terminarPlan(recurrencia.id)
       onCerrar()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo terminar la recurrencia')
@@ -283,16 +282,20 @@ export function EditorDeRecurrencia({ recurrencia, onCerrar }: EditorDeRecurrenc
 
               <Pressable
                 onPress={terminar}
-                disabled={editando}
+                disabled={editando || terminando}
                 accessibilityRole="button"
                 accessibilityLabel="Terminar la recurrencia"
                 className={`h-control px-xl justify-center items-center rounded-lg active:opacity-80 ${
-                  editando ? 'opacity-40' : ''
+                  editando || terminando ? 'opacity-40' : ''
                 }`}
               >
-                <Text className="text-muted-foreground text-body font-medium">
-                  Terminar la recurrencia
-                </Text>
+                {terminando ? (
+                  <ActivityIndicator size="small" color={colors.textMuted} />
+                ) : (
+                  <Text className="text-muted-foreground text-body font-medium">
+                    Terminar la recurrencia
+                  </Text>
+                )}
               </Pressable>
             </View>
           </View>
