@@ -49,6 +49,34 @@ https://claude.ai/artifact/6H1LTgBbkuVTwSTDFuUR5G
 
 ---
 
+## El `desde` de "editar de aquí en adelante" también es el ancla del plan que sigue
+
+PR de la vista de recurrencias · noviembre 2026
+
+- **Síntoma**: ninguno todavía, y ahí está el problema. Corregirle el monto al
+  plan del arriendo un día 19 lo dejaba proponiendo los 19 en vez de los 5, sin
+  que nada lo dijera: el plan seguía existiendo, con el monto nuevo, y la
+  siguiente propuesta aparecía en la fecha equivocada un mes después.
+- **Causa**: el `desde` de un cambio no es solo "desde cuándo vale". La función
+  `editar_recurrencia_desde` cierra el plan el día anterior y crea el sucesor con
+  `vigente_desde = desde`, y `vigente_desde` es el ancla de la que sale el día del
+  mes de **todas** las ocurrencias. El editor viejo ofrecía ese campo con hoy
+  como default, así que guardar sin tocar la fecha re-anclaba el plan.
+- **Por qué no se notaba**: es un cambio válido en todos los niveles. La
+  validación lo acepta —es exactamente lo que pidió el cuerpo—, la base lo
+  escribe, la respuesta trae el plan nuevo y la pantalla muestra lo que se
+  guardó. El síntoma aparece recién en la siguiente ocurrencia, en otra pantalla
+  y semanas después, cuando ya nadie lo asocia con haber corregido un monto.
+- **Arreglo**: `proximaOcurrencia()` en `@saldai/core`, y la vista del plan manda
+  esa fecha como `desde` en vez de hoy. La fecha sigue siendo editable, para
+  cuando se quiera mover el día a propósito.
+- **Regla**: cuando un campo de un pedido hace dos cosas, el default no puede
+  elegirse mirando solo una. Y en este modelo, cualquier fecha que termine en
+  `vigente_desde` es una decisión sobre el calendario del usuario, no sobre
+  cuándo empieza a valer un cambio.
+
+---
+
 ## Lo único que leía la vista de compatibilidad era el keep-alive, y no está en el repo
 
 - **Síntoma**: ninguno todavía. Se iba a borrar la vista `public.gastos` del

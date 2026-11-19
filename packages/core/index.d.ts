@@ -271,6 +271,17 @@ export declare function ocurrenciasDelPlan(
 /** La ocurrencia número `n` del plan, contando la primera como 0. */
 export declare function ocurrenciaNumero(plan: Recurrencia, n: number): Date | null
 
+/**
+ * La primera fecha que el plan propone a partir de `desde`, inclusive, o `null`
+ * si ya no propone ninguna. Es el `desde` que conserva el día en un
+ * "editar de aquí en adelante": con "hoy", el plan se re-ancla en el día en que
+ * se editó.
+ */
+export declare function proximaOcurrencia(
+  plan: Recurrencia,
+  opciones: { desde: FechaISO }
+): FechaISO | null
+
 /** `true` si esa fecha es una de las que el plan propone. */
 export declare function esOcurrenciaDelPlan(plan: Recurrencia, fecha: unknown): boolean
 

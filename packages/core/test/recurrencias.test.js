@@ -4,6 +4,7 @@ const assert = require('node:assert')
 const {
   FRECUENCIAS,
   ocurrenciasDelPlan,
+  proximaOcurrencia,
   esOcurrenciaDelPlan,
   propuestasPendientes,
   movimientoDeLaPropuesta,
@@ -323,4 +324,29 @@ test('una cadena con un ciclo no cuelga el pedido', () => {
   ]
 
   assert.ok(['a', 'b'].includes(planVivoDeLaCadena(planes, 'a').id))
+})
+
+
+test('la próxima ocurrencia conserva el día del plan', () => {
+  // Es el `desde` de un "editar de aquí en adelante": el `desde` pasa a ser el
+  // ancla del plan que sigue, así que con "hoy" el arriendo del 5 se mudaría al
+  // día en que alguien editó el monto.
+  const mensual = plan({ frecuencia: 'mensual', vigente_desde: '2026-01-05' })
+
+  assert.strictEqual(proximaOcurrencia(mensual, { desde: '2026-03-19' }), '2026-04-05')
+  // El día exacto cuenta como próxima: ese día el plan propone.
+  assert.strictEqual(proximaOcurrencia(mensual, { desde: '2026-03-05' }), '2026-03-05')
+  // Antes del ancla, la próxima es el ancla.
+  assert.strictEqual(proximaOcurrencia(mensual, { desde: '2025-12-01' }), '2026-01-05')
+})
+
+test('un plan terminado no tiene próxima ocurrencia', () => {
+  const terminado = plan({
+    frecuencia: 'mensual',
+    vigente_desde: '2026-01-05',
+    vigente_hasta: '2026-03-31',
+  })
+
+  assert.strictEqual(proximaOcurrencia(terminado, { desde: '2026-04-01' }), null)
+  assert.strictEqual(proximaOcurrencia(terminado, { desde: '2026-03-01' }), '2026-03-05')
 })
