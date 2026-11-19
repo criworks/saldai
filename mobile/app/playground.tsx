@@ -80,6 +80,16 @@ export default function UIPlayground() {
             {/* Solo una prendida. */}
             <ExpenseItem id="4" monto="$420.000" titulo="Arriendo del mes" categoria="Básicos" />
             <ExpenseItem id="5" monto="$1" titulo="Sin categoría" metodo="EF" />
+            {/* Nacida de un plan: el reloj adelante. Es la misma fila que una
+                propuesta por confirmar, que agrega sus dos acciones al lado. */}
+            <ExpenseItem
+              id="6"
+              monto="$140.000"
+              titulo="Netflix"
+              categoria="Ocio"
+              metodo="TC"
+              recurrente
+            />
           </View>
 
           <Text className="mb-2 text-foreground font-semibold mt-6">Category Selector:</Text>

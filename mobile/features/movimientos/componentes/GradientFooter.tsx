@@ -1,4 +1,4 @@
-import { ArrowLeft, BellSimple, CardsThree, Nut, Plus, Check } from 'phosphor-react-native';
+import { ArrowLeft, BellSimple, CardsThree, Nut, Plus, Check, Trash } from 'phosphor-react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useMemo } from 'react';
@@ -62,6 +62,15 @@ export function GradientFooter(props: BottomTabBarProps) {
   // cambia los tres iconos por una flecha de volver, porque desde ahí la única
   // navegación que tiene sentido es salir.
   const esPantallaDeAjuste = routeName === 'zona-horaria' || routeName === 'capacidades';
+  /*
+    La vista de un movimiento: la barra cambia de significado entera. A la
+    izquierda, volver sin guardar; a la derecha, descartar y aceptar. Qué hacen
+    esos dos lo decide la pantalla según el estado del movimiento —confirmar u
+    omitir una propuesta, guardar o eliminar uno ya registrado—, así que de acá
+    sale un evento y no una acción: el footer no sabe qué movimiento se está
+    mirando, y pasarle un callback por la navegación lo ataría a la pantalla.
+  */
+  const esMovimiento = routeName === 'movimiento';
   const isEnCursoActive = routeName === 'index' && mes === currentCalendarMonth;
 
   const handleCategoryPress = (category: string) => {
@@ -118,7 +127,7 @@ export function GradientFooter(props: BottomTabBarProps) {
       )}
 
       {/* Filters Row (Centrado) */}
-      {!isConfiguracionesActive && !isCapturaActive && !isCuentaActive && !esPantallaDeAjuste && (
+      {!isConfiguracionesActive && !isCapturaActive && !isCuentaActive && !esPantallaDeAjuste && !esMovimiento && (
         <View className="flex-row justify-center items-center w-full mb-sm gap-sm">
           <Pressable
             className={`rounded-full px-md py-sm active:opacity-80 ${isEnCursoActive ? 'bg-secondary' : 'bg-transparent'}`}
@@ -159,12 +168,16 @@ export function GradientFooter(props: BottomTabBarProps) {
       <View className="flex-row justify-between items-center w-full">
         
         {/* Nav Group (Izquierda) */}
-        {esPantallaDeAjuste ? (
+        {esPantallaDeAjuste || esMovimiento ? (
           <Pressable
             className="w-4xl h-4xl items-center justify-center rounded-full active:opacity-80"
             accessibilityRole="button"
-            accessibilityLabel="Volver a configuraciones"
-            onPress={() => props.navigation.navigate('configuraciones')}
+            accessibilityLabel={esMovimiento ? 'Volver sin guardar' : 'Volver a configuraciones'}
+            onPress={() =>
+              esMovimiento
+                ? props.navigation.goBack()
+                : props.navigation.navigate('configuraciones')
+            }
           >
             {/*
               El color va por prop y no por `className` como los otros iconos
@@ -208,7 +221,29 @@ export function GradientFooter(props: BottomTabBarProps) {
           acción es volver, y un `+` que salta a la captura deja a medias lo
           que el usuario estaba configurando.
         */}
-        {esPantallaDeAjuste ? null : isCapturaActive ? (
+        {esMovimiento ? (
+          <View className="flex-row items-center gap-sm">
+            <Pressable
+              className="w-4xl h-4xl bg-secondary rounded-full items-center justify-center active:opacity-80"
+              accessibilityRole="button"
+              accessibilityLabel="Descartar este movimiento"
+              testID="descartar-movimiento"
+              onPress={() => DeviceEventEmitter.emit('descartarMovimiento')}
+            >
+              <Trash size={24} color={colors.errorStrong} />
+            </Pressable>
+
+            <Pressable
+              className="bg-primary rounded-full items-center justify-center active:opacity-80 px-8 py-3"
+              accessibilityRole="button"
+              accessibilityLabel="Guardar este movimiento"
+              testID="guardar-movimiento"
+              onPress={() => DeviceEventEmitter.emit('guardarMovimiento')}
+            >
+              <Check size={24} className="text-primary-foreground" weight="bold" />
+            </Pressable>
+          </View>
+        ) : esPantallaDeAjuste ? null : isCapturaActive ? (
           <Pressable
             className="bg-primary rounded-full items-center justify-center active:opacity-80 px-8 py-3"
             onPress={() => DeviceEventEmitter.emit('submitCaptura')}

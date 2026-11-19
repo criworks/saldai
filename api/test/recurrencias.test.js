@@ -44,6 +44,8 @@ test('todas las rutas de recurrencias piden sesión', async () => {
       request(app).delete(
         `/recurrencias/propuestas/omitida?recurrenciaId=${UUID}&fecha=2026-05-01`
       ),
+    () => request(app).get(`/recurrencias/${UUID}`),
+    () => request(app).post(`/recurrencias/${UUID}/terminar`).send({}),
   ]) {
     const res = await pedir()
     assert.strictEqual(res.status, 401)
@@ -154,4 +156,24 @@ test('la ruta del plan no se confunde con la del movimiento', async () => {
   const res = await request(app).post(`/movimientos/${UUID}`).send({ frecuencia: 'mensual' })
 
   assert.strictEqual(res.status, 404)
+})
+
+
+test('terminar un plan no se confunde con una propuesta', async () => {
+  // `/recurrencias/propuestas/confirmar` y `/recurrencias/:id/terminar` tienen
+  // la misma forma, así que vale comprobar que "propuestas" no se lee como un
+  // id: las rutas de propuestas están declaradas antes a propósito.
+  const res = await request(app)
+    .post('/recurrencias/propuestas/confirmar')
+    .send({ recurrenciaId: UUID, fecha: '2026-05-01' })
+
+  assert.strictEqual(res.status, 401)
+  assert.strictEqual(res.body.error, 'Token requerido')
+
+  // Al revés también: 'propuestas' entra por `/:id/terminar`, y ahí lo para
+  // primero la sesión y después la validación del id, que es el orden del resto
+  // de las rutas. Nunca llega a la base como si fuera un plan.
+  const terminar = await request(app).post('/recurrencias/propuestas/terminar').send({})
+  assert.strictEqual(terminar.status, 401)
+  assert.strictEqual(terminar.body.error, 'Token requerido')
 })

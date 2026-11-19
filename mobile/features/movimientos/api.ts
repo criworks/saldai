@@ -1,4 +1,12 @@
-import type { CambioDeMovimiento, MovimientoCreado, MovimientosDelMes, MovimientoCambiado, TotalesAnuales } from '@saldai/core'
+import type {
+  CambioDeMovimiento,
+  MovimientoCreado,
+  MovimientosDelMes,
+  MovimientoCambiado,
+  RecurrenciaDeMovimiento,
+  RecurrenciaGuardada,
+  TotalesAnuales,
+} from '@saldai/core'
 import * as mocks from '@/services/mocks'
 import { enModoMock } from '@/services/mocks'
 import { API_URL, getAuthHeaders, leerError, mensajeDeError } from '@/lib/peticiones'
@@ -43,13 +51,25 @@ export async function fetchMovimientosAnuales(anio: number | string): Promise<To
  * `zona` va en el cuerpo para que el "hoy" del servidor sea el del usuario y no
  * el de Chile. Si no se manda, la API cae a su `APP_TIMEZONE`.
  */
-export async function crearMovimiento(inputStr: string, zona?: string): Promise<MovimientoCreado> {
-  if (enModoMock) return mocks.crearMovimiento(inputStr)
+export async function crearMovimiento(
+  inputStr: string,
+  zona?: string,
+  // La recurrencia viaja **con el alta** y no en una llamada después: el plan se
+  // ancla en la fecha del movimiento y su primera ocurrencia queda confirmada,
+  // así que las dos escrituras tienen que verse juntas o no verse (la API lo
+  // hace en una función de Postgres).
+  recurrencia?: RecurrenciaDeMovimiento
+): Promise<MovimientoCreado> {
+  if (enModoMock) return mocks.crearMovimiento(inputStr, recurrencia)
 
   const res = await fetch(`${API_URL}/movimientos`, {
     method: 'POST',
     headers: await getAuthHeaders(),
-    body: JSON.stringify(zona ? { input: inputStr, zona } : { input: inputStr }),
+    body: JSON.stringify({
+      input: inputStr,
+      ...(zona ? { zona } : {}),
+      ...(recurrencia ? { recurrencia } : {}),
+    }),
   })
 
   const json = await res.json().catch(() => null)
@@ -107,6 +127,35 @@ export async function eliminarMovimiento(id: string): Promise<MovimientoCambiado
 
   if (!res.ok || !json?.ok) {
     throw new Error(mensajeDeError(json, 'Error al eliminar el movimiento'))
+  }
+
+  return json
+}
+
+
+/**
+ * Marca como recurrente un movimiento que ya existe, de cualquier fecha.
+ *
+ * El plan se ancla en la fecha de ese movimiento y esa primera ocurrencia queda
+ * confirmada: lo que la persona ya tiene registrado no vuelve como propuesta.
+ * Lo de después de esa fecha sí vuelve, y lo decide ella una por una.
+ */
+export async function atarRecurrencia(
+  id: string,
+  recurrencia: RecurrenciaDeMovimiento
+): Promise<RecurrenciaGuardada> {
+  if (enModoMock) return mocks.atarRecurrencia(id, recurrencia)
+
+  const res = await fetch(`${API_URL}/movimientos/${id}/recurrencia`, {
+    method: 'POST',
+    headers: await getAuthHeaders(),
+    body: JSON.stringify(recurrencia),
+  })
+
+  const json = await res.json().catch(() => null)
+
+  if (!res.ok || !json?.ok) {
+    throw new Error(mensajeDeError(json, 'Error al crear la recurrencia'))
   }
 
   return json

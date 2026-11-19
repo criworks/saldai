@@ -1,5 +1,6 @@
 import { cssInterop } from 'nativewind';
 import { 
+  Alarm,
   BellSimple, 
   CardsThree, 
   Nut, 
@@ -30,6 +31,7 @@ const iconConfig = {
 };
 
 // phosphor-react-native
+cssInterop(Alarm, iconConfig as any);
 cssInterop(BellSimple, iconConfig as any);
 cssInterop(CardsThree, iconConfig as any);
 cssInterop(Nut, iconConfig as any);

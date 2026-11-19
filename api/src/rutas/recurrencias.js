@@ -1,10 +1,13 @@
 const express = require('express')
 const {
   aIsoCivil,
+  desdeIsoCivil,
   esOcurrenciaDelPlan,
   hoyCivil,
   movimientoDeLaPropuesta,
   planVigente,
+  planVivoDeLaCadena,
+  sumarDias,
   propuestasPendientes,
   validarCambioDeMovimiento,
   validarCambioDePlan,
@@ -241,6 +244,89 @@ function rutasDeRecurrencias({ zona, limites }) {
     if (!data) return noEncontrado(res, 'No hay una omisión en esa fecha')
 
     return res.status(200).json({ ok: true, errores: [], datos: data })
+  })
+
+  // ── GET /recurrencias/:id ────────────────────────────────────────────────
+  //
+  // Un plan por id, y **el que sigue proponiendo de su cadena**. Las dos cosas,
+  // porque un movimiento guarda la versión del plan que lo propuso y esa versión
+  // puede estar cerrada: la app necesita el plan que el movimiento tuvo (para
+  // mostrar con qué frecuencia nació) y el vivo (para poder editarlo o
+  // terminarlo). Resolver la cadena en el cliente pediría la lista completa de
+  // planes para abrir un movimiento.
+  router.get('/:id', limites.conSesion, requireAuth, async (req, res) => {
+    const id = validarIdDeRecurrencia(req.params.id)
+    if (!id.ok) return errorDeEntrada(res, id.errores)
+
+    const repositorio = repositorioDeRecurrencias(req.token)
+
+    const plan = await repositorio.buscar(id.valor, { userId: req.userId })
+    if (plan.error) return errorDeBase(res, 'Error al leer la recurrencia', plan.error)
+    if (!plan.data) return noEncontrado(res, 'No existe esa recurrencia')
+
+    const planes = await repositorio.listar({ userId: req.userId })
+    if (planes.error) return errorDeBase(res, 'Error al leer las recurrencias', planes.error)
+
+    return res.status(200).json({
+      ok: true,
+      errores: [],
+      datos: plan.data,
+      vivo: planVivoDeLaCadena(planes.data, id.valor) ?? plan.data,
+    })
+  })
+
+  // ── POST /recurrencias/:id/terminar ──────────────────────────────────────
+  //
+  // "Eliminar la recurrencia", que es **cortar desde hoy**: el plan deja de
+  // proponer y lo ya creado no se toca. Por eso escribe `vigente_hasta` el día
+  // anterior a hoy y no borra nada: las propuestas pendientes de antes de hoy
+  // siguen ahí hasta que el usuario las decida, que es lo que se decidió para
+  // que la app no cuadre sola.
+  //
+  // El día lo resuelve el servidor con la zona del pedido y no lo manda el
+  // cliente: "hoy" es lo único que define el corte, y un cliente con la fecha
+  // mal puesta cerraría el plan en otro día sin que nada lo diga.
+  //
+  // Actúa sobre el plan **vivo** de la cadena, no sobre el id que llegó: desde
+  // un movimiento de marzo llega la versión que lo propuso, y cerrar una versión
+  // ya cerrada dejaría la recurrencia proponiendo igual.
+  router.post('/:id/terminar', limites.conSesion, requireAuth, async (req, res) => {
+    const id = validarIdDeRecurrencia(req.params.id)
+    if (!id.ok) return errorDeEntrada(res, id.errores)
+
+    const repositorio = repositorioDeRecurrencias(req.token)
+
+    const plan = await repositorio.buscar(id.valor, { userId: req.userId })
+    if (plan.error) return errorDeBase(res, 'Error al leer la recurrencia', plan.error)
+    if (!plan.data) return noEncontrado(res, 'No existe esa recurrencia')
+
+    const planes = await repositorio.listar({ userId: req.userId })
+    if (planes.error) return errorDeBase(res, 'Error al leer las recurrencias', planes.error)
+    const vivo = planVivoDeLaCadena(planes.data, id.valor) ?? plan.data
+
+    const { zona: zonaUsada, advertencias } = zonaDelPedido(req.body?.zona, zona)
+    const hoy = aIsoCivil(hoyCivil(zonaUsada))
+    const ayer = aIsoCivil(sumarDias(desdeIsoCivil(hoy), -1))
+
+    // Un plan anclado hoy o después nunca propuso otra cosa que su ancla: se
+    // cierra en su propia fecha de inicio, porque `vigente_hasta` no puede ser
+    // anterior a `vigente_desde` (lo impide un check de la tabla).
+    const corte = ayer < vivo.vigente_desde ? vivo.vigente_desde : ayer
+
+    // Ya terminado antes del corte no se toca: terminar dos veces no puede
+    // alargar la vigencia de un plan.
+    if (vivo.vigente_hasta && vivo.vigente_hasta <= corte) {
+      return res.status(200).json({ ok: true, errores: [], advertencias, datos: vivo })
+    }
+
+    const { data, error } = await repositorio.terminar(vivo.id, {
+      userId: req.userId,
+      vigenteHasta: corte,
+    })
+
+    if (error) return errorDeBase(res, 'Error al terminar la recurrencia', error)
+
+    return res.status(200).json({ ok: true, errores: [], advertencias, datos: data })
   })
 
   // ── PATCH /recurrencias/:id ──────────────────────────────────────────────

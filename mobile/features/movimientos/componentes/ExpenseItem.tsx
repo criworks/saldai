@@ -1,7 +1,8 @@
 import type { Metodo } from '@saldai/core';
+import { Alarm } from 'phosphor-react-native';
 import React from 'react';
 import { Text, View } from 'react-native';
-import { categoryEmoji, SIN_CATEGORIA } from '@/constants/theme';
+import { categoryEmoji, colors, SIN_CATEGORIA } from '@/constants/theme';
 
 export interface ExpenseItemProps {
   id?: string;
@@ -15,6 +16,11 @@ export interface ExpenseItemProps {
   categoria?: string;
   /** El método de pago. Se omite igual que la categoría. */
   metodo?: Metodo;
+  /**
+   * El movimiento nace de un plan de recurrencia, o es una propuesta de uno.
+   * Dibuja el reloj adelante.
+   */
+  recurrente?: boolean;
 }
 
 /**
@@ -27,15 +33,30 @@ export interface ExpenseItemProps {
  * saber de preferencias ni pedirlas. Así el playground la puede dibujar en sus
  * cuatro combinaciones sin montar la consulta.
  *
+ * El reloj adelante marca lo que viene de un plan, y lo marca igual en una
+ * propuesta por confirmar y en un movimiento ya registrado. Es a propósito: si
+ * el usuario marca como recurrente algo de hace tres meses, las propuestas de
+ * los meses intermedios conviven en el feed con los movimientos que él cargó a
+ * mano en su momento, y el reloj es lo que le deja ver cuál es cuál antes de
+ * confirmar algo repetido.
+ *
  * "Sin categoría" no se dibuja. Es lo que queda cuando ni el usuario ni el
  * parser eligieron, igual que en el selector de la captura, y una burbuja en
  * cada fila que no tiene categoría es ruido y no información.
  */
-export function ExpenseItem({ monto, titulo, categoria, metodo }: ExpenseItemProps) {
+export function ExpenseItem({ monto, titulo, categoria, metodo, recurrente }: ExpenseItemProps) {
   const muestraCategoria = !!categoria && categoria !== SIN_CATEGORIA;
 
   return (
     <View className="flex-row items-center gap-sm w-full">
+      {recurrente && (
+        // El ícono de phosphor no acepta props de accesibilidad, así que la
+        // etiqueta va en la View que lo envuelve.
+        <View accessibilityLabel="Recurrente" testID="fila-recurrente">
+          <Alarm size={16} color={colors.warning} />
+        </View>
+      )}
+
       <View className="bg-secondary rounded-full px-md py-[6px] justify-center items-center">
         <Text className="text-foreground text-body font-medium leading-[normal]">{monto}</Text>
       </View>

@@ -19,6 +19,7 @@ import {
   hoyCivil,
   isoAChileno,
   movimientoDeLaPropuesta,
+  planVivoDeLaCadena,
   propuestasPendientes,
   sumarDias,
   unirCamposEditados,
@@ -32,6 +33,7 @@ import type {
   Movimiento,
   NuevaRecurrencia,
   Recurrencia,
+  RecurrenciaDeMovimiento,
 } from '@saldai/core'
 import { mockFeedConfig } from './config'
 import { MOVIMIENTOS, MOVIMIENTOS_MUCHOS, movimientoDeMentira } from './datos'
@@ -92,7 +94,7 @@ const ERRORES_POR_ITEM: { prefijo: string; espera: number; mensaje: string }[] =
   { prefijo: 'error token', espera: 300, mensaje: 'Error simulado: Token de sesión expirado o inválido' },
 ]
 
-export async function crearMovimiento(input: string) {
+export async function crearMovimiento(input: string, recurrencia?: RecurrenciaDeMovimiento) {
   const partes = input.split(',').map(p => p.trim())
   const item = partes[1] || input
   const monto = parseInt(partes[0].replace(/[^0-9]/g, ''), 10) || 9999
@@ -110,6 +112,14 @@ export async function crearMovimiento(input: string) {
   const nuevo = movimientoDeMentira(Date.now().toString(), monto, item, categorizar(item))
   MOVIMIENTOS.unshift(nuevo)
 
+  // Con recurrencia, el alta crea además el plan y deja esta primera ocurrencia
+  // confirmada: es lo que hace la función de Postgres, y el mock tiene que
+  // dejar el mismo estado o la propuesta de hoy volvería a aparecer.
+  if (recurrencia) {
+    const plan = planDelMovimiento(nuevo, recurrencia)
+    nuevo.recurrencia_id = plan.id
+  }
+
   // `POST /movimientos` devuelve lo que armó el parser, no la fila cruda: de ahí
   // salen `montoFormateado`, `categoriaSrc` y `fechaFormateada`. El mock las
   // faltaba y el tipo del contrato lo cacheó.
@@ -121,6 +131,7 @@ export async function crearMovimiento(input: string) {
       categoriaSrc: 'item' as const,
       fechaFormateada: isoAChileno(nuevo.fecha),
     },
+    ...(nuevo.recurrencia_id ? { recurrenciaId: nuevo.recurrencia_id } : {}),
   }
 }
 
@@ -393,4 +404,90 @@ export async function editarRecurrencia(id: string, cambio: CambioDeRecurrencia)
   }
 
   return { ok: true as const, errores: [] as [], datos: nuevo }
+}
+
+/**
+ * El plan de un movimiento marcado como recurrente, anclado en su fecha, y la
+ * decisión que deja esa primera ocurrencia confirmada.
+ *
+ * Las dos cosas juntas, como la función de Postgres: con el plan creado y la
+ * decisión sin escribir, el movimiento que la persona acaba de registrar
+ * volvería como propuesta.
+ */
+function planDelMovimiento(
+  movimiento: Movimiento,
+  recurrencia: RecurrenciaDeMovimiento
+): Recurrencia {
+  const plan: Recurrencia = {
+    id: `rec-${Date.now()}`,
+    monto: movimiento.monto,
+    monto_formateado: movimiento.monto_formateado,
+    item: movimiento.item,
+    categoria: movimiento.categoria,
+    categoria_src: 'campo',
+    metodo: movimiento.metodo,
+    notas: movimiento.notas ?? null,
+    frecuencia: recurrencia.frecuencia,
+    vigente_desde: movimiento.fecha,
+    vigente_hasta: recurrencia.hasta ?? null,
+    input_original: null,
+    zona: 'America/Santiago',
+    hoy_resuelto: null,
+    plan_anterior_id: null,
+  }
+
+  RECURRENCIAS.unshift(plan)
+  DECISIONES.push({ recurrenciaId: plan.id, fecha: movimiento.fecha })
+
+  return plan
+}
+
+/** Marca como recurrente un movimiento que ya existe. */
+export async function atarRecurrencia(id: string, recurrencia: RecurrenciaDeMovimiento) {
+  await esperar(500)
+
+  const movimiento = MOVIMIENTOS.find((m) => String(m.id) === String(id))
+  if (!movimiento) throw new Error('Error simulado: ese movimiento no existe')
+  if (movimiento.recurrencia_id) {
+    // El mismo 409 que da el unique de la base: dos toques seguidos no crean
+    // dos planes para el mismo movimiento.
+    throw new Error('Ese movimiento ya tiene una recurrencia')
+  }
+
+  const plan = planDelMovimiento(movimiento, recurrencia)
+  movimiento.recurrencia_id = plan.id
+
+  return { ok: true as const, errores: [] as [], datos: plan }
+}
+
+/** Un plan por id, y el que sigue proponiendo de su cadena. */
+export async function fetchRecurrencia(id: string) {
+  await esperar(300)
+
+  const plan = RECURRENCIAS.find((r) => r.id === id)
+  if (!plan) throw new Error('Error simulado: esa recurrencia no existe')
+
+  return {
+    ok: true as const,
+    errores: [] as [],
+    datos: plan,
+    vivo: planVivoDeLaCadena(RECURRENCIAS, id) ?? plan,
+  }
+}
+
+/** Termina un plan: deja de proponer desde hoy, sin borrar nada. */
+export async function terminarRecurrencia(id: string) {
+  await esperar(500)
+
+  const vivo = planVivoDeLaCadena(RECURRENCIAS, id)
+  if (!vivo) throw new Error('Error simulado: esa recurrencia no existe')
+
+  const indice = RECURRENCIAS.findIndex((r) => r.id === vivo.id)
+  const ayer = aIsoCivil(sumarDias(hoyCivil(), -1))
+  const corte = ayer < vivo.vigente_desde ? vivo.vigente_desde : ayer
+
+  const terminado = { ...vivo, vigente_hasta: corte }
+  RECURRENCIAS[indice] = terminado
+
+  return { ok: true as const, errores: [] as [], datos: terminado }
 }

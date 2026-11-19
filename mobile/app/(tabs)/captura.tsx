@@ -1,33 +1,49 @@
-import { formatearNumero } from '@saldai/core'
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
+import { DeviceEventEmitter, View } from 'react-native'
 import {
-  ActivityIndicator,
-  Pressable,
-  Text,
-  TextInput,
-  View,
-  Keyboard,
-  DeviceEventEmitter,
-} from 'react-native'
-import { useFocusEffect } from 'expo-router'
-import { Calendar, CaretDown } from 'phosphor-react-native'
-import DateTimePicker from '@react-native-community/datetimepicker'
-import Animated, { useAnimatedStyle } from 'react-native-reanimated'
-import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { CategorySelector, PaymentMethodSelector, useMovimientoMutation } from '@/features/movimientos'
-import { Input } from '@/components/ui/Input'
+  FormularioDeMovimiento,
+  useMovimientoMutation,
+  type ValoresDelMovimiento,
+} from '@/features/movimientos'
 import { Notification } from '@/components/ui/Notification'
 import { Alert } from '@/components/ui/Alert'
-import { colors } from '@/constants/theme'
 import { usePreferencias } from '@/features/perfil'
+import { BotonDeRecurrencia } from '@/features/recurrencias'
 
+/**
+ * El texto del chip de fecha para el día que se eligió en el calendario.
+ *
+ * Acá la fecha se guarda **como la escribiría la persona** ("Hoy", "Ayer",
+ * 05/03/2026) y no en ISO: lo que se manda es una línea que el parser lee del
+ * otro lado, así que el movimiento queda con el `input_original` que la persona
+ * habría tecleado.
+ */
+function textoDeLaFecha(elegida: Date): string {
+  const hoy = new Date()
+  hoy.setHours(0, 0, 0, 0)
+  const dia = new Date(elegida)
+  dia.setHours(0, 0, 0, 0)
+
+  const dias = Math.round((hoy.getTime() - dia.getTime()) / 86_400_000)
+  if (dias === 0) return 'Hoy'
+  if (dias === 1) return 'Ayer'
+
+  const dd = String(elegida.getDate()).padStart(2, '0')
+  const mm = String(elegida.getMonth() + 1).padStart(2, '0')
+  return `${dd}/${mm}/${elegida.getFullYear()}`
+}
+
+/**
+ * Registrar un movimiento.
+ *
+ * El formulario es el mismo componente que usa la vista del movimiento, así
+ * que crear y editar se ven igual: era la petición del diseño y además es lo
+ * que evita que las dos pantallas se vayan separando de a un arreglo. Lo que
+ * esta pantalla pone de su parte es qué pasa al guardar: el alta optimista, el
+ * mensaje de resultado y volver a dejar el cursor en el monto para el
+ * siguiente.
+ */
 export default function CapturaScreen() {
-  // Las dos funciones conmutables salen de las preferencias del perfil, no de
-  // una constante de compilación: el usuario las prende y las apaga en
-  // configuraciones.
-  const { categoriasVisibles, metodosVisibles } = usePreferencias()
-
   const {
     valores,
     metodo,
@@ -36,216 +52,95 @@ export default function CapturaScreen() {
     mensaje,
     handleChange,
     guardarMovimiento,
-    listo,
     lastSaved,
     categoriaInferida,
+    recurrencia,
+    setRecurrencia,
   } = useMovimientoMutation()
 
-  const montoRef = useRef<TextInput>(null)
-  const descripcionRef = useRef<TextInput>(null)
-  const [showDatePicker, setShowDatePicker] = useState(false)
-  const [date, setDate] = useState(new Date())
-  const insets = useSafeAreaInsets()
+  // Con la función apagada el botón no aparece: un plan que después no se ve en
+  // ningún lado es peor que no poder crearlo.
+  const { recurrenciasVisibles } = usePreferencias()
 
-  // Altura del teclado como shared value, actualizada en el hilo de UI
-  // siguiendo la animación real del sistema cuadro a cuadro. Es lo que hace
-  // que el form acompañe al teclado en vez de saltar cuando ya terminó.
-  const { height: alturaTeclado } = useReanimatedKeyboardAnimation()
-  
-  // Custom Alert para manejar los mensajes de error devueltos por la mutation
-  const [alertConfig, setAlertConfig] = useState<{ visible: boolean; message: string; type: 'error' | 'warning' | 'info' }>({ visible: false, message: '', type: 'error' })
+  // El día con el que abre el calendario. El texto del chip lo lleva el hook
+  // (es parte de la línea que se manda), así que el `Date` vive acá: de "Ayer"
+  // no se puede volver al día sin volver a resolverlo.
+  const [dia, setDia] = useState(new Date())
+
+  const [alerta, setAlerta] = useState('')
 
   useEffect(() => {
-    if (estado === 'error') {
-      setAlertConfig({ visible: true, message: mensaje || 'Error desconocido', type: 'error' })
-      setTimeout(() => setAlertConfig(prev => ({ ...prev, visible: false })), 4000)
-    }
+    if (estado !== 'error') return
+    setAlerta(mensaje || 'Error desconocido')
+    const limpiar = setTimeout(() => setAlerta(''), 4000)
+    return () => clearTimeout(limpiar)
   }, [estado, mensaje])
 
-  const handleAmountChange = (text: string) => {
-    // Solo permitimos números
-    const numericValue = text.replace(/[^0-9]/g, '')
-    handleChange('monto', numericValue)
-  }
-
-  const handleGuardar = () => {
-    // La lista no se recarga desde acá: el movimiento entra en la caché del mes al
-    // guardarlo y la mutación invalida ese mes sola (ver useMovimientoMutation).
-    guardarMovimiento(() => {
-      setTimeout(() => montoRef.current?.focus(), 100)
-    })
-  }
-
+  // El check que guarda está en el footer de la app, que es el que sabe en qué
+  // ruta está; llega por evento para no pasar un callback por la navegación.
   useEffect(() => {
-    const subscription = DeviceEventEmitter.addListener('submitCaptura', handleGuardar)
-    return () => {
-      subscription.remove()
-    }
-  }, [handleGuardar])
+    const suscripcion = DeviceEventEmitter.addListener('submitCaptura', () => {
+      // La lista no se recarga desde acá: el movimiento entra en la caché del mes
+      // al guardarlo y la mutación invalida ese mes sola (ver useMovimientoMutation).
+      guardarMovimiento()
+    })
+    return () => suscripcion.remove()
+  }, [guardarMovimiento])
 
-  useFocusEffect(
-    useCallback(() => {
-      // Screen is focused
-      const focusTimeout = setTimeout(() => {
-        montoRef.current?.focus()
-      }, 100)
-
-      return () => {
-        // Screen is losing focus
-        clearTimeout(focusTimeout)
-        Keyboard.dismiss()
-      }
-    }, [])
-  )
-
-  const onDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(false)
-    if (selectedDate) {
-      setDate(selectedDate)
-      
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      const selectedDay = new Date(selectedDate)
-      selectedDay.setHours(0, 0, 0, 0)
-      
-      const diffTime = Math.abs(today.getTime() - selectedDay.getTime())
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-      
-      if (diffDays === 0) {
-        handleChange('fecha', 'Hoy')
-      } else if (diffDays === 1 && selectedDay < today) {
-        handleChange('fecha', 'Ayer')
-      } else {
-        const dd = String(selectedDate.getDate()).padStart(2, '0')
-        const mm = String(selectedDate.getMonth() + 1).padStart(2, '0')
-        const yyyy = selectedDate.getFullYear()
-        handleChange('fecha', `${dd}/${mm}/${yyyy}`)
-      }
-    }
+  const enPantalla: ValoresDelMovimiento = {
+    monto: valores.monto,
+    item: valores.item,
+    categoria: valores.categoria,
+    metodo,
+    // La captura no muestra el campo de nota: acá se escribe una línea, y la
+    // nota se agrega después abriendo el movimiento.
+    notas: '',
   }
 
-  // Formato con separadores de miles para Chile
-  const formattedAmount = valores.monto ? formatearNumero(parseInt(valores.monto, 10)) : ''
-
-  // El form está anclado abajo en los dos estados del diseño; lo único que
-  // cambia es qué ocupa el espacio debajo: el footer, o el teclado. Un solo
-  // valor cubre los dos, así que la transición entre ellos es continua y no
-  // hay booleano de "teclado visible" del que salgan saltos.
-  const espacioFooter = 96 + insets.bottom
-  const estiloEspacio = useAnimatedStyle(() => ({
-    // `height` llega negativa (el signo sirve para un translateY directo);
-    // acá hace falta la magnitud.
-    paddingBottom: Math.max(Math.abs(alturaTeclado.value), espacioFooter),
-  }))
+  const cambiar = (cambio: Partial<ValoresDelMovimiento>) => {
+    if (cambio.metodo !== undefined) setMetodo(cambio.metodo)
+    if (cambio.monto !== undefined) handleChange('monto', cambio.monto)
+    if (cambio.item !== undefined) handleChange('item', cambio.item)
+    if (cambio.categoria !== undefined) handleChange('categoria', cambio.categoria)
+    // `notas` no llega: el campo no se muestra en la captura.
+  }
 
   return (
-    <Pressable
-      // Tocar fuera de los campos baja el teclado. Los taps sobre un input o
-      // sobre el chip de fecha los atiende ese elemento y no llegan acá.
-      accessible={false}
-      onPress={() => Keyboard.dismiss()}
-      className="flex-1 bg-background justify-end items-center"
-    >
-      <Alert 
-        visible={alertConfig.visible} 
-        message={alertConfig.message} 
-        type={alertConfig.type} 
-      />
-      <Notification 
+    <View className="flex-1 bg-background">
+      <Alert visible={!!alerta} message={alerta} type="error" />
+      <Notification
         visible={estado === 'ok' && lastSaved !== null}
         monto={lastSaved?.monto || ''}
         descripcion={lastSaved?.descripcion || ''}
         type="success"
       />
 
-      <Animated.View style={[{ width: '100%' }, estiloEspacio]}>
-        <View className="w-full flex-col items-center px-xl pt-3xl pb-lg">
-        <View className="flex-col items-start gap-lg w-full">
-          <View className="flex-row justify-end items-center w-full mb-sm">
-            <Text className="text-muted-foreground text-display font-light mr-xs">$</Text>
-            <Input
-              variante="sin-fondo"
-              ref={montoRef}
-              value={formattedAmount}
-              onChangeText={handleAmountChange}
-              placeholder="0"
-              keyboardType="numeric"
-              returnKeyType="next"
-              onSubmitEditing={() => descripcionRef.current?.focus()}
-              editable={estado !== 'loading'}
-              className={`text-display font-light min-w-[30px] text-right ${estado === 'loading' ? 'opacity-50' : ''}`}
+      <FormularioDeMovimiento
+        valores={enPantalla}
+        onCambiar={cambiar}
+        fechaTexto={valores.fecha || 'Hoy'}
+        fechaDelPicker={dia}
+        onElegirFecha={(elegida) => {
+          setDia(elegida)
+          handleChange('fecha', textoDeLaFecha(elegida))
+        }}
+        categoriaInferida={categoriaInferida}
+        ocupado={estado === 'loading'}
+        enfocarAlEntrar
+        accionesDeLaFila={
+          recurrenciasVisibles ? (
+            // Acá todavía no hay plan: el movimiento no existe, así que la
+            // frecuencia queda elegida y viaja con el alta. Quitarla es soltar
+            // lo que se eligió, no cortar nada.
+            <BotonDeRecurrencia
+              frecuenciaElegida={recurrencia?.frecuencia ?? null}
+              onElegir={(frecuencia) => setRecurrencia({ frecuencia })}
+              onQuitar={() => setRecurrencia(null)}
+              ocupado={estado === 'loading'}
             />
-          </View>
-
-          <View className="flex-row py-lg justify-between items-center w-full">
-            <Input
-              variante="sin-fondo"
-              ref={descripcionRef}
-              value={valores.item}
-              onChangeText={(val) => handleChange('item', val)}
-              placeholder="Descripción..."
-              maxLength={40}
-              returnKeyType="next"
-              onSubmitEditing={() => {
-                // La tecla de acción del teclado pasa al siguiente campo, que
-                // es la fecha. Abrir el picker baja el teclado solo, así que
-                // el footer con el check vuelve justo cuando toca guardar.
-                Keyboard.dismiss()
-                setShowDatePicker(true)
-              }}
-              editable={estado !== 'loading'}
-              className={`flex-1 text-body text-right w-full ${estado === 'loading' ? 'opacity-50' : ''}`}
-            />
-          </View>
-
-          <View className="flex-row justify-end items-center gap-sm w-full">
-            {estado === 'loading' && <ActivityIndicator size="small" color={colors.warning} className="mr-2" />}
-            <Pressable 
-              className={`flex-row px-md py-sm justify-center items-center gap-sm rounded-full bg-secondary ${estado === 'loading' ? 'opacity-50' : ''}`}
-              disabled={estado === 'loading'}
-              onPress={() => {
-                Keyboard.dismiss();
-                setShowDatePicker(true);
-              }}
-            >
-              <Calendar size={16} className="text-muted-foreground" />
-              <Text className={`text-body font-medium ${valores.fecha ? 'text-foreground' : 'text-muted-foreground'}`}>
-                {valores.fecha || 'Hoy'}
-              </Text>
-              <CaretDown size={16} className="text-muted-foreground" />
-            </Pressable>
-          </View>
-
-          {/* La categoría se va deduciendo de la descripción mientras se escribe:
-              aparece atenuada hasta que un tap la confirma. Apagado en la v1,
-              se prende y se apaga en configuraciones. */}
-          <View className={`w-full ${estado === 'loading' ? 'opacity-50' : ''}`} pointerEvents={estado === 'loading' ? 'none' : 'auto'}>
-            {categoriasVisibles && (
-              <CategorySelector
-                selectedCategory={valores.categoria}
-                inferredCategory={categoriaInferida}
-                onSelectCategory={(cat) => handleChange('categoria', cat)}
-              />
-            )}
-            {metodosVisibles && (
-              <PaymentMethodSelector
-                method={metodo}
-                onSelectMethod={setMetodo}
-              />
-            )}
-          </View>
-        </View>
-        </View>
-      </Animated.View>
-
-      {showDatePicker && (
-        <DateTimePicker
-          value={date}
-          mode="date"
-          display="default"
-          onChange={onDateChange}
-        />
-      )}
-    </Pressable>
+          ) : null
+        }
+      />
+    </View>
   )
 }

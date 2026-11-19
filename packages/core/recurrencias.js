@@ -499,6 +499,38 @@ function planVigente(plan, hoy) {
   return !plan?.vigente_hasta || plan.vigente_hasta >= hoy
 }
 
+/**
+ * El plan vivo de una cadena de planes, empezando por `id`.
+ *
+ * "Editar de aquí en adelante" cierra un plan y crea el siguiente apuntando al
+ * cerrado (`plan_anterior_id`), así que un movimiento guarda **la versión del
+ * plan que lo propuso**, que puede no ser la que sigue proponiendo. Sin esto,
+ * terminar la recurrencia desde un movimiento de marzo cerraría una versión que
+ * ya estaba cerrada y el plan seguiría proponiendo como si nada.
+ *
+ * Devuelve `null` si `id` no está entre los planes. Lleva control de vistos
+ * porque una cadena con un ciclo —una fila mal escrita a mano— colgaría el
+ * pedido en vez de dar un error.
+ */
+function planVivoDeLaCadena(planes, id) {
+  const lista = Array.isArray(planes) ? planes : []
+  const siguienteDe = new Map()
+  for (const plan of lista) {
+    if (plan?.plan_anterior_id) siguienteDe.set(plan.plan_anterior_id, plan)
+  }
+
+  let actual = lista.find((plan) => plan?.id === id) ?? null
+  const vistos = new Set()
+  while (actual && !vistos.has(actual.id)) {
+    vistos.add(actual.id)
+    const siguiente = siguienteDe.get(actual.id)
+    if (!siguiente) break
+    actual = siguiente
+  }
+
+  return actual
+}
+
 module.exports = {
   FRECUENCIAS,
   CAMPOS_DEL_PLAN,
@@ -513,4 +545,5 @@ module.exports = {
   validarRecurrenciaDeMovimiento,
   validarCambioDePlan,
   planVigente,
+  planVivoDeLaCadena,
 }

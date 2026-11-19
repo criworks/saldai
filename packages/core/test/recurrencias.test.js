@@ -11,6 +11,7 @@ const {
   validarRecurrenciaDeMovimiento,
   validarCambioDePlan,
   planVigente,
+  planVivoDeLaCadena,
   MAXIMO_DE_OCURRENCIAS,
 } = require('../recurrencias')
 
@@ -297,4 +298,29 @@ test('atar un plan a un movimiento viejo deja los meses intermedios por confirma
     pendientes.map((p) => p.fecha),
     ['2026-09-10', '2026-10-10', '2026-11-10']
   )
+})
+
+test('el plan vivo de una cadena es el último, no el que anotó el movimiento', () => {
+  // Un movimiento de agosto guarda la versión del plan que lo propuso; en
+  // septiembre el usuario editó "de aquí en adelante" y esa versión quedó
+  // cerrada. Actuar sobre la recurrencia desde ese movimiento tiene que llegar
+  // a la que sigue proponiendo, o se cierra una ya cerrada y el plan sigue vivo.
+  const planes = [
+    { id: 'v1', plan_anterior_id: null, vigente_hasta: '2026-08-31' },
+    { id: 'v2', plan_anterior_id: 'v1', vigente_hasta: '2026-10-31' },
+    { id: 'v3', plan_anterior_id: 'v2', vigente_hasta: null },
+  ]
+
+  assert.strictEqual(planVivoDeLaCadena(planes, 'v1').id, 'v3')
+  assert.strictEqual(planVivoDeLaCadena(planes, 'v3').id, 'v3')
+  assert.strictEqual(planVivoDeLaCadena(planes, 'no-existe'), null)
+})
+
+test('una cadena con un ciclo no cuelga el pedido', () => {
+  const planes = [
+    { id: 'a', plan_anterior_id: 'b' },
+    { id: 'b', plan_anterior_id: 'a' },
+  ]
+
+  assert.ok(['a', 'b'].includes(planVivoDeLaCadena(planes, 'a').id))
 })

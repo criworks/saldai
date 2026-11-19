@@ -294,6 +294,15 @@ export declare function movimientoDeLaPropuesta(
 
 export declare function validarFrecuencia(frecuencia: unknown): boolean
 
+/**
+ * El plan vivo de una cadena de planes, empezando por `id`: el último
+ * "editar de aquí en adelante". `null` si ese id no está en la lista.
+ */
+export declare function planVivoDeLaCadena(
+  planes: Recurrencia[],
+  id: string
+): Recurrencia | null
+
 /** `true` si el plan sigue proponiendo fechas al día `hoy`. */
 export declare function planVigente(plan: Recurrencia, hoy: FechaISO): boolean
 
@@ -436,6 +445,20 @@ export interface MovimientosDelMes {
 export interface MovimientoCreado {
   ok: true
   datos: MovimientoParseado & { id: string | number }
+  /** El plan que se creó junto al movimiento, si el alta pidió recurrencia. */
+  recurrenciaId?: string
+}
+
+/**
+ * Lo que la app manda para que un movimiento sea recurrente: en el cuerpo del
+ * alta (`POST /movimientos`, campo `recurrencia`) o en
+ * `POST /movimientos/:id/recurrencia`, que es la misma cosa sobre un movimiento
+ * que ya existe.
+ */
+export interface RecurrenciaDeMovimiento {
+  frecuencia: Frecuencia
+  /** Último día en que el plan propone. Omitido o `null` = sin fin. */
+  hasta?: FechaISO | null
 }
 
 /** `PATCH /movimientos/:id` y `DELETE /movimientos/:id` */
@@ -463,7 +486,24 @@ export interface PropuestasPendientes {
   datos: PropuestaPendiente[]
 }
 
-/** `POST /recurrencias` y `PATCH /recurrencias/:id` */
+/**
+ * `GET /recurrencias/:id`
+ *
+ * `datos` es el plan de ese id y `vivo` el que sigue proponiendo de su cadena:
+ * un movimiento guarda la versión del plan que lo propuso, que puede estar
+ * cerrada por un "editar de aquí en adelante" posterior.
+ */
+export interface RecurrenciaConCadena {
+  ok: true
+  errores: []
+  datos: Recurrencia
+  vivo: Recurrencia
+}
+
+/**
+ * `POST /recurrencias`, `PATCH /recurrencias/:id`,
+ * `POST /recurrencias/:id/terminar` y `POST /movimientos/:id/recurrencia`
+ */
 export interface RecurrenciaGuardada {
   ok: true
   errores: []
