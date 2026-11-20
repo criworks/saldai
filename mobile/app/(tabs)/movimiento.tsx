@@ -92,26 +92,47 @@ export default function MovimientoScreen() {
     [recurrenciaId, fecha, propuestas]
   )
 
+  // La identidad de lo que la pantalla está mostrando.
+  //
+  // Hace falta porque esta ruta vive en las tabs y **queda montada** cuando se
+  // vuelve atrás: el siguiente `push` entra al mismo componente con su estado
+  // intacto. Sin atar el borrador a esta llave, abrir otra fila mostraba el
+  // movimiento anterior, y las acciones se mandaban contra el `original` viejo
+  // —con una propuesta en pantalla y un movimiento guardado, el PATCH salía con
+  // un id `undefined` y la API respondía que no era un uuid—.
+  const llaveDelSujeto = id ?? (recurrenciaId && fecha ? `${recurrenciaId}|${fecha}` : '')
+
   // Lo que se está editando, y lo que había cuando se abrió. Se arma **una sola
-  // vez**, con lo primero que llega: un refetch del mes pisaría lo que la
-  // persona está escribiendo, y confirmar una propuesta la saca de la lista, así
-  // que sin la copia la pantalla se quedaría sin nada que mostrar justo mientras
-  // vuelve atrás.
+  // vez por sujeto**, con lo primero que llega: un refetch del mes pisaría lo
+  // que la persona está escribiendo, y confirmar una propuesta la saca de la
+  // lista, así que sin la copia la pantalla se quedaría sin nada que mostrar
+  // justo mientras vuelve atrás.
   const [borrador, setBorrador] = useState<BorradorDeMovimiento | null>(null)
   const [original, setOriginal] = useState<Movimiento | PropuestaPendiente | null>(null)
+  const [cargado, setCargado] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [confirmarBorrado, setConfirmarBorrado] = useState(false)
 
   useEffect(() => {
-    if (borrador) return
+    if (cargado === llaveDelSujeto) return
+
     if (propuesta) {
       setBorrador(borradorDePropuesta(propuesta))
       setOriginal(propuesta)
     } else if (movimiento) {
       setBorrador(borradorDe(movimiento))
       setOriginal(movimiento)
+    } else {
+      // Todavía no llegó a la caché: no se arma nada y la pantalla espera. Sin
+      // este caso, el borrador del sujeto anterior seguiría en pantalla.
+      return
     }
-  }, [borrador, movimiento, propuesta])
+
+    setCargado(llaveDelSujeto)
+    // El error y el modal son del sujeto anterior y no de este.
+    setError('')
+    setConfirmarBorrado(false)
+  }, [cargado, llaveDelSujeto, movimiento, propuesta])
 
   const esPropuesta = !!recurrenciaId && !!fecha
 
@@ -224,10 +245,12 @@ export default function MovimientoScreen() {
     }
   })
 
-  if (!borrador) {
+  if (!borrador || cargado !== llaveDelSujeto) {
     // O todavía no llegó el mes a la caché, o la fila ya no está (se eliminó en
     // otro lado). Las dos se ven igual y de las dos se sale con la flecha del
-    // footer, así que no hay dos mensajes distintos que escribir.
+    // footer, así que no hay dos mensajes distintos que escribir. Y mientras el
+    // borrador sea de otro sujeto no se dibuja: es de la vez anterior que se
+    // abrió esta pantalla.
     return (
       <View className="flex-1 bg-background items-center justify-center">
         <ActivityIndicator size="small" color={colors.textMuted} />

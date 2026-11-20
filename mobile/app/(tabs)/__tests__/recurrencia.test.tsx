@@ -211,3 +211,19 @@ describe('un plan que ya existe', () => {
     expect(mockVolver).toHaveBeenCalled()
   })
 })
+
+test('"Nueva recurrencia" abre vacía aunque antes se haya editado un plan', async () => {
+  // La ruta vive en las tabs y no se desmonta al volver atrás, así que la
+  // segunda entrada reusa el estado de la primera: sin atar el borrador a la
+  // identidad de los parámetros, crear un plan abría con los valores del que se
+  // acababa de editar, y el check los habría mandado como un plan nuevo.
+  mockParametros = { id: 'rec-1' }
+  const { rerender } = montar()
+  await screen.findByDisplayValue('arriendo')
+
+  mockParametros = {}
+  rerender(<RecurrenciaScreen />)
+
+  await waitFor(() => expect(screen.queryByDisplayValue('arriendo')).toBeNull())
+  expect(screen.getByLabelText('Descripción')).toHaveDisplayValue('')
+})

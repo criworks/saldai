@@ -49,6 +49,42 @@ https://claude.ai/artifact/6H1LTgBbkuVTwSTDFuUR5G
 
 ---
 
+## Una pantalla de las tabs no se desmonta al volver atrás
+
+PR de las propuestas en el día que les toca · noviembre 2026
+
+- **Síntoma**: "me queda un movimiento pendiente que no me deja guardar ni
+  eliminar, con el alert «el parámetro id tiene que ser el uuid de un
+  movimiento»; y cuando abro cualquier otro movimiento la app me muestra uno que
+  estuve creando o editando antes".
+- **Causa**: las dos cosas eran lo mismo. `app/(tabs)/movimiento.tsx` y
+  `recurrencia.tsx` son pantallas del navegador de tabs, y ese navegador **las
+  deja montadas**: `router.back()` las saca de pantalla pero no las destruye, así
+  que el `push` siguiente entra al mismo componente con su `useState` intacto. El
+  borrador se armaba con un efecto que se cortaba solo con `if (borrador) return`
+  —pensado para que un refetch no pisara lo que la persona escribe—, y esa guarda
+  no distingue "ya lo armé para este movimiento" de "ya lo armé para otro". El
+  alert salía de ahí: con una propuesta en los parámetros y un movimiento viejo
+  en el estado, guardar mandaba un `PATCH /movimientos/undefined`.
+- **Por qué no se notaba**: nada de esto se ve en un render aislado. Los tests
+  montaban la pantalla una vez por caso, que es justo lo que la app no hace, y
+  cada uno pasaba. En el teléfono aparece recién en la **segunda** entrada, y el
+  síntoma que se ve primero —un alert sobre un uuid— apunta a la API y no a la
+  pantalla.
+- **Arreglo**: el borrador se ata a la identidad que viene en los parámetros
+  (`id`, o el plan y la fecha de la propuesta). Si la llave cargada no es la de
+  los parámetros, se rearma y se limpian el error y el modal; y mientras no
+  coincidan la pantalla no dibuja el formulario, para no mostrar un frame del
+  sujeto anterior. Los tests nuevos hacen `rerender` con parámetros distintos sin
+  desmontar, que es la forma de reproducir esto en Jest.
+- **Regla**: en una ruta de las tabs, **el estado no nace en el mount**: nace con
+  la identidad que la ruta recibe. Cualquier `useState` inicializado desde los
+  parámetros o cualquier efecto con guarda de "una sola vez" tiene que llevar esa
+  identidad adentro. Y un caso que depende de entrar dos veces se prueba con dos
+  `rerender`, no con dos `render`.
+
+---
+
 ## El `desde` de "editar de aquí en adelante" también es el ancla del plan que sigue
 
 PR de la vista de recurrencias · noviembre 2026
