@@ -39,6 +39,9 @@ del formato; el texto de cada entrada es el original.
 
 - **El mes abierto muestra también las repeticiones que todavía no llegaron.** Antes lo por confirmar llegaba hasta hoy, así que un plan mensual no mostraba nada hasta que caía el día: abrías diciembre y el arriendo del 5 no estaba en ninguna parte. Ahora cada mes muestra lo que pasa en él, con las repeticiones en su fecha y por confirmar. Lo atrasado sigue viniendo siempre, incluso mirando un mes viejo, porque es lo que uno se está olvidando.
 
+### Fixed
+- **La vista de un movimiento y la de un plan ya no abren con lo de la vez anterior.** Abrir una fila mostraba el movimiento que se había abierto antes, y con eso el check y el tacho salían contra ese otro: en una propuesta aparecía "el parámetro id tiene que ser el uuid de un movimiento" y no se podía ni guardar ni eliminar. Pasaba porque las dos pantallas viven en las pestañas y volver atrás no las cierra, así que la siguiente entrada reusaba lo que había quedado escrito. "Nueva recurrencia" tenía lo mismo: abría con los valores del plan que se acababa de editar. Queda anotado en `docs/aprendizajes.md`.
+
 ## [1.8.1] - 2026-11-13
 ### Changed
 - **`mobile/.env.example` muestra las dos formas válidas de `EXPO_PUBLIC_API_URL`**: la URL que da Render y un dominio propio apuntado a ese servicio. El placeholder nombraba solo la primera, y después de mudar la API a un dominio propio el ejemplo sugería el único de los dos valores que ya no es el que se usa. También queda escrito que va sin barra final, porque las llamadas concatenan la ruta directo (`${API_URL}/movimientos`) y una barra de más deja un `//` en el path.

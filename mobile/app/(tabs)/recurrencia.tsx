@@ -86,21 +86,43 @@ export default function RecurrenciaScreen() {
 
   const plan = id ? recurrencias.find((r) => r.id === id) ?? null : null
 
-  // Se arma una sola vez, con lo primero que llega: un refetch de la lista
-  // pisaría lo que la persona está escribiendo, y terminar un plan lo saca de la
-  // lista justo mientras la pantalla vuelve atrás.
-  const [borrador, setBorrador] = useState<BorradorDeMovimiento | null>(id ? null : borradorNuevo())
+  // Qué plan está en pantalla, o `nuevo`. Esta ruta vive en las tabs y **queda
+  // montada** al volver atrás, así que sin atar el borrador a esta llave entrar
+  // de nuevo reusa el estado de la vez anterior: "Nueva recurrencia" abriría
+  // con los valores del plan que se acababa de editar.
+  const llaveDelPlan = id ?? 'nuevo'
+
+  // Se arma una sola vez por plan, con lo primero que llega: un refetch de la
+  // lista pisaría lo que la persona está escribiendo, y terminar un plan lo saca
+  // de la lista justo mientras la pantalla vuelve atrás.
+  const [borrador, setBorrador] = useState<BorradorDeMovimiento | null>(null)
   const [original, setOriginal] = useState<Recurrencia | null>(null)
   const [frecuencia, setFrecuencia] = useState<Frecuencia>('mensual')
+  const [cargado, setCargado] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [confirmarEliminar, setConfirmarEliminar] = useState(false)
 
   useEffect(() => {
-    if (borrador || !plan) return
-    setBorrador(borradorDePlan(plan))
-    setOriginal(plan)
-    setFrecuencia(plan.frecuencia)
-  }, [borrador, plan])
+    if (cargado === llaveDelPlan) return
+
+    if (!id) {
+      setBorrador(borradorNuevo())
+      setOriginal(null)
+      setFrecuencia('mensual')
+    } else if (plan) {
+      setBorrador(borradorDePlan(plan))
+      setOriginal(plan)
+      setFrecuencia(plan.frecuencia)
+    } else {
+      // La lista todavía no llegó: la pantalla espera en vez de mostrar el plan
+      // anterior.
+      return
+    }
+
+    setCargado(llaveDelPlan)
+    setError('')
+    setConfirmarEliminar(false)
+  }, [cargado, llaveDelPlan, id, plan])
 
   const ocupado = creando || editando || terminando
 
@@ -187,7 +209,7 @@ export default function RecurrenciaScreen() {
     }
   })
 
-  if (!borrador) {
+  if (!borrador || cargado !== llaveDelPlan) {
     return (
       <View className="flex-1 bg-background items-center justify-center">
         <Text className="text-muted-foreground text-body font-normal">

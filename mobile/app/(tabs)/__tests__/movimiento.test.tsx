@@ -322,3 +322,42 @@ describe('la recurrencia desde el movimiento', () => {
     expect(mockVolver).not.toHaveBeenCalled()
   })
 })
+
+describe('la pantalla queda montada entre dos entradas', () => {
+  // `(tabs)/movimiento` es una pantalla de las tabs: al volver atrás no se
+  // desmonta, así que la siguiente entra al mismo componente con el estado de
+  // la vez anterior. Sin atar el borrador a la identidad de los parámetros, la
+  // pantalla mostraba el movimiento anterior y las acciones salían contra él.
+  test('abrir otra cosa no muestra la anterior', async () => {
+    mockParametros = { id: 'mov-1' }
+    const { rerender } = montar()
+    await screen.findByDisplayValue('uber')
+
+    mockParametros = { recurrenciaId: 'rec-1', fecha: '2026-03-05' }
+    rerender(<MovimientoScreen />)
+
+    expect(await screen.findByDisplayValue('arriendo')).toBeTruthy()
+    expect(screen.queryByDisplayValue('uber')).toBeNull()
+  })
+
+  test('y el check va contra lo que está en pantalla, no contra lo anterior', async () => {
+    // Este era el síntoma raro: con una propuesta en pantalla y un movimiento
+    // guardado en el estado, el check mandaba un PATCH con un id `undefined` y
+    // la API respondía "el parámetro id tiene que ser el uuid de un movimiento",
+    // sin dejar guardar ni eliminar.
+    mockParametros = { id: 'mov-1' }
+    const { rerender } = montar()
+    await screen.findByDisplayValue('uber')
+
+    mockParametros = { recurrenciaId: 'rec-1', fecha: '2026-03-05' }
+    rerender(<MovimientoScreen />)
+    await screen.findByDisplayValue('arriendo')
+
+    tocarCheck()
+
+    await waitFor(() =>
+      expect(confirmarMock).toHaveBeenCalledWith('rec-1', '2026-03-05', {})
+    )
+    expect(editarMock).not.toHaveBeenCalled()
+  })
+})
