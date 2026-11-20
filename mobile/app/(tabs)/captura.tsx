@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { DeviceEventEmitter, View } from 'react-native'
 import {
   FormularioDeMovimiento,
+  isoDelDia,
   nombreRelativoDelDia,
   useMovimientoMutation,
   type ValoresDelMovimiento,
@@ -129,7 +130,12 @@ export default function CapturaScreen() {
             // lo que se eligió, no cortar nada.
             <BotonDeRecurrencia
               frecuenciaElegida={recurrencia?.frecuencia ?? null}
-              onElegir={(frecuencia) => setRecurrencia({ frecuencia })}
+              repeticionElegida={recurrencia?.repeticion ?? null}
+              // El ancla es el día que el movimiento va a tener, y de ahí sale
+              // el default de la regla: "cada mes" significa "el día 2" porque
+              // el movimiento es del 2.
+              ancla={isoDelDia(dia)}
+              onElegir={(frecuencia, repeticion) => setRecurrencia({ frecuencia, repeticion })}
               onQuitar={() => setRecurrencia(null)}
               ocupado={estado === 'loading'}
             />

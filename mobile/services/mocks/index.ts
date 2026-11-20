@@ -380,6 +380,7 @@ export async function editarRecurrencia(id: string, cambio: CambioDeRecurrencia)
     metodo: Recurrencia['metodo']
     notas: string | null
     frecuencia: Recurrencia['frecuencia']
+    repeticion: Repeticion
     vigenteHasta: string | null
   }
 
@@ -399,6 +400,10 @@ export async function editarRecurrencia(id: string, cambio: CambioDeRecurrencia)
     metodo: siguiente.metodo,
     notas: siguiente.notas,
     frecuencia: siguiente.frecuencia,
+    dia_de_la_semana: siguiente.repeticion.diaDeLaSemana,
+    semana_del_mes: siguiente.repeticion.semanaDelMes,
+    dia_del_mes: siguiente.repeticion.diaDelMes,
+    mes_del_anio: siguiente.repeticion.mesDelAnio,
     vigente_desde: desde,
     vigente_hasta: siguiente.vigenteHasta,
     plan_anterior_id: enElLugar ? (previo.plan_anterior_id ?? null) : previo.id,
@@ -442,6 +447,12 @@ function planDelMovimiento(
     metodo: movimiento.metodo,
     notas: movimiento.notas ?? null,
     frecuencia: recurrencia.frecuencia,
+    // La regla sin elegir queda en null, que es "derivá del ancla": acá, la
+    // fecha del movimiento.
+    dia_de_la_semana: recurrencia.repeticion?.diaDeLaSemana ?? null,
+    semana_del_mes: recurrencia.repeticion?.semanaDelMes ?? null,
+    dia_del_mes: recurrencia.repeticion?.diaDelMes ?? null,
+    mes_del_anio: recurrencia.repeticion?.mesDelAnio ?? null,
     vigente_desde: movimiento.fecha,
     vigente_hasta: recurrencia.hasta ?? null,
     input_original: null,

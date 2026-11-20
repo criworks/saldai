@@ -287,9 +287,20 @@ describe('la recurrencia desde el movimiento', () => {
     // la API (el plan se ancla en la fecha del movimiento).
     await userEvent.press(await screen.findByLabelText('Hacer recurrente'))
     await userEvent.press(screen.getByLabelText('Cada mes'))
+    await userEvent.press(screen.getByLabelText('Listo'))
 
     await waitFor(() =>
-      expect(atarMock).toHaveBeenCalledWith('mov-1', { frecuencia: 'mensual' })
+      expect(atarMock).toHaveBeenCalledWith('mov-1', {
+        frecuencia: 'mensual',
+        // Sin regla elegida viaja vacía, que es "derivá del ancla": acá, el día
+        // del mes de la fecha del movimiento.
+        repeticion: {
+          diaDeLaSemana: null,
+          semanaDelMes: null,
+          diaDelMes: null,
+          mesDelAnio: null,
+        },
+      })
     )
     expect(mockVolver).not.toHaveBeenCalled()
   })

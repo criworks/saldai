@@ -2,9 +2,12 @@ import {
   isoAChileno,
   METODO_DEFAULT,
   proximaOcurrencia,
+  repeticionDelPlan,
   SIN_CATEGORIA,
+  SIN_REPETICION,
   type Frecuencia,
   type Recurrencia,
+  type Repeticion,
 } from '@saldai/core'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Trash } from 'phosphor-react-native'
@@ -100,6 +103,7 @@ export default function RecurrenciaScreen() {
   const [borrador, setBorrador] = useState<BorradorDeMovimiento | null>(null)
   const [original, setOriginal] = useState<Recurrencia | null>(null)
   const [frecuencia, setFrecuencia] = useState<Frecuencia>('mensual')
+  const [repeticion, setRepeticion] = useState<Repeticion>(SIN_REPETICION)
   const [cargado, setCargado] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [confirmarEliminar, setConfirmarEliminar] = useState(false)
@@ -111,10 +115,12 @@ export default function RecurrenciaScreen() {
       setBorrador(borradorNuevo())
       setOriginal(null)
       setFrecuencia('mensual')
+      setRepeticion(SIN_REPETICION)
     } else if (plan) {
       setBorrador(borradorDePlan(plan))
       setOriginal(plan)
       setFrecuencia(plan.frecuencia)
+      setRepeticion(repeticionDelPlan(plan))
     } else {
       // La lista todavía no llegó: la pantalla espera en vez de mostrar el plan
       // anterior.
@@ -155,6 +161,7 @@ export default function RecurrenciaScreen() {
             metodo: borrador.metodo,
             notas: borrador.notas.trim() || null,
             frecuencia,
+            repeticion,
           },
         })
       } else {
@@ -164,6 +171,7 @@ export default function RecurrenciaScreen() {
         await crear({
           input: [monto, item, borrador.categoria, borrador.metodo].join(', '),
           frecuencia,
+          repeticion,
           desde: borrador.fecha,
           notas: borrador.notas.trim() || null,
         })
@@ -253,7 +261,14 @@ export default function RecurrenciaScreen() {
           // eliminar el plan es el tacho de la barra de abajo.
           <BotonDeRecurrencia
             frecuenciaElegida={frecuencia}
-            onElegir={setFrecuencia}
+            repeticionElegida={repeticion}
+            // El ancla de un plan es la fecha que tiene en pantalla, y de ahí
+            // sale el default de la regla: cambiarla cambia el default.
+            ancla={borrador.fecha}
+            onElegir={(elegida, regla) => {
+              setFrecuencia(elegida)
+              setRepeticion(regla)
+            }}
             onQuitar={() => {}}
             permitirQuitar={false}
             ocupado={ocupado}

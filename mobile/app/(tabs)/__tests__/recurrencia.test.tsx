@@ -121,6 +121,8 @@ describe('un plan nuevo', () => {
     // La frecuencia es lo propio del plan y va en el botón de alarma.
     await userEvent.press(screen.getByLabelText('Recurrente'))
     await userEvent.press(screen.getByLabelText('Cada semana'))
+    // La frecuencia y la regla se guardan juntas, al tocar "Listo".
+    await userEvent.press(screen.getByLabelText('Listo'))
     tocarCheck()
 
     await waitFor(() =>

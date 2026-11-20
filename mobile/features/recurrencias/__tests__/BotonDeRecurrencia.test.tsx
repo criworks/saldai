@@ -16,6 +16,10 @@ const PLAN: Recurrencia = {
   frecuencia: 'mensual',
   vigente_desde: '2026-01-05',
   vigente_hasta: null,
+  dia_de_la_semana: null,
+  semana_del_mes: null,
+  dia_del_mes: null,
+  mes_del_anio: null,
   input_original: null,
   zona: 'America/Santiago',
   hoy_resuelto: null,
@@ -59,21 +63,69 @@ test('con plan el botón está activo y dice cada cuánto', () => {
   expect(screen.getByText('Cada mes')).toBeTruthy()
 })
 
-test('elegir una frecuencia la avisa una sola vez, y la misma no avisa nada', async () => {
-  const { onElegir } = montar()
+test('la frecuencia y la regla se guardan juntas, al tocar Listo', async () => {
+  // Una escritura por toque guardaría un plan a medio configurar que ya empezó
+  // a proponer: cambiar de "mes" a "año" y después el mes serían dos.
+  const { onElegir } = montar({ ancla: '2026-01-06' })
 
   await userEvent.press(screen.getByLabelText('Hacer recurrente'))
   await userEvent.press(screen.getByLabelText('Cada semana'))
 
-  expect(onElegir).toHaveBeenCalledWith('semanal')
+  expect(onElegir).not.toHaveBeenCalled()
+
+  await userEvent.press(screen.getByLabelText('Listo'))
+
   expect(onElegir).toHaveBeenCalledTimes(1)
+  expect(onElegir).toHaveBeenCalledWith('semanal', {
+    diaDeLaSemana: null,
+    semanaDelMes: null,
+    diaDelMes: null,
+    mesDelAnio: null,
+  })
 })
 
-test('tocar la frecuencia que ya está puesta no escribe nada', async () => {
+test('elegir un día de la semana viaja como regla', async () => {
+  const { onElegir } = montar({ ancla: '2026-01-06' })
+
+  await userEvent.press(screen.getByLabelText('Hacer recurrente'))
+  await userEvent.press(screen.getByLabelText('Cada semana'))
+  await userEvent.press(screen.getByLabelText('viernes'))
+  await userEvent.press(screen.getByLabelText('Listo'))
+
+  expect(onElegir).toHaveBeenCalledWith('semanal', {
+    diaDeLaSemana: 5,
+    semanaDelMes: null,
+    diaDelMes: null,
+    mesDelAnio: null,
+  })
+})
+
+test('el último viernes de cada mes viaja como día de la semana y semana', async () => {
+  const { onElegir } = montar({ ancla: '2026-01-06' })
+
+  await userEvent.press(screen.getByLabelText('Hacer recurrente'))
+  await userEvent.press(screen.getByLabelText('Última semana'))
+  await userEvent.press(screen.getByLabelText('viernes'))
+  await userEvent.press(screen.getByLabelText('Listo'))
+
+  // Las dos formas del día son excluyentes: elegir la de la semana limpia el
+  // día del calendario, que es lo que el core y el check de la tabla exigen.
+  expect(onElegir).toHaveBeenCalledWith('mensual', {
+    diaDeLaSemana: 5,
+    semanaDelMes: -1,
+    diaDelMes: null,
+    mesDelAnio: null,
+  })
+})
+
+test('guardar sin cambiar nada no escribe', async () => {
+  // Con plan sería un "editar de aquí en adelante" que corta la cadena en dos
+  // por nada.
   const { onElegir } = montar({ plan: PLAN })
 
   await userEvent.press(screen.getByLabelText('Recurrente'))
   await userEvent.press(screen.getByLabelText('Cada mes'))
+  await userEvent.press(screen.getByLabelText('Listo'))
 
   expect(onElegir).not.toHaveBeenCalled()
 })

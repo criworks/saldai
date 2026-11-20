@@ -12,8 +12,15 @@
 export { usePropuestas } from './usePropuestas'
 export { useRecurrenciaDeMovimiento } from './useRecurrenciaDeMovimiento'
 export { useRecurrencias } from './useRecurrencias'
-export { NOMBRES_FRECUENCIAS, descripcionDeFrecuencia } from './frecuencias'
+export {
+  NOMBRES_FRECUENCIAS,
+  descripcionDeFrecuencia,
+  descripcionDeRepeticion,
+  reglaCompleta,
+  reglaEfectiva,
+} from './frecuencias'
 export { BotonDeRecurrencia } from './componentes/BotonDeRecurrencia'
+export { SelectorDeRepeticion } from './componentes/SelectorDeRepeticion'
 export { FilaDePropuesta } from './componentes/FilaDePropuesta'
 export { llaveDePropuesta } from './propuestas'
 export {
