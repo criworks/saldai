@@ -133,6 +133,32 @@ dejan, respectivamente, un movimiento duplicable y un perfil sin recurrencia.
 `recurrencias` no tiene política de DELETE: terminar un plan es escribir
 `vigente_hasta`.
 
+**Qué día del período propone un plan** lo dice su regla de repetición, cuatro
+columnas nullable: `dia_de_la_semana` (0 domingo a 6 sábado, como `getUTCDay()`
+y como el parser), `semana_del_mes` (1 a 4, o `-1` para la última, nunca 5),
+`dia_del_mes` y `mes_del_anio`. **En `null` significan "derivá del ancla"**, que
+es lo que el cálculo hacía cuando la regla no existía, así que un plan viejo
+propone lo mismo que siempre. **El ancla pasó de ser la única fuente de la regla
+a ser su default: la regla gana, y `vigente_desde` solo dice desde cuándo.** La
+ocurrencia 0 sigue siendo el ancla tal cual, cumpla la regla o no, porque un
+plan atado a un movimiento cierra esa fecha como primera ocurrencia confirmada
+(`fecha_prevista = vigente_desde`) y una regla que la moviera dejaría esa
+decisión apuntando a una fecha que el plan no propone. Dos checks la cuidan: uno
+de rangos y otro de coherencia por frecuencia —un plan semanal solo lleva día de
+la semana, y en mensual y anual las dos formas del día son excluyentes—, porque
+una regla incoherente no falla al escribirse sino meses después, al derivar las
+fechas. **Agregarle un parámetro a una función de Postgres la sobrecarga en vez
+de reemplazarla**, y PostgREST elige según los nombres de los argumentos que le
+manden. De ahí dos cosas: la API manda **siempre** los cuatro parámetros de la
+regla, con `null` cuando no hay (`api/src/recurrencias/columnas.js`), porque
+mandarlos solo a veces dejaría un `PATCH` cayendo en la función vieja, guardando
+el plan sin regla y respondiendo 200; y las dos versiones de
+`editar_recurrencia_desde`, `atar_recurrencia_a_movimiento` y
+`crear_movimiento_con_recurrencia` **conviven**, porque la migración la aplica
+una persona y el deploy sale al mergear a `main`, así que borrar la firma vieja
+rompe el hueco entre los dos momentos. Son temporales: se borran en una
+migración posterior al release que lleve la regla a producción.
+
 Las preferencias del perfil (`public.preferencias`) llevan **dos campos por
 flag**: `habilitado` es el entitlement, que decide el plan, y `activo` la
 preferencia, que decide el usuario. El `PATCH` solo acepta `activo` y `zona`.

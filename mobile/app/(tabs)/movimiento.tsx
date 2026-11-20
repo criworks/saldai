@@ -1,6 +1,7 @@
 import {
   isoAChileno,
   type Frecuencia,
+  type Repeticion,
   type Movimiento,
   type PropuestaPendiente,
 } from '@saldai/core'
@@ -174,12 +175,18 @@ export default function MovimientoScreen() {
    * protege la cadena. Sin plan, el movimiento queda atado a uno nuevo anclado en
    * su fecha, y esa primera ocurrencia nace confirmada.
    */
-  const elegirFrecuencia = async (frecuencia: Frecuencia) => {
+  const elegirFrecuencia = async (frecuencia: Frecuencia, repeticion: Repeticion) => {
     try {
       if (plan) {
-        await editarPlan({ id: plan.id, cambio: { desde: isoDelDia(new Date()), frecuencia } })
+        await editarPlan({
+          id: plan.id,
+          cambio: { desde: isoDelDia(new Date()), frecuencia, repeticion },
+        })
       } else if (sujeto?.tipo === 'movimiento') {
-        await atarRecurrencia({ id: String(sujeto.movimiento.id), recurrencia: { frecuencia } })
+        await atarRecurrencia({
+          id: String(sujeto.movimiento.id),
+          recurrencia: { frecuencia, repeticion },
+        })
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo guardar la recurrencia')
@@ -297,6 +304,9 @@ export default function MovimientoScreen() {
           recurrenciasVisibles ? (
             <BotonDeRecurrencia
               plan={plan}
+              // Sin plan, el ancla va a ser la fecha del movimiento: es la que
+              // `atar_recurrencia_a_movimiento` escribe en `vigente_desde`.
+              ancla={borrador.fecha}
               onElegir={elegirFrecuencia}
               onQuitar={quitarRecurrencia}
               ocupado={ocupado}

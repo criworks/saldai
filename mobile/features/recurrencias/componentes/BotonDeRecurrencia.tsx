@@ -1,11 +1,20 @@
-import { FRECUENCIAS, isoAChileno, type Frecuencia, type Recurrencia } from '@saldai/core'
+import {
+  FRECUENCIAS,
+  isoAChileno,
+  repeticionDelPlan,
+  SIN_REPETICION,
+  type Frecuencia,
+  type Recurrencia,
+  type Repeticion,
+} from '@saldai/core'
 import { Portal } from '@rn-primitives/portal'
 import { Alarm, Check, Trash, X } from 'phosphor-react-native'
 import React, { useState } from 'react'
-import { ActivityIndicator, Modal, Pressable, Text, View } from 'react-native'
+import { ActivityIndicator, Modal, Pressable, ScrollView, Text, View } from 'react-native'
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal'
 import { colors } from '@/constants/theme'
-import { NOMBRES_FRECUENCIAS } from '../frecuencias'
+import { descripcionDeRepeticion, NOMBRES_FRECUENCIAS, reglaCompleta } from '../frecuencias'
+import { SelectorDeRepeticion } from './SelectorDeRepeticion'
 
 export interface BotonDeRecurrenciaProps {
   /**
@@ -21,8 +30,22 @@ export interface BotonDeRecurrenciaProps {
    * activo sale de acá.
    */
   frecuenciaElegida?: Frecuencia | null
-  /** Elegir una frecuencia: crea el plan, lo ata o le cambia la frecuencia. */
-  onElegir: (frecuencia: Frecuencia) => void
+  /** La regla elegida y todavía no guardada, igual que `frecuenciaElegida`. */
+  repeticionElegida?: Partial<Repeticion> | null
+  /**
+   * La fecha desde la que el plan rige: la del movimiento, o la del plan si ya
+   * existe. De ahí sale el default de cada campo de la regla.
+   */
+  ancla?: string | null
+  /**
+   * Guardar: crea el plan, lo ata o le cambia la frecuencia y la regla.
+   *
+   * Las dos van juntas en una sola llamada porque una regla sin su frecuencia
+   * no se puede validar —"el último viernes" no significa nada en un plan
+   * semanal— y guardarlas por separado dejaría un plan en un estado que el
+   * check de la tabla rechaza.
+   */
+  onElegir: (frecuencia: Frecuencia, repeticion: Repeticion) => void
   /**
    * Quitar la recurrencia. Con plan es "Eliminar", que corta desde hoy y pide
    * confirmación; sin plan es soltar lo que se acababa de elegir.
@@ -35,6 +58,16 @@ export interface BotonDeRecurrenciaProps {
    */
   permitirQuitar?: boolean
   ocupado?: boolean
+}
+
+/** Dos reglas son la misma si sus cuatro campos coinciden. */
+function mismaRegla(a: Repeticion, b: Repeticion) {
+  return (
+    a.diaDeLaSemana === b.diaDeLaSemana &&
+    a.semanaDelMes === b.semanaDelMes &&
+    a.diaDelMes === b.diaDelMes &&
+    a.mesDelAnio === b.mesDelAnio
+  )
 }
 
 /**
@@ -57,27 +90,64 @@ export interface BotonDeRecurrenciaProps {
 export function BotonDeRecurrencia({
   plan,
   frecuenciaElegida,
+  repeticionElegida,
+  ancla,
   onElegir,
   onQuitar,
   permitirQuitar = true,
   ocupado,
 }: BotonDeRecurrenciaProps) {
-  const [abierto, setAbierto] = useState(false)
   const [confirmarEliminar, setConfirmarEliminar] = useState(false)
 
   const frecuencia = plan?.frecuencia ?? frecuenciaElegida ?? null
   const activo = !!frecuencia
+  const reglaGuardada = plan ? repeticionDelPlan(plan) : reglaCompleta(repeticionElegida)
+  const anclaEfectiva = plan?.vigente_desde ?? ancla ?? null
 
-  const elegir = (elegida: Frecuencia) => {
-    setAbierto(false)
-    if (elegida === frecuencia) return
-    onElegir(elegida)
+  /**
+   * El borrador de la hoja: `null` con la hoja cerrada.
+   *
+   * La frecuencia y la regla se eligen juntas y se guardan al tocar "Listo", y
+   * no una escritura por toque: cambiar de "mes" a "año" y después el mes del
+   * año serían dos llamadas, y la primera guardaría un plan a medio configurar
+   * que ya empezó a proponer.
+   */
+  const [borrador, setBorrador] = useState<{
+    frecuencia: Frecuencia
+    repeticion: Repeticion
+  } | null>(null)
+
+  const abrir = () =>
+    setBorrador({ frecuencia: frecuencia ?? 'mensual', repeticion: reglaGuardada })
+
+  const cambiarFrecuencia = (elegida: Frecuencia) =>
+    setBorrador((previo) =>
+      previo
+        ? {
+            frecuencia: elegida,
+            // La regla de la frecuencia vieja no vale en la nueva, así que
+            // vuelve a derivarse del ancla. Es lo mismo que hace el core
+            // cuando un cambio de frecuencia viene sin regla.
+            repeticion: elegida === previo.frecuencia ? previo.repeticion : SIN_REPETICION,
+          }
+        : previo
+    )
+
+  const guardar = () => {
+    if (!borrador) return
+    setBorrador(null)
+    // Guardar sin haber cambiado nada no escribe: con plan sería un "editar de
+    // aquí en adelante" que corta la cadena en dos por nada.
+    if (activo && borrador.frecuencia === frecuencia && mismaRegla(borrador.repeticion, reglaGuardada)) {
+      return
+    }
+    onElegir(borrador.frecuencia, borrador.repeticion)
   }
 
   return (
     <>
       <Pressable
-        onPress={() => setAbierto(true)}
+        onPress={abrir}
         disabled={ocupado}
         accessibilityRole="button"
         accessibilityLabel={activo ? 'Recurrente' : 'Hacer recurrente'}
@@ -99,19 +169,19 @@ export function BotonDeRecurrencia({
         )}
       </Pressable>
 
-      {abierto && (
+      {borrador && (
         <Portal name="selector-de-recurrencia">
           <Modal
             visible
             transparent
             animationType="slide"
             statusBarTranslucent
-            onRequestClose={() => setAbierto(false)}
+            onRequestClose={() => setBorrador(null)}
           >
             <View className="flex-1 justify-end bg-background/60">
               <Pressable
                 className="absolute inset-0"
-                onPress={() => setAbierto(false)}
+                onPress={() => setBorrador(null)}
                 accessibilityLabel="Cerrar"
               />
 
@@ -125,14 +195,22 @@ export function BotonDeRecurrencia({
                       Desde cuándo, cuando ya hay plan: es lo que explica por qué
                       hay meses por confirmar hacia atrás.
                     */}
-                    {plan && (
-                      <Text className="text-muted-foreground text-base font-normal">
-                        {`Desde el ${isoAChileno(plan.vigente_desde)}`}
-                      </Text>
-                    )}
+                    {/*
+                      Qué día va a caer, escrito, y desde cuándo. Es lo que hace
+                      visible un ancla mal guardada sin esperar a que el plan
+                      proponga el mes que viene.
+                    */}
+                    <Text className="text-muted-foreground text-base font-normal">
+                      {descripcionDeRepeticion(
+                        borrador.frecuencia,
+                        borrador.repeticion,
+                        anclaEfectiva
+                      )}
+                      {plan ? ` · desde el ${isoAChileno(plan.vigente_desde)}` : ''}
+                    </Text>
                   </View>
                   <Pressable
-                    onPress={() => setAbierto(false)}
+                    onPress={() => setBorrador(null)}
                     accessibilityRole="button"
                     accessibilityLabel="Cerrar"
                     className="w-xxl h-xxl rounded-full bg-secondary items-center justify-center active:opacity-80"
@@ -141,28 +219,57 @@ export function BotonDeRecurrencia({
                   </Pressable>
                 </View>
 
-                <View className="flex-col w-full">
+                {/*
+                  La hoja scrollea: con los 31 días del mes, el selector no
+                  entra en una pantalla de teléfono y el botón de guardar
+                  quedaría abajo del borde, fuera de alcance.
+                */}
+                <ScrollView
+                  keyboardShouldPersistTaps="handled"
+                  showsVerticalScrollIndicator={false}
+                  className="max-h-[420px] w-full"
+                >
                   {FRECUENCIAS.map((opcion) => (
                     <Pressable
                       key={opcion}
-                      onPress={() => elegir(opcion)}
+                      onPress={() => cambiarFrecuencia(opcion)}
                       accessibilityRole="button"
                       accessibilityLabel={`Cada ${NOMBRES_FRECUENCIAS[opcion].toLowerCase()}`}
-                      accessibilityState={{ selected: opcion === frecuencia }}
+                      accessibilityState={{ selected: opcion === borrador.frecuencia }}
                       className="flex-row h-control items-center justify-between active:opacity-80"
                     >
                       <Text className="text-card-foreground text-body font-normal">
                         {`Cada ${NOMBRES_FRECUENCIAS[opcion].toLowerCase()}`}
                       </Text>
-                      {opcion === frecuencia && <Check size={16} color={colors.textMuted} />}
+                      {opcion === borrador.frecuencia && (
+                        <Check size={16} color={colors.textMuted} />
+                      )}
                     </Pressable>
                   ))}
-                </View>
+
+                  <SelectorDeRepeticion
+                    frecuencia={borrador.frecuencia}
+                    repeticion={borrador.repeticion}
+                    ancla={anclaEfectiva}
+                    onCambiar={(repeticion) =>
+                      setBorrador((previo) => (previo ? { ...previo, repeticion } : previo))
+                    }
+                  />
+
+                  <Pressable
+                    onPress={guardar}
+                    accessibilityRole="button"
+                    accessibilityLabel="Listo"
+                    className="h-control px-xl mt-xl justify-center items-center rounded-lg bg-foreground active:opacity-80"
+                  >
+                    <Text className="text-background text-body font-semibold">Listo</Text>
+                  </Pressable>
+                </ScrollView>
 
                 {activo && permitirQuitar && (
                   <Pressable
                     onPress={() => {
-                      setAbierto(false)
+                      setBorrador(null)
                       // Sin plan todavía no hay nada que cortar: es soltar lo
                       // que se eligió hace diez segundos, y un modal para eso
                       // es fricción sin nada que proteger.

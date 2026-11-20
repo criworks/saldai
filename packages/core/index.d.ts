@@ -209,6 +209,29 @@ export type Frecuencia = 'semanal' | 'mensual' | 'anual'
 
 export declare const FRECUENCIAS: readonly Frecuencia[]
 export declare const CAMPOS_DEL_PLAN: readonly string[]
+export declare const CAMPOS_DE_LA_REPETICION: readonly (keyof Repeticion)[]
+/** La regla vacía: "derivá todo del ancla". */
+export declare const SIN_REPETICION: Repeticion
+
+/** 0 domingo a 6 sábado, como `getUTCDay()`. */
+export type DiaDeLaSemana = 0 | 1 | 2 | 3 | 4 | 5 | 6
+/** 1 a 4, o -1 para la última. Sin 5: no existe en todos los meses. */
+export type SemanaDelMes = 1 | 2 | 3 | 4 | -1
+
+/**
+ * Qué día del período propone el plan. El ancla es el **default** de cada
+ * campo, no la única fuente: en `null`, ese campo sale del ancla.
+ *
+ * En un plan mensual o anual las dos formas del día son excluyentes: o
+ * `diaDelMes`, o `diaDeLaSemana` con `semanaDelMes`. `mesDelAnio` solo vale en
+ * uno anual, y en uno semanal solo vale `diaDeLaSemana`.
+ */
+export interface Repeticion {
+  diaDeLaSemana: DiaDeLaSemana | null
+  semanaDelMes: SemanaDelMes | null
+  diaDelMes: number | null
+  mesDelAnio: number | null
+}
 /** Tope de fechas que se derivan de un plan en una sola pasada. */
 export declare const MAXIMO_DE_OCURRENCIAS: number
 
@@ -228,6 +251,18 @@ export interface Recurrencia {
   metodo: Metodo | null
   notas: string | null
   frecuencia: Frecuencia
+  /**
+   * La regla de repetición. Cada campo en `null` es "derivá del ancla", que es
+   * lo que hacían todos los planes antes de que la regla existiera.
+   *
+   * Opcionales porque una API más vieja que la app responde sin las columnas
+   * —la app se actualiza por la store y la API por un deploy, y no en ese
+   * orden—, y el core las lee con `??` justamente para eso.
+   */
+  dia_de_la_semana?: DiaDeLaSemana | null
+  semana_del_mes?: SemanaDelMes | null
+  dia_del_mes?: number | null
+  mes_del_anio?: number | null
   /** La primera ocurrencia y el ancla de las siguientes. */
   vigente_desde: FechaISO
   /** Último día en que propone, inclusive. `null` = sin fin. */
@@ -314,6 +349,15 @@ export declare function planVivoDeLaCadena(
   id: string
 ): Recurrencia | null
 
+/** Valida la regla de repetición contra la frecuencia del plan. */
+export declare function validarRepeticion(
+  entrada: unknown,
+  frecuencia: string
+): { ok: boolean; errores: string[]; repeticion: Repeticion | null }
+
+/** La regla de un plan guardado, con los nombres del dominio. */
+export declare function repeticionDelPlan(plan: Recurrencia | null): Repeticion
+
 /** `true` si el plan sigue proponiendo fechas al día `hoy`. */
 export declare function planVigente(plan: Recurrencia, hoy: FechaISO): boolean
 
@@ -322,6 +366,8 @@ export interface NuevaRecurrencia {
   /** La línea, igual que la de un movimiento. Su fecha es el ancla. */
   input: string
   frecuencia: Frecuencia
+  /** Sin esto, la regla sale entera del ancla. */
+  repeticion?: Partial<Repeticion> | null
   /** Ancla explícita, si el plan no empieza el día que dice la línea. */
   desde?: FechaISO
   /** Último día en que propone. Sin esto, el plan no termina. */
@@ -355,6 +401,8 @@ export interface CambioDeRecurrencia {
   metodo?: Metodo
   notas?: string | null
   frecuencia?: Frecuencia
+  /** `null` vuelve la regla a "derivá del ancla". */
+  repeticion?: Partial<Repeticion> | null
   hasta?: FechaISO | null
 }
 
@@ -468,6 +516,8 @@ export interface MovimientoCreado {
  */
 export interface RecurrenciaDeMovimiento {
   frecuencia: Frecuencia
+  /** Sin esto, la regla sale entera de la fecha del movimiento. */
+  repeticion?: Partial<Repeticion> | null
   /** Último día en que el plan propone. Omitido o `null` = sin fin. */
   hasta?: FechaISO | null
 }
