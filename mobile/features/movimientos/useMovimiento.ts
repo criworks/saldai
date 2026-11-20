@@ -6,7 +6,7 @@ import { atarRecurrencia, editarMovimiento, eliminarMovimiento } from './api'
 /**
  * Editar y eliminar un movimiento ya registrado.
  *
- * Las dos mutaciones invalidan el prefijo de los movimientos y no la llave de un mes
+ * Las mutaciones invalidan el prefijo de los movimientos y no la llave de un mes
  * puntual: una edición de fecha mueve el movimiento de mes, así que las llaves
  * afectadas son dos, y la de origen la pantalla no la tiene a mano cuando la
  * respuesta ya trae la fila nueva. Invalidar el prefijo cubre las dos sin que
@@ -21,9 +21,19 @@ import { atarRecurrencia, editarMovimiento, eliminarMovimiento } from './api'
 export function useMovimiento() {
   const cliente = useQueryClient()
 
+  // Las tres mutaciones invalidan lo mismo, y eso incluye las recurrencias y
+  // las propuestas aunque dos de ellas no hablen de planes: tocar un movimiento
+  // que salió de un plan mueve el plan. Cambiarle la fecha al movimiento que
+  // ancla un plan mueve el ancla, y de ahí sale el día de todas las
+  // ocurrencias; borrarlo borra en cascada la decisión que lo creó, así que esa
+  // fecha vuelve a estar por confirmar. En los dos casos la lista de planes y
+  // las propuestas del mes quedan viejas, y el usuario lo ve como que su
+  // corrección no hizo nada.
   const invalidar = () => {
     cliente.invalidateQueries({ queryKey: llaves.todosLosMovimientos() })
     cliente.invalidateQueries({ queryKey: llaves.todosLosTotalesAnuales() })
+    cliente.invalidateQueries({ queryKey: llaves.recurrencias() })
+    cliente.invalidateQueries({ queryKey: llaves.todasLasPropuestas() })
   }
 
   const edicion = useMutation({
@@ -32,18 +42,14 @@ export function useMovimiento() {
     onSuccess: invalidar,
   })
 
-  // Marcar como recurrente un movimiento que ya existe. Invalida también las
-  // recurrencias y las propuestas: el plan se ancla en la fecha del movimiento,
-  // así que todo lo que va de esa fecha a hoy queda por confirmar en el mismo
-  // momento. Y los movimientos, porque la fila gana su `recurrencia_id`.
+  // Marcar como recurrente un movimiento que ya existe: el plan se ancla en la
+  // fecha del movimiento, así que todo lo que va de esa fecha a hoy queda por
+  // confirmar en el mismo momento. Los movimientos también, porque la fila gana
+  // su `recurrencia_id`.
   const atado = useMutation({
     mutationFn: ({ id, recurrencia }: { id: string; recurrencia: RecurrenciaDeMovimiento }) =>
       atarRecurrencia(id, recurrencia),
-    onSuccess: () => {
-      invalidar()
-      cliente.invalidateQueries({ queryKey: llaves.recurrencias() })
-      cliente.invalidateQueries({ queryKey: llaves.todasLasPropuestas() })
-    },
+    onSuccess: invalidar,
   })
 
   const borrado = useMutation({
