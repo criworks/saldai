@@ -55,6 +55,33 @@ function existe(anio, mes, dia) {
 }
 
 /**
+ * La `semana`-ésima vez que `diaDeLaSemana` cae en ese mes, o `null` si no cae
+ * tantas veces.
+ *
+ * `semana = -1` es la última, y es un valor propio y no un `5` a propósito: un
+ * quinto viernes existe en algunos meses y no en otros, así que un plan
+ * "el quinto viernes" se saltearía meses enteros. De 1 a 4 y "la última"
+ * siempre existen —un mes tiene 28 días como mínimo— y por eso
+ * `validarRepeticion` no acepta el 5.
+ *
+ * @param {number} anio
+ * @param {number} mes - 1 a 12.
+ * @param {number} diaDeLaSemana - 0 domingo a 6 sábado, como `getUTCDay()`.
+ * @param {number} semana - 1 a 4, o -1 para la última.
+ */
+function nEsimoDiaDeLaSemana(anio, mes, diaDeLaSemana, semana) {
+  if (semana === -1) {
+    const ultimo = civil(anio, mes, diasEnMes(anio, mes));
+    return sumarDias(ultimo, -((ultimo.getUTCDay() - diaDeLaSemana + 7) % 7));
+  }
+
+  const primero = civil(anio, mes, 1);
+  const dia = 1 + ((diaDeLaSemana - primero.getUTCDay() + 7) % 7) + 7 * (semana - 1);
+  if (!existe(anio, mes, dia)) return null;
+  return civil(anio, mes, dia);
+}
+
+/**
  * @param {string|undefined} input - texto de fecha del usuario
  * @param {Date} [hoy] - fecha de referencia. Solo se pasa en los tests.
  * @returns {{ fecha?: Date, fechaISO?: string, fechaStr?: string, raw: string, advertencia?: string, error?: string }}
@@ -188,6 +215,7 @@ module.exports = {
   civil,
   sumarDias,
   diasEnMes,
+  nEsimoDiaDeLaSemana,
   aIsoCivil,
   desdeIsoCivil,
 };

@@ -23,7 +23,14 @@
 const { SIN_CATEGORIA, TODAS_LAS_CATEGORIAS } = require('./categorias')
 const { METODO_DEFAULT, esMetodoValido } = require('./metodos')
 const { formatearMonto } = require('./dinero')
-const { aIsoCivil, civil, desdeIsoCivil, diasEnMes, sumarDias } = require('./fechas-humanas')
+const {
+  aIsoCivil,
+  civil,
+  desdeIsoCivil,
+  diasEnMes,
+  nEsimoDiaDeLaSemana,
+  sumarDias,
+} = require('./fechas-humanas')
 const { esFechaIso, LARGO_MAXIMO_ITEM, LARGO_MAXIMO_NOTAS } = require('./ediciones')
 const { registrarMovimiento } = require('./movimientos')
 
@@ -44,6 +51,55 @@ const MAXIMO_DE_OCURRENCIAS = 500
 const bien = (valor) => ({ ok: true, errores: [], ...valor })
 
 /**
+ * El día dentro de un mes concreto, según la regla del plan.
+ *
+ * Dos formas excluyentes, y es `validarRepeticion` quien impide que vengan las
+ * dos: un día del calendario ("el 2"), o un día de la semana en una semana del
+ * mes ("el último viernes").
+ */
+function diaDelMesDelPlan(plan, ancla, anio, mes) {
+  if (plan.dia_de_la_semana !== null && plan.dia_de_la_semana !== undefined) {
+    return nEsimoDiaDeLaSemana(anio, mes, plan.dia_de_la_semana, plan.semana_del_mes ?? 1)
+  }
+
+  const dia = plan.dia_del_mes ?? ancla.getUTCDate()
+  // Un 31 en un mes de 30 cae el 30: saltear el mes haría desaparecer el
+  // arriendo de febrero, que es justo el caso de uso de un plan mensual. Lo
+  // mismo con el 29 de febrero en un año que no es bisiesto.
+  return civil(anio, mes, Math.min(dia, diasEnMes(anio, mes)))
+}
+
+/**
+ * La fecha que la regla pone en el período `k`, contando el período del ancla
+ * como 0: la semana del ancla, su mes o su año.
+ *
+ * Es un período y no una ocurrencia: el período del ancla puede caer antes del
+ * ancla —"los viernes" con el ancla un sábado— y entonces no es una ocurrencia
+ * de nada. De eso se encarga `ocurrenciaNumero`.
+ */
+function fechaDelPeriodo(plan, ancla, k) {
+  const mes = ancla.getUTCMonth() + 1
+  const anio = ancla.getUTCFullYear()
+
+  if (plan.frecuencia === 'semanal') {
+    const dia = plan.dia_de_la_semana ?? ancla.getUTCDay()
+    return sumarDias(ancla, ((dia - ancla.getUTCDay() + 7) % 7) + 7 * k)
+  }
+
+  if (plan.frecuencia === 'mensual') {
+    const total = mes - 1 + k
+    const anioDestino = anio + Math.floor(total / 12)
+    return diaDelMesDelPlan(plan, ancla, anioDestino, (total % 12) + 1)
+  }
+
+  if (plan.frecuencia === 'anual') {
+    return diaDelMesDelPlan(plan, ancla, anio + k, plan.mes_del_anio ?? mes)
+  }
+
+  return null
+}
+
+/**
  * La ocurrencia número `n` de un plan, contando la primera como 0.
  *
  * Siempre se calcula **desde el ancla** y no desde la ocurrencia anterior. Con
@@ -51,33 +107,30 @@ const bien = (valor) => ({ ok: true, errores: [], ...valor })
  * febrero y de ahí en adelante propone el 28 para siempre: el día se pierde en
  * el primer mes corto y no vuelve. Desde el ancla, febrero cae el 28 y marzo
  * vuelve al 31, que es lo que el usuario quiso decir.
+ *
+ * **La ocurrencia 0 es el ancla tal cual, cumpla la regla o no.** Un plan atado
+ * a un movimiento cierra esa fecha como primera ocurrencia confirmada
+ * (`fecha_prevista = vigente_desde`), así que si la regla pudiera mover la
+ * ocurrencia 0 esa decisión quedaría apuntando a una fecha que el plan no
+ * propone, y la propuesta real reaparecería como pendiente. La regla manda
+ * desde la ocurrencia 1.
+ *
+ * **Las columnas de la regla en `null` significan "derivá del ancla"**, que es
+ * lo que este cálculo hacía cuando no existían: un plan guardado antes de que
+ * la regla existiera propone exactamente las mismas fechas.
  */
 function ocurrenciaNumero(plan, n) {
-  const ancla = desdeIsoCivil(plan.vigente_desde)
-  if (!ancla) return null
+  const ancla = desdeIsoCivil(plan?.vigente_desde)
+  if (!ancla || !FRECUENCIAS.includes(plan.frecuencia)) return null
+  if (n === 0) return ancla
 
-  const dia = ancla.getUTCDate()
-  const mes = ancla.getUTCMonth() + 1
-  const anio = ancla.getUTCFullYear()
+  // Si el período del ancla ya quedó atrás —"los viernes" con el ancla un
+  // sábado, o el 2 de cada mes con el ancla el 2— la cuenta arranca en el
+  // período siguiente. Sin esto, la ocurrencia 1 podría caer antes del ancla.
+  const primero = fechaDelPeriodo(plan, ancla, 0)
+  const corrimiento = primero && primero.getTime() > ancla.getTime() ? 0 : 1
 
-  if (plan.frecuencia === 'semanal') return sumarDias(ancla, 7 * n)
-
-  if (plan.frecuencia === 'mensual') {
-    const total = mes - 1 + n
-    const anioDestino = anio + Math.floor(total / 12)
-    const mesDestino = (total % 12) + 1
-    // Un 31 en un mes de 30 cae el 30: saltear el mes haría desaparecer el
-    // arriendo de febrero, que es justo el caso de uso de un plan mensual.
-    return civil(anioDestino, mesDestino, Math.min(dia, diasEnMes(anioDestino, mesDestino)))
-  }
-
-  if (plan.frecuencia === 'anual') {
-    const anioDestino = anio + n
-    // Lo mismo con el 29 de febrero en un año que no es bisiesto.
-    return civil(anioDestino, mes, Math.min(dia, diasEnMes(anioDestino, mes)))
-  }
-
-  return null
+  return fechaDelPeriodo(plan, ancla, n - 1 + corrimiento)
 }
 
 /**
@@ -217,19 +270,123 @@ function validarFrecuencia(frecuencia) {
   return FRECUENCIAS.includes(frecuencia)
 }
 
+/** Los campos de la regla de repetición, con los nombres del dominio. */
+const CAMPOS_DE_LA_REPETICION = Object.freeze([
+  'diaDeLaSemana', 'semanaDelMes', 'diaDelMes', 'mesDelAnio',
+])
+
+/** La regla vacía: "derivá todo del ancla", que es el default. */
+const SIN_REPETICION = Object.freeze({
+  diaDeLaSemana: null,
+  semanaDelMes: null,
+  diaDelMes: null,
+  mesDelAnio: null,
+})
+
+const enteroEntre = (valor, min, max) =>
+  Number.isInteger(valor) && valor >= min && valor <= max
+
 /**
- * Valida la creación de un plan a partir de la línea que escribió el usuario.
+ * Valida la regla de repetición de un plan contra su frecuencia.
  *
- * El plan se escribe con el mismo lenguaje que un movimiento —"525457,
- * arriendo, basicos, 1/12/2026, tc"— y lo lee `registrarMovimiento`, que es el
- * único punto de entrada de escritura: así una categoría o un método
- * significan lo mismo en un plan que en un movimiento, y la fecha de la línea
- * es el ancla de la recurrencia. La diferencia es que esto **no registra
- * nada**: deja escrito qué se va a proponer.
+ * **El ancla dejó de ser la única fuente de la regla y pasó a ser su default.**
+ * Hasta acá el día de la semana, el día del mes y el mes salían de
+ * `vigente_desde` y no había forma de decir otra cosa; ahora el usuario puede,
+ * y lo que gana es la regla. No es una contradicción con el ancla —la
+ * migración de noviembre descartaba estas columnas justamente por eso— porque
+ * está decidido quién gana: el ancla solo dice **desde cuándo**.
  *
- * @param {Record<string, unknown>} entrada
- * @param {{ zona?: string, hoy?: Date }} [opciones]
+ * Cada campo en `null` o ausente significa "derivá del ancla", así que una
+ * regla vacía es el comportamiento de siempre.
+ *
+ * Las combinaciones sin sentido se rechazan acá y no se "arreglan": un
+ * `semanaDelMes` sin día de la semana, o las dos formas del día del mes juntas,
+ * son un cuerpo mal armado, y elegir una por él es esconder el bug del cliente.
+ *
+ * @param {unknown} entrada - `{ diaDeLaSemana?, semanaDelMes?, diaDelMes?, mesDelAnio? }`.
+ * @param {string} frecuencia - la frecuencia con la que tiene que ser coherente.
  */
+function validarRepeticion(entrada, frecuencia) {
+  if (entrada === undefined || entrada === null) {
+    return { ok: true, errores: [], repeticion: { ...SIN_REPETICION } }
+  }
+
+  if (typeof entrada !== 'object' || Array.isArray(entrada)) {
+    return {
+      ok: false,
+      errores: ["El campo 'repeticion' tiene que ser un objeto"],
+      repeticion: null,
+    }
+  }
+
+  const errores = []
+  const desconocidos = Object.keys(entrada).filter((c) => !CAMPOS_DE_LA_REPETICION.includes(c))
+  if (desconocidos.length > 0) {
+    errores.push(
+      `Campos de 'repeticion' que no existen: ${desconocidos.join(', ')}. Son: ${CAMPOS_DE_LA_REPETICION.join(', ')}`
+    )
+  }
+
+  const leer = (campo) => (entrada[campo] === undefined ? null : entrada[campo])
+  const regla = {
+    diaDeLaSemana: leer('diaDeLaSemana'),
+    semanaDelMes: leer('semanaDelMes'),
+    diaDelMes: leer('diaDelMes'),
+    mesDelAnio: leer('mesDelAnio'),
+  }
+
+  if (regla.diaDeLaSemana !== null && !enteroEntre(regla.diaDeLaSemana, 0, 6)) {
+    errores.push("El campo 'diaDeLaSemana' va de 0 (domingo) a 6 (sábado)")
+  }
+  // 1 a 4 y -1 ("la última"), sin 5: un quinto viernes no existe en todos los
+  // meses, así que un plan así se saltearía meses enteros.
+  if (regla.semanaDelMes !== null && !(enteroEntre(regla.semanaDelMes, 1, 4) || regla.semanaDelMes === -1)) {
+    errores.push("El campo 'semanaDelMes' va de 1 a 4, o -1 para la última")
+  }
+  if (regla.diaDelMes !== null && !enteroEntre(regla.diaDelMes, 1, 31)) {
+    errores.push("El campo 'diaDelMes' va de 1 a 31")
+  }
+  if (regla.mesDelAnio !== null && !enteroEntre(regla.mesDelAnio, 1, 12)) {
+    errores.push("El campo 'mesDelAnio' va de 1 (enero) a 12 (diciembre)")
+  }
+
+  if (frecuencia === 'semanal') {
+    const sobran = ['semanaDelMes', 'diaDelMes', 'mesDelAnio'].filter((c) => regla[c] !== null)
+    if (sobran.length > 0) {
+      errores.push(`Un plan semanal solo lleva 'diaDeLaSemana'; sobran: ${sobran.join(', ')}`)
+    }
+  } else if (frecuencia === 'mensual' || frecuencia === 'anual') {
+    if (regla.diaDelMes !== null && regla.diaDeLaSemana !== null) {
+      errores.push(
+        "Hay que elegir una sola forma del día: 'diaDelMes', o 'diaDeLaSemana' con 'semanaDelMes'"
+      )
+    }
+    if (regla.diaDeLaSemana !== null && regla.semanaDelMes === null) {
+      errores.push("Con 'diaDeLaSemana' hace falta 'semanaDelMes'")
+    }
+    if (regla.semanaDelMes !== null && regla.diaDeLaSemana === null) {
+      errores.push("El campo 'semanaDelMes' no significa nada sin 'diaDeLaSemana'")
+    }
+    if (frecuencia === 'mensual' && regla.mesDelAnio !== null) {
+      errores.push("El campo 'mesDelAnio' solo vale en un plan anual")
+    }
+  }
+
+  if (errores.length > 0) return { ok: false, errores, repeticion: null }
+
+  return { ok: true, errores: [], repeticion: regla }
+}
+
+/** La regla de un plan tal como está guardada, con los nombres del dominio. */
+function repeticionDelPlan(plan) {
+  return {
+    diaDeLaSemana: plan?.dia_de_la_semana ?? null,
+    semanaDelMes: plan?.semana_del_mes ?? null,
+    diaDelMes: plan?.dia_del_mes ?? null,
+    mesDelAnio: plan?.mes_del_anio ?? null,
+  }
+}
+
 /**
  * La parte de recurrencia de un movimiento: cada cuánto se repite y hasta
  * cuándo.
@@ -259,9 +416,22 @@ function validarRecurrenciaDeMovimiento(entrada, { desde } = {}) {
   const { errores: deHasta, vigenteHasta } = leerHasta(entrada.hasta, desde)
   errores.push(...deHasta)
 
+  const repeticion = validarFrecuencia(entrada.frecuencia)
+    ? validarRepeticion(entrada.repeticion, entrada.frecuencia)
+    : { ok: true, errores: [], repeticion: { ...SIN_REPETICION } }
+  if (!repeticion.ok) errores.push(...repeticion.errores)
+
   if (errores.length > 0) return { ok: false, errores, recurrencia: null }
 
-  return { ok: true, errores: [], recurrencia: { frecuencia: entrada.frecuencia, vigenteHasta } }
+  return {
+    ok: true,
+    errores: [],
+    recurrencia: {
+      frecuencia: entrada.frecuencia,
+      repeticion: repeticion.repeticion ?? { ...SIN_REPETICION },
+      vigenteHasta,
+    },
+  }
 }
 
 /**
@@ -287,6 +457,19 @@ function leerHasta(valor, vigenteDesde) {
   return { errores, vigenteHasta }
 }
 
+/**
+ * Valida la creación de un plan a partir de la línea que escribió el usuario.
+ *
+ * El plan se escribe con el mismo lenguaje que un movimiento —"525457,
+ * arriendo, basicos, 1/12/2026, tc"— y lo lee `registrarMovimiento`, que es el
+ * único punto de entrada de escritura: así una categoría o un método
+ * significan lo mismo en un plan que en un movimiento, y la fecha de la línea
+ * es el ancla de la recurrencia. La diferencia es que esto **no registra
+ * nada**: deja escrito qué se va a proponer.
+ *
+ * @param {Record<string, unknown>} entrada
+ * @param {{ zona?: string, hoy?: Date }} [opciones]
+ */
 function validarPlanDeRecurrencia(entrada, opciones = {}) {
   const errores = []
 
@@ -303,6 +486,13 @@ function validarPlanDeRecurrencia(entrada, opciones = {}) {
   if (!validarFrecuencia(entrada.frecuencia)) {
     errores.push(`El campo 'frecuencia' tiene que ser una de: ${FRECUENCIAS.join(', ')}`)
   }
+
+  // Solo si la frecuencia es válida: la regla se valida contra ella, y con una
+  // frecuencia inventada los errores de la regla no querrían decir nada.
+  const repeticion = validarFrecuencia(entrada.frecuencia)
+    ? validarRepeticion(entrada.repeticion, entrada.frecuencia)
+    : { ok: true, errores: [], repeticion: { ...SIN_REPETICION } }
+  if (!repeticion.ok) errores.push(...repeticion.errores)
 
   const lectura = registrarMovimiento(entrada.input, opciones)
   if (!lectura.ok) errores.push(...lectura.errores)
@@ -357,6 +547,7 @@ function validarPlanDeRecurrencia(entrada, opciones = {}) {
       metodo: lectura.datos.metodo,
       notas,
       frecuencia: entrada.frecuencia,
+      repeticion: repeticion.repeticion ?? { ...SIN_REPETICION },
       vigenteDesde,
       vigenteHasta,
       inputOriginal: String(entrada.input),
@@ -368,7 +559,7 @@ function validarPlanDeRecurrencia(entrada, opciones = {}) {
 
 /** Los campos de un plan que se pueden cambiar. */
 const CAMPOS_DEL_PLAN = Object.freeze([
-  'monto', 'item', 'categoria', 'metodo', 'notas', 'frecuencia', 'hasta',
+  'monto', 'item', 'categoria', 'metodo', 'notas', 'frecuencia', 'repeticion', 'hasta',
 ])
 
 /**
@@ -412,6 +603,7 @@ function validarCambioDePlan(plan, cambio) {
     metodo: plan.metodo,
     notas: plan.notas ?? null,
     frecuencia: plan.frecuencia,
+    repeticion: repeticionDelPlan(plan),
     vigenteHasta: plan.vigente_hasta ?? null,
   }
 
@@ -481,6 +673,22 @@ function validarCambioDePlan(plan, cambio) {
       errores.push(`El campo 'frecuencia' tiene que ser una de: ${FRECUENCIAS.join(', ')}`)
     } else if (cambio.frecuencia !== siguiente.frecuencia) {
       siguiente.frecuencia = cambio.frecuencia
+      // Cambiar de frecuencia sin mandar regla la vuelve a "derivá del ancla":
+      // la regla de la frecuencia vieja no es válida en la nueva —un día de la
+      // semana con semana del mes no significa nada en un plan semanal— y
+      // dejarla puesta guardaría una combinación que el check rechaza.
+      if (cambio.repeticion === undefined) siguiente.repeticion = { ...SIN_REPETICION }
+      algoCambia = true
+    }
+  }
+
+  if ('repeticion' in cambio) {
+    const repeticion = validarRepeticion(cambio.repeticion, siguiente.frecuencia)
+    if (!repeticion.ok) errores.push(...repeticion.errores)
+    else if (
+      CAMPOS_DE_LA_REPETICION.some((c) => repeticion.repeticion[c] !== siguiente.repeticion[c])
+    ) {
+      siguiente.repeticion = repeticion.repeticion
       algoCambia = true
     }
   }
@@ -560,6 +768,8 @@ function planVivoDeLaCadena(planes, id) {
 module.exports = {
   FRECUENCIAS,
   CAMPOS_DEL_PLAN,
+  CAMPOS_DE_LA_REPETICION,
+  SIN_REPETICION,
   MAXIMO_DE_OCURRENCIAS,
   ocurrenciaNumero,
   ocurrenciasDelPlan,
@@ -568,6 +778,8 @@ module.exports = {
   propuestasPendientes,
   movimientoDeLaPropuesta,
   validarFrecuencia,
+  validarRepeticion,
+  repeticionDelPlan,
   validarPlanDeRecurrencia,
   validarRecurrenciaDeMovimiento,
   validarCambioDePlan,

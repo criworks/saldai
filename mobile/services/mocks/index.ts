@@ -34,6 +34,7 @@ import type {
   NuevaRecurrencia,
   Recurrencia,
   RecurrenciaDeMovimiento,
+  Repeticion,
 } from '@saldai/core'
 import { mockFeedConfig } from './config'
 import { MOVIMIENTOS, MOVIMIENTOS_MUCHOS, movimientoDeMentira } from './datos'
@@ -198,6 +199,11 @@ const RECURRENCIAS: Recurrencia[] = [
     metodo: 'TC',
     notas: null,
     frecuencia: 'mensual',
+    // La regla en null es "derivá del ancla", que es el default del dominio.
+    dia_de_la_semana: null,
+    semana_del_mes: null,
+    dia_del_mes: null,
+    mes_del_anio: null,
     // Tres meses atrás del día de hoy, así el mock siempre tiene propuestas
     // pendientes sin que haya que editar una fecha a mano cada mes.
     vigente_desde: aIsoCivil(sumarDias(hoyCivil(), -92)),
@@ -264,6 +270,7 @@ export async function crearRecurrencia(plan: NuevaRecurrencia) {
     metodo: Recurrencia['metodo']
     notas: string | null
     frecuencia: Recurrencia['frecuencia']
+    repeticion: Repeticion
     vigenteDesde: string
     vigenteHasta: string | null
     zona: string
@@ -280,6 +287,10 @@ export async function crearRecurrencia(plan: NuevaRecurrencia) {
     metodo: campos.metodo,
     notas: campos.notas,
     frecuencia: campos.frecuencia,
+    dia_de_la_semana: campos.repeticion.diaDeLaSemana,
+    semana_del_mes: campos.repeticion.semanaDelMes,
+    dia_del_mes: campos.repeticion.diaDelMes,
+    mes_del_anio: campos.repeticion.mesDelAnio,
     vigente_desde: campos.vigenteDesde,
     vigente_hasta: campos.vigenteHasta,
     input_original: plan.input,
