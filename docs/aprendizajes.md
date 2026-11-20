@@ -77,11 +77,24 @@ PR de las propuestas en el día que les toca · noviembre 2026
   coincidan la pantalla no dibuja el formulario, para no mostrar un frame del
   sujeto anterior. Los tests nuevos hacen `rerender` con parámetros distintos sin
   desmontar, que es la forma de reproducir esto en Jest.
+- **Y una segunda cara, del mismo origen**: una pantalla montada **sigue
+  escuchando**. Las dos rutas se suscriben a los dos botones de la barra de
+  abajo (`DeviceEventEmitter`, porque la barra la dibuja el footer de la app), y
+  un `DeviceEventEmitter` no sabe de foco: un tap en el tacho de la vista del
+  movimiento lo recibía también la vista del plan abierta un rato antes, que
+  levantaba su propio "Eliminar la recurrencia" encima. Confirmando ahí se
+  terminaba un plan que nadie estaba mirando, y el plan dejaba de proponer y
+  desaparecía de la lista sin que nada lo explicara: el síntoma aparecía lejos
+  del tap, en otro mes y en otra pantalla. La suscripción ahora va con
+  `useFocusEffect` y los handlers se leen de un ref.
 - **Regla**: en una ruta de las tabs, **el estado no nace en el mount**: nace con
   la identidad que la ruta recibe. Cualquier `useState` inicializado desde los
   parámetros o cualquier efecto con guarda de "una sola vez" tiene que llevar esa
-  identidad adentro. Y un caso que depende de entrar dos veces se prueba con dos
-  `rerender`, no con dos `render`.
+  identidad adentro. Y **nada de lo que la pantalla deja escuchando es neutro**:
+  una suscripción global —un `DeviceEventEmitter`, un listener de teclado— va
+  atada al foco, o la pantalla actúa desde atrás. Un caso que depende de entrar
+  dos veces se prueba con dos `rerender`, no con dos `render`; uno que depende
+  del foco, con el foco apagado.
 
 ---
 
