@@ -9,10 +9,11 @@ import {
   View,
 } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
+import { Alarm } from 'phosphor-react-native'
 import { colors, SIN_CATEGORIA } from '@/constants/theme'
 import { EncabezadoDelMes, ExpenseItem, useFilter, useMovimientos, Movimiento } from '@/features/movimientos'
 import { usePreferencias } from '@/features/perfil'
-import { ListaDePropuestas, llaveDePropuesta, usePropuestas } from '@/features/recurrencias'
+import { FilaDePropuesta, llaveDePropuesta, usePropuestas } from '@/features/recurrencias'
 import { Alert } from '@/components/ui/Alert'
 import type { PropuestaPendiente } from '@saldai/core'
 
@@ -51,9 +52,21 @@ function tituloDelDia(dia: Date): string {
   return texto.charAt(0).toUpperCase() + texto.slice(1)
 }
 
+/**
+ * Lo que puede haber bajo el encabezado de un día: un movimiento registrado o
+ * una propuesta sin decidir. Las dos cosas ocurren en una fecha, así que las
+ * dos se agrupan por fecha; lo que cambia es qué dibuja la fila y si trae las
+ * dos decisiones al lado.
+ */
+type ItemDelDia =
+  | { tipo: 'movimiento'; llave: string; movimiento: Movimiento }
+  | { tipo: 'propuesta'; llave: string; propuesta: PropuestaPendiente }
+
 export default function DashboardScreen() {
   const {
     mes,
+    anio,
+    setMes,
     datos,
     loading,
     refreshing,
@@ -84,7 +97,7 @@ export default function DashboardScreen() {
   //
   // Con el filtro de categoría puesto no se muestran: el listado está recortado
   // a una categoría y las propuestas no son parte de ese recorte, así que
-  // quedarían arriba de una lista que no las incluye.
+  // quedarían entre filas que sí lo están.
   const { propuestas, confirmar, omitir } = usePropuestas()
 
   // Cuál propuesta está esperando respuesta de la API, por llave de plan y
@@ -125,27 +138,72 @@ export default function DashboardScreen() {
     return delMes.filter((g) => (g.categoria || SIN_CATEGORIA) === filtro)
   }, [datos?.datos, filtro])
 
-  // Los movimientos agrupados por día, en el orden en que se muestran: el día más
-  // nuevo primero. Es lo que SectionList espera como `sections`.
-  const secciones = useMemo(() => {
-    const conFecha = movimientosVisibles.map((g) => ({
-      ...g,
-      diaDelMovimiento: fechaDelDia(g.fecha),
-    }))
+  // Las propuestas que esta pantalla puede mostrar. Con la función apagada no
+  // hay ninguna —es lo único que le pide algo a la persona, así que apagarla
+  // sin sacarlas de acá no apagaría nada— y con el filtro de categoría puesto
+  // tampoco.
+  const propuestasVisibles = recurrenciasVisibles && !filtro ? propuestas : []
 
-    conFecha.sort((a, b) => b.diaDelMovimiento.getTime() - a.diaDelMovimiento.getTime())
+  // El mes que se está mirando, como lo escribe la columna `date`: así una
+  // propuesta se reparte por prefijo y no hay que volver a parsear la fecha.
+  const prefijoDelMes = `${anio}-${String(mes).padStart(2, '0')}`
+
+  // Las del mes abierto van en la lista, en su día. Las de otros meses **no**:
+  // el encabezado dice "Vie 5" y no el mes, así que una propuesta de septiembre
+  // colada entre los días de noviembre se vería igual que la de noviembre.
+  const propuestasDelMes = useMemo(
+    () => propuestasVisibles.filter((p) => p.fecha.startsWith(prefijoDelMes)),
+    [propuestasVisibles, prefijoDelMes],
+  )
+  const propuestasDeOtrosMeses = useMemo(
+    () => propuestasVisibles.filter((p) => !p.fecha.startsWith(prefijoDelMes)),
+    [propuestasVisibles, prefijoDelMes],
+  )
+
+  // Lo del mes agrupado por día, en el orden en que se muestra: el día más
+  // nuevo primero. Es lo que SectionList espera como `sections`.
+  //
+  // Las propuestas se agrupan junto con los movimientos y no en un bloque
+  // aparte arriba: una propuesta del 5 es plata que salió el 5, y cuando el
+  // usuario está cuadrando el mes lo que quiere ver es el día completo, con lo
+  // que ya registró y lo que el plan dice que falta.
+  const secciones = useMemo(() => {
+    const items = [
+      ...movimientosVisibles.map((movimiento) => ({
+        dia: fechaDelDia(movimiento.fecha),
+        // Dentro de un día las propuestas van primero: son lo único que pide
+        // una decisión, y el resto del día ya está decidido.
+        orden: 1,
+        item: {
+          tipo: 'movimiento',
+          llave: `movimiento-${movimiento.id}`,
+          movimiento,
+        } as ItemDelDia,
+      })),
+      ...propuestasDelMes.map((propuesta) => ({
+        dia: fechaDelDia(propuesta.fecha),
+        orden: 0,
+        item: {
+          tipo: 'propuesta',
+          llave: `propuesta-${llaveDePropuesta(propuesta)}`,
+          propuesta,
+        } as ItemDelDia,
+      })),
+    ]
+
+    items.sort((a, b) => b.dia.getTime() - a.dia.getTime() || a.orden - b.orden)
 
     // Un Map y no un objeto: el Map mantiene el orden de inserción, que acá es
     // el orden en que se van a ver los grupos.
-    const porDia = new Map<string, Movimiento[]>()
-    for (const movimiento of conFecha) {
-      const titulo = tituloDelDia(movimiento.diaDelMovimiento)
+    const porDia = new Map<string, ItemDelDia[]>()
+    for (const { dia, item } of items) {
+      const titulo = tituloDelDia(dia)
       if (!porDia.has(titulo)) porDia.set(titulo, [])
-      porDia.get(titulo)!.push(movimiento)
+      porDia.get(titulo)!.push(item)
     }
 
     return Array.from(porDia, ([titulo, data]) => ({ titulo, data }))
-  }, [movimientosVisibles])
+  }, [movimientosVisibles, propuestasDelMes])
 
   // Con filtro, el total es el de lo que se ve. El total del mes arriba de una
   // lista recortada es un número que no corresponde a ninguna de sus filas.
@@ -207,6 +265,35 @@ export default function DashboardScreen() {
     </View>
   ) : null
 
+  // Lo que quedó sin decidir en otro mes, en una línea. Hace falta porque las
+  // propuestas ahora se ven en su fecha: sin este aviso, una del mes pasado
+  // deja de existir para quien está mirando este mes, y es justo la que se
+  // está olvidando.
+  //
+  // La pantalla mira un solo año (el contexto no tiene `setAnio`), así que si
+  // la más vieja cayó en otro año la línea avisa pero no lleva a ninguna
+  // parte: es mejor que no decir nada.
+  const masVieja = propuestasDeOtrosMeses[0]
+  const seLlegaAlMes = !!masVieja && masVieja.fecha.startsWith(`${anio}-`)
+  const textoDeOtrosMeses =
+    propuestasDeOtrosMeses.length === 1
+      ? '1 por confirmar en otro mes'
+      : `${propuestasDeOtrosMeses.length} por confirmar en otros meses`
+
+  const avisoDeOtrosMeses = !masVieja ? null : (
+    <Pressable
+      onPress={() => seLlegaAlMes && setMes(Number(masVieja.fecha.slice(5, 7)))}
+      disabled={!seLlegaAlMes}
+      accessibilityRole={seLlegaAlMes ? 'button' : 'text'}
+      accessibilityLabel={textoDeOtrosMeses}
+      testID="propuestas-de-otros-meses"
+      className="w-full flex-row items-center gap-sm pt-xl active:opacity-60"
+    >
+      <Alarm size={16} color={colors.warning} />
+      <Text className="text-muted-foreground text-body font-medium">{textoDeOtrosMeses}</Text>
+    </Pressable>
+  )
+
   return (
     <SafeAreaView edges={['top', 'left', 'right']} className="flex-1 bg-background">
       <Alert
@@ -223,7 +310,7 @@ export default function DashboardScreen() {
       */}
       <SectionList
         sections={secciones}
-        keyExtractor={(movimiento) => String(movimiento.id)}
+        keyExtractor={(item) => item.llave}
         stickySectionHeadersEnabled={false}
         contentContainerStyle={{
           paddingHorizontal: 24,
@@ -242,34 +329,12 @@ export default function DashboardScreen() {
           <View className="w-full flex-col">
             <EncabezadoDelMes mes={mes} total={totalMostrado} loading={loading} />
             {/*
-              Con las recurrencias apagadas no hay bloque por confirmar: es lo
-              único que la función le pide a la persona, así que apagarla sin
-              sacarlo de acá no apagaría nada.
+              Lo que quedó por confirmar en otro mes. Va como una línea y no
+              como las filas de abajo: si se mostraran acá harían lo que esta
+              pantalla justamente dejó de hacer, que es sacar una propuesta de
+              su fecha. Lleva a su mes, que es donde se decide.
             */}
-            {recurrenciasVisibles && !filtro && (
-              <ListaDePropuestas
-                propuestas={propuestas}
-                onElegir={(propuesta) =>
-                  router.push({
-                    pathname: '/movimiento',
-                    params: { recurrenciaId: propuesta.recurrenciaId, fecha: propuesta.fecha },
-                  })
-                }
-                onConfirmar={(propuesta) =>
-                  decidir(propuesta, (p) =>
-                    confirmar({ recurrenciaId: p.recurrenciaId, fecha: p.fecha })
-                  )
-                }
-                onOmitir={(propuesta) =>
-                  decidir(propuesta, (p) =>
-                    omitir({ recurrenciaId: p.recurrenciaId, fecha: p.fecha })
-                  )
-                }
-                categoriasVisibles={categoriasVisibles}
-                metodosVisibles={metodosVisibles}
-                decidiendo={decidiendo}
-              />
-            )}
+            {avisoDeOtrosMeses}
           </View>
         }
         ListEmptyComponent={vacio}
@@ -288,37 +353,64 @@ export default function DashboardScreen() {
           </View>
         )}
         ItemSeparatorComponent={() => <View className="h-xl" />}
-        renderItem={({ item }) => (
-          // Tocar la fila abre el movimiento. Un movimiento provisorio (el que
-          // se ve mientras la API responde el alta) todavía no tiene id de
-          // Postgres, así que no se puede abrir: un PATCH a ese id no existe.
-          <Pressable
-            onPress={() => router.push({ pathname: '/movimiento', params: { id: String(item.id) } })}
-            disabled={String(item.id).startsWith('provisorio-')}
-            accessibilityRole="button"
-            accessibilityLabel={`Editar ${item.item}`}
-            className="active:opacity-60"
-          >
-            {/*
-              La categoría y el método se pasan solo si el perfil los tiene
-              prendidos. Es la misma cuenta que hace la captura para mostrar sus
-              selectores: lo que se registra se ve, y lo que no se registra no
-              aparece a medias en el listado.
-            */}
-            <ExpenseItem
-              monto={formatearMonto(item.monto)}
-              titulo={item.item}
-              categoria={categoriasVisibles ? item.categoria : undefined}
-              metodo={metodosVisibles ? item.metodo : undefined}
-              // El mismo reloj que las propuestas, y por eso mismo: una
-              // propuesta de un mes viejo y el movimiento que la persona cargó
-              // a mano ese mes se ven juntos, y el reloj es lo que distingue
-              // uno de otro antes de confirmar algo repetido. Llega en la fila
-              // (`recurrencia_id`), así que no hay consulta extra.
-              recurrente={!!item.recurrencia_id && recurrenciasVisibles}
+        renderItem={({ item }) =>
+          item.tipo === 'propuesta' ? (
+            <FilaDePropuesta
+              propuesta={item.propuesta}
+              onElegir={(propuesta) =>
+                router.push({
+                  pathname: '/movimiento',
+                  params: { recurrenciaId: propuesta.recurrenciaId, fecha: propuesta.fecha },
+                })
+              }
+              onConfirmar={(propuesta) =>
+                decidir(propuesta, (p) =>
+                  confirmar({ recurrenciaId: p.recurrenciaId, fecha: p.fecha })
+                )
+              }
+              onOmitir={(propuesta) =>
+                decidir(propuesta, (p) => omitir({ recurrenciaId: p.recurrenciaId, fecha: p.fecha }))
+              }
+              categoriasVisibles={categoriasVisibles}
+              metodosVisibles={metodosVisibles}
+              ocupada={decidiendo === llaveDePropuesta(item.propuesta)}
             />
-          </Pressable>
-        )}
+          ) : (
+            // Tocar la fila abre el movimiento. Un movimiento provisorio (el
+            // que se ve mientras la API responde el alta) todavía no tiene id
+            // de Postgres, así que no se puede abrir: un PATCH a ese id no
+            // existe.
+            <Pressable
+              onPress={() =>
+                router.push({
+                  pathname: '/movimiento',
+                  params: { id: String(item.movimiento.id) },
+                })
+              }
+              disabled={String(item.movimiento.id).startsWith('provisorio-')}
+              accessibilityRole="button"
+              accessibilityLabel={`Editar ${item.movimiento.item}`}
+              className="active:opacity-60"
+            >
+              {/*
+                La categoría y el método se pasan solo si el perfil los tiene
+                prendidos. Es la misma cuenta que hace la captura para mostrar
+                sus selectores: lo que se registra se ve, y lo que no se
+                registra no aparece a medias en el listado.
+
+                Sin reloj: un movimiento registrado es un movimiento, venga de
+                un plan o no. El reloj marca lo que está por confirmar, y esto
+                ya lo está.
+              */}
+              <ExpenseItem
+                monto={formatearMonto(item.movimiento.monto)}
+                titulo={item.movimiento.item}
+                categoria={categoriasVisibles ? item.movimiento.categoria : undefined}
+                metodo={metodosVisibles ? item.movimiento.metodo : undefined}
+              />
+            </Pressable>
+          )
+        }
       />
     </SafeAreaView>
   )

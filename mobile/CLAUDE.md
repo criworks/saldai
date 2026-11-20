@@ -55,7 +55,9 @@ app/                        # Rutas (Expo Router)
   (tabs)/categorias.tsx
   (tabs)/configuraciones.tsx
   (tabs)/capacidades.tsx    # General > Capacidades: los switches de las funciones
-  (tabs)/recurrencias.tsx   # Crear y editar planes de recurrencia
+  (tabs)/recurrencias.tsx   # La lista de planes de recurrencia
+  (tabs)/recurrencia.tsx    # Un plan, con la forma de un movimiento
+  (tabs)/movimiento.tsx     # Un movimiento: por confirmar o registrado
   (tabs)/cuenta.tsx
   playground.tsx            # Pruebas de UI (solo en dev con mocks)
 features/movimientos/            # Estado, componentes y llamadas de movimientos

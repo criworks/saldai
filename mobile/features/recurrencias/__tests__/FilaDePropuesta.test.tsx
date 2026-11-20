@@ -1,7 +1,7 @@
 import type { PropuestaPendiente } from '@saldai/core'
 import { render, screen, userEvent } from '@testing-library/react-native'
 import React from 'react'
-import { ListaDePropuestas } from '../componentes/ListaDePropuestas'
+import { FilaDePropuesta } from '../componentes/FilaDePropuesta'
 
 const nada = () => {}
 const props = { onElegir: nada, onConfirmar: nada, onOmitir: nada }
@@ -39,36 +39,23 @@ function propuesta(fecha: string, item: string, monto: number): PropuestaPendien
   }
 }
 
-test('sin propuestas no dibuja nada', () => {
-  const { toJSON } = render(<ListaDePropuestas propuestas={[]} {...props} />)
+test('se ve como una fila del mes, con el monto y el reloj', () => {
+  render(<FilaDePropuesta propuesta={propuesta('2026-03-05', 'arriendo', 525457)} {...props} />)
 
-  expect(toJSON()).toBeNull()
-})
-
-test('con una sola propuesta el título va sin número', () => {
-  render(
-    <ListaDePropuestas propuestas={[propuesta('2026-03-05', 'arriendo', 525457)]} {...props} />
-  )
-
-  expect(screen.getByText('Por confirmar')).toBeTruthy()
-  // La fecha va corta: en el bloque no hay encabezados de día y dos propuestas
-  // del mismo plan se verían idénticas sin ella.
-  expect(screen.getByText('05/03')).toBeTruthy()
   expect(screen.getByText('$525.457')).toBeTruthy()
+  expect(screen.getByText('arriendo')).toBeTruthy()
+  // El reloj es lo que la marca como todavía sin confirmar.
+  expect(screen.getByTestId('fila-recurrente')).toBeTruthy()
 })
 
-test('con varias propuestas el título lleva cuántas son', () => {
-  render(
-    <ListaDePropuestas
-      propuestas={[
-        propuesta('2026-02-05', 'arriendo', 525457),
-        propuesta('2026-03-05', 'arriendo', 525457),
-      ]}
-      {...props}
-    />
-  )
+test('la fecha va en la etiqueta y no en pantalla', () => {
+  // En pantalla la dice el encabezado del día que la agrupa. En la etiqueta
+  // sí, porque un lector de pantalla lee la fila sola y dos propuestas del
+  // mismo plan se escucharían idénticas.
+  render(<FilaDePropuesta propuesta={propuesta('2026-03-05', 'arriendo', 525457)} {...props} />)
 
-  expect(screen.getByText('Por confirmar (2)')).toBeTruthy()
+  expect(screen.queryByText('05/03')).toBeNull()
+  expect(screen.getByLabelText('arriendo del 05/03/2026, por confirmar')).toBeTruthy()
 })
 
 test('tocar la fila abre la propuesta para corregirla', async () => {
@@ -80,8 +67,8 @@ test('tocar la fila abre la propuesta para corregirla', async () => {
   const laPropuesta = propuesta('2026-03-05', 'arriendo', 525457)
 
   render(
-    <ListaDePropuestas
-      propuestas={[laPropuesta]}
+    <FilaDePropuesta
+      propuesta={laPropuesta}
       onElegir={onElegir}
       onConfirmar={onConfirmar}
       onOmitir={nada}
@@ -100,8 +87,8 @@ test('el check confirma y la equis omite, sin abrir nada', async () => {
   const laPropuesta = propuesta('2026-03-05', 'arriendo', 525457)
 
   render(
-    <ListaDePropuestas
-      propuestas={[laPropuesta]}
+    <FilaDePropuesta
+      propuesta={laPropuesta}
       onElegir={onElegir}
       onConfirmar={onConfirmar}
       onOmitir={onOmitir}
@@ -118,28 +105,21 @@ test('el check confirma y la equis omite, sin abrir nada', async () => {
   expect(onElegir).not.toHaveBeenCalled()
 })
 
-test('la propuesta que se está decidiendo no acepta otro toque', async () => {
+test('mientras la decisión está en vuelo no acepta otro toque', async () => {
   // Sin esto, dos toques seguidos mandan dos confirmaciones: la segunda falla
   // por el unique de la base, pero el usuario ve un error sobre algo que sí
   // funcionó.
   const onConfirmar = jest.fn()
-  const laPropuesta = propuesta('2026-03-05', 'arriendo', 525457)
 
   render(
-    <ListaDePropuestas
-      propuestas={[laPropuesta]}
+    <FilaDePropuesta
+      propuesta={propuesta('2026-03-05', 'arriendo', 525457)}
       onElegir={nada}
       onConfirmar={onConfirmar}
       onOmitir={nada}
-      decidiendo="rec-1-2026-03-05"
+      ocupada
     />
   )
 
   expect(screen.queryByLabelText('Confirmar arriendo del 05/03/2026')).toBeNull()
-})
-
-test('el reloj marca que la fila viene de un plan', () => {
-  render(<ListaDePropuestas propuestas={[propuesta('2026-03-05', 'arriendo', 525457)]} {...props} />)
-
-  expect(screen.getByTestId('fila-recurrente')).toBeTruthy()
 })

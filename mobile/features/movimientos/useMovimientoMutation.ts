@@ -142,7 +142,7 @@ export function useMovimientoMutation() {
 
       // Si el alta creó un plan, lo que queda por confirmar cambió en el mismo
       // momento: el plan se ancla en la fecha del movimiento y propone de ahí a
-      // hoy. Sin esto, el bloque "Por confirmar" no muestra nada hasta el
+      // hoy. Sin esto, las propuestas no aparecen en los días del mes hasta el
       // siguiente refetch.
       if (json.recurrenciaId) {
         cliente.invalidateQueries({ queryKey: llaves.recurrencias() })
