@@ -17,6 +17,7 @@ const {
 const { requireAuth } = require('../middleware/auth.js')
 const { repositorioDeRecurrencias } = require('../recurrencias/repositorio')
 const {
+  hastaDelPedido,
   validarIdDeRecurrencia,
   validarPropuesta,
   zonaDelPedido,
@@ -90,16 +91,19 @@ function rutasDeRecurrencias({ zona, limites }) {
 
   // ── GET /recurrencias/propuestas ─────────────────────────────────────────
   //
-  // Hasta hoy y no más allá: la confirmación existe para registrar lo que ya
-  // ocurrió, y una pantalla llena de fechas futuras no le dice al usuario qué
-  // le falta hacer. La propuesta más vieja va primero, que es la que se está
-  // olvidando.
+  // Hasta hoy por defecto, y hasta donde diga `hasta` si el cliente lo manda:
+  // la app muestra cada propuesta en el día que le toca, dentro del mes que se
+  // está mirando, así que ese mes necesita también las que todavía no llegaron.
+  // Lo atrasado viene siempre —`hasta` solo estira la ventana— porque es lo que
+  // el usuario se está olvidando. La propuesta más vieja va primero, por lo
+  // mismo.
   //
   // Va antes de `/:id` para que `propuestas` no se lea como un id.
   router.get('/propuestas', limites.conSesion, requireAuth, async (req, res) => {
     const repositorio = repositorioDeRecurrencias(req.token)
     const { zona: zonaUsada, advertencias } = zonaDelPedido(req.query.zona, zona)
     const hoy = aIsoCivil(hoyCivil(zonaUsada))
+    const ventana = hastaDelPedido(req.query.hasta, hoy)
 
     const planes = await repositorio.listar({ userId: req.userId })
     if (planes.error) return errorDeBase(res, 'Error al leer las recurrencias', planes.error)
@@ -109,12 +113,14 @@ function rutasDeRecurrencias({ zona, limites }) {
       return errorDeBase(res, 'Error al leer las ocurrencias', decisiones.error)
     }
 
-    const propuestas = propuestasPendientes(planes.data, decisiones.data, { hasta: hoy })
+    const propuestas = propuestasPendientes(planes.data, decisiones.data, {
+      hasta: ventana.hasta,
+    })
 
     return res.status(200).json({
       ok: true,
       errores: [],
-      advertencias,
+      advertencias: [...advertencias, ...ventana.advertencias],
       cantidad: propuestas.length,
       datos: propuestas.map(({ recurrenciaId, fecha, plan }) => ({
         recurrenciaId,

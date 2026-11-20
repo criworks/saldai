@@ -37,6 +37,8 @@ del formato; el texto de cada entrada es el original.
 - **El reloj marca solo lo que está por confirmar.** El movimiento que ancla una recurrencia, y cualquier repetición que ya confirmaste, se ven como un movimiento cualquiera: el reloj está para lo que todavía te pide algo. Donde importaba sigue sirviendo igual, porque en un mes viejo la propuesta lleva reloj y la fila que cargaste a mano no.
 - **Lo que quedó por confirmar en otro mes se avisa en una línea arriba de la lista**, con cuántas son, y toca para ir a su mes. Hace falta porque ahora cada propuesta se ve en su fecha: sin el aviso, la del mes pasado dejaba de existir para quien está mirando este mes.
 
+- **El mes abierto muestra también las repeticiones que todavía no llegaron.** Antes lo por confirmar llegaba hasta hoy, así que un plan mensual no mostraba nada hasta que caía el día: abrías diciembre y el arriendo del 5 no estaba en ninguna parte. Ahora cada mes muestra lo que pasa en él, con las repeticiones en su fecha y por confirmar. Lo atrasado sigue viniendo siempre, incluso mirando un mes viejo, porque es lo que uno se está olvidando.
+
 ## [1.8.1] - 2026-11-13
 ### Changed
 - **`mobile/.env.example` muestra las dos formas válidas de `EXPO_PUBLIC_API_URL`**: la URL que da Render y un dominio propio apuntado a ese servicio. El placeholder nombraba solo la primera, y después de mudar la API a un dominio propio el ejemplo sugería el único de los dos valores que ya no es el que se usa. También queda escrito que va sin barra final, porque las llamadas concatenan la ruta directo (`${API_URL}/movimientos`) y una barra de más deja un `//` en el path.

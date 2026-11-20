@@ -45,10 +45,18 @@ export async function fetchRecurrencias(zona?: string): Promise<RecurrenciasDelP
 }
 
 /** Las propuestas que el usuario todavía no decidió, de la más vieja primero. */
-export async function fetchPropuestas(zona?: string): Promise<PropuestasPendientes> {
-  if (enModoMock) return mocks.fetchPropuestas()
+export async function fetchPropuestas(
+  zona?: string,
+  hasta?: string
+): Promise<PropuestasPendientes> {
+  if (enModoMock) return mocks.fetchPropuestas(hasta)
 
-  const params = new URLSearchParams(zona ? { zona } : {})
+  const params = new URLSearchParams({
+    ...(zona ? { zona } : {}),
+    // Hasta dónde proponer. Sin esto la API propone hasta hoy, que es lo que
+    // hacía cuando las propuestas vivían en un bloque fuera de los días.
+    ...(hasta ? { hasta } : {}),
+  })
   const res = await fetch(`${API_URL}/recurrencias/propuestas?${params.toString()}`, {
     method: 'GET',
     headers: await getAuthHeaders(),

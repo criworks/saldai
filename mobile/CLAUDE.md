@@ -120,6 +120,13 @@ abril. Omitir no crea movimiento, así que no toca la caché de movimientos. Cre
 editar un plan invalida también las propuestas: un plan nuevo propone desde su
 fecha ancla, que puede ser pasada.
 
+La ventana de las propuestas la decide `usePropuestas()` y no cada pantalla, con
+`ventanaDePropuestas(mes, anio)`: llega al fin del mes que se está mirando y
+nunca antes de hoy. Va en la llave de caché, y es lo que deja que el listado del
+mes y la vista de una propuesta lean la **misma** consulta — con una ventana por
+pantalla quedarían en llaves distintas, y abrir una propuesta de fin de mes
+desde la lista caería en una caché que no la tiene.
+
 Lo que viaja en el `PATCH` es **solo lo que cambió** (`cambioPendiente`, en
 `features/movimientos/edicion.ts`): la API marca como editados a mano los campos que
 recibe, y esa marca decide si un reclasificar masivo puede tocar la fila.

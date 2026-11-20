@@ -255,3 +255,37 @@ test('con las recurrencias apagadas no hay propuestas ni aviso', async () => {
   expect(screen.queryByText('arriendo')).toBeNull()
   expect(screen.queryByTestId('propuestas-de-otros-meses')).toBeNull()
 })
+
+test('le pide a la API hasta el fin del mes que se está mirando', async () => {
+  // La ventana la decide el hook a partir del mes abierto, así que la lista y
+  // la vista de una propuesta leen la misma consulta: con una ventana por
+  // pantalla quedarían en llaves distintas y abrir una propuesta de fin de mes
+  // encontraría una caché que no la tiene.
+  const ultimoDelMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0)
+  const finDelMes = `${ultimoDelMes.getFullYear()}-${String(ultimoDelMes.getMonth() + 1).padStart(2, '0')}-${String(ultimoDelMes.getDate()).padStart(2, '0')}`
+
+  montar()
+
+  await waitFor(() => expect(propuestasMock).toHaveBeenCalled())
+  expect(propuestasMock).toHaveBeenCalledWith(expect.any(String), finDelMes)
+})
+
+test('una propuesta del mes que todavía no llegó también se ve', async () => {
+  // Es lo que cambia con la ventana del mes: antes la API proponía hasta hoy,
+  // así que un plan mensual no mostraba nada hasta que llegaba el día.
+  const ultimoDelMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0)
+  const finDelMes = `${ultimoDelMes.getFullYear()}-${String(ultimoDelMes.getMonth() + 1).padStart(2, '0')}-${String(ultimoDelMes.getDate()).padStart(2, '0')}`
+
+  propuestasMock.mockResolvedValue({
+    ok: true,
+    errores: [],
+    advertencias: [],
+    cantidad: 1,
+    datos: [propuesta(finDelMes, 'arriendo', 525457)],
+  })
+  montar()
+
+  await waitFor(() => expect(screen.getByText('arriendo')).toBeTruthy())
+  // En su día, no en el aviso de otros meses.
+  expect(screen.queryByTestId('propuestas-de-otros-meses')).toBeNull()
+})

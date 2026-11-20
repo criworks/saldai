@@ -42,7 +42,7 @@ export function useMovimiento() {
     onSuccess: () => {
       invalidar()
       cliente.invalidateQueries({ queryKey: llaves.recurrencias() })
-      cliente.invalidateQueries({ queryKey: llaves.propuestas() })
+      cliente.invalidateQueries({ queryKey: llaves.todasLasPropuestas() })
     },
   })
 

@@ -7,7 +7,13 @@
  * forma de los identificadores y de los parámetros.
  */
 
-const { esFechaIso, esZonaValida } = require('@saldai/core')
+const {
+  aIsoCivil,
+  desdeIsoCivil,
+  esFechaIso,
+  esZonaValida,
+  sumarDias,
+} = require('@saldai/core')
 
 const bien = (valor) => ({ ok: true, errores: [], valor })
 const mal = (mensaje) => ({ ok: false, errores: [mensaje], valor: null })
@@ -63,4 +69,54 @@ function zonaDelPedido(valor, porDefecto) {
   }
 }
 
-module.exports = { validarIdDeRecurrencia, validarPropuesta, zonaDelPedido }
+/**
+ * Un año y pico de propuestas por delante. El tope existe porque las
+ * ocurrencias se derivan una por una: un `hasta` de 2099 en una recurrencia
+ * diaria son decenas de miles de fechas calculadas para una respuesta que nadie
+ * puede leer.
+ */
+const DIAS_MAXIMOS_POR_DELANTE = 400
+
+/**
+ * Hasta qué fecha proponer.
+ *
+ * `hasta` solo **estira** la ventana hacia adelante: un valor anterior a hoy se
+ * ignora y queda hoy. Es lo que deja al cliente pedir "el mes que estoy
+ * mirando" sin tener que acordarse de incluir lo atrasado — y lo atrasado es
+ * justo lo que el usuario se está olvidando, así que una ventana que lo pueda
+ * recortar es una forma de perderlo.
+ *
+ * Una fecha que no se entiende advierte y cae a hoy, por lo mismo que la zona:
+ * dejar al usuario sin ninguna propuesta es peor que mostrarle menos de las que
+ * pidió.
+ */
+function hastaDelPedido(valor, hoy) {
+  if (!valor) return { hasta: hoy, advertencias: [] }
+
+  const pedido = String(valor).trim()
+  if (!esFechaIso(pedido)) {
+    return {
+      hasta: hoy,
+      advertencias: [`Fecha "${pedido}" no reconocida en 'hasta', se usó ${hoy}`],
+    }
+  }
+
+  if (pedido <= hoy) return { hasta: hoy, advertencias: [] }
+
+  const tope = aIsoCivil(sumarDias(desdeIsoCivil(hoy), DIAS_MAXIMOS_POR_DELANTE))
+  if (pedido > tope) {
+    return {
+      hasta: tope,
+      advertencias: [`'hasta' no puede pasar de ${tope}, se usó esa fecha`],
+    }
+  }
+
+  return { hasta: pedido, advertencias: [] }
+}
+
+module.exports = {
+  hastaDelPedido,
+  validarIdDeRecurrencia,
+  validarPropuesta,
+  zonaDelPedido,
+}

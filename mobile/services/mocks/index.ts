@@ -222,11 +222,14 @@ export async function fetchRecurrencias() {
   }
 }
 
-export async function fetchPropuestas() {
+export async function fetchPropuestas(hasta?: string) {
   await esperar(400)
 
+  // La misma regla que la API: `hasta` solo estira la ventana hacia adelante,
+  // nunca antes de hoy, porque lo atrasado se debe igual.
   const hoy = aIsoCivil(hoyCivil())
-  const pendientes = propuestasPendientes(RECURRENCIAS, DECISIONES, { hasta: hoy })
+  const tope = hasta && hasta > hoy ? hasta : hoy
+  const pendientes = propuestasPendientes(RECURRENCIAS, DECISIONES, { hasta: tope })
 
   return {
     ok: true as const,

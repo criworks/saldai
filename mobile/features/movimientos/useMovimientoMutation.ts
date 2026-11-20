@@ -146,7 +146,7 @@ export function useMovimientoMutation() {
       // siguiente refetch.
       if (json.recurrenciaId) {
         cliente.invalidateQueries({ queryKey: llaves.recurrencias() })
-        cliente.invalidateQueries({ queryKey: llaves.propuestas() })
+        cliente.invalidateQueries({ queryKey: llaves.todasLasPropuestas() })
       }
 
       limpiarEnUnRato()

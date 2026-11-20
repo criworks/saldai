@@ -50,13 +50,24 @@ export const llaves = {
    */
   recurrencia: (id: string) => ['recurrencias', id] as const,
   /**
-   * Las propuestas pendientes.
+   * Las propuestas pendientes hasta una fecha.
    *
-   * No lleva el mes ni la zona en la llave: la respuesta son las propuestas
-   * hasta hoy, no las de un periodo, así que no hay parámetro de agrupación que
-   * se pueda cambiar sin que la llave lo refleje.
+   * La fecha va en la llave porque cambia la respuesta: la ventana llega hasta
+   * el fin del mes que se está mirando, así que abrir otro mes puede pedir más
+   * propuestas que las que ya están en caché. Sin la fecha en la llave, el mes
+   * nuevo mostraría la respuesta del anterior hasta que termine el refetch.
+   *
+   * La zona no va: es la del dispositivo y no cambia mientras la app corre.
    */
-  propuestas: () => ['propuestas'] as const,
+  propuestas: (hasta: string) => ['propuestas', hasta] as const,
+  /**
+   * El prefijo de las propuestas, cualquiera sea la ventana.
+   *
+   * Lo usan las decisiones y todo lo que crea o corta un plan: lo que quedó
+   * pendiente cambió para todas las ventanas, no solo para la que está en
+   * pantalla.
+   */
+  todasLasPropuestas: () => ['propuestas'] as const,
   /**
    * El prefijo de todos los meses y de todos los años.
    *

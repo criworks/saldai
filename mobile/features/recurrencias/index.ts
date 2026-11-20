@@ -14,6 +14,7 @@ export {
 } from './confirmacion'
 export type { BorradorDePropuesta } from './confirmacion'
 export { NOMBRES_FRECUENCIAS, descripcionDeFrecuencia } from './frecuencias'
+export { ventanaDePropuestas } from './ventana'
 export { BotonDeRecurrencia } from './componentes/BotonDeRecurrencia'
 export { FilaDePropuesta, llaveDePropuesta } from './componentes/FilaDePropuesta'
 export {
