@@ -1,4 +1,5 @@
-import { useEffect } from 'react'
+import { useFocusEffect } from 'expo-router'
+import { useCallback, useRef } from 'react'
 import { DeviceEventEmitter } from 'react-native'
 
 /**
@@ -15,20 +16,38 @@ export const ACCION_GUARDAR = 'guardarMovimiento'
 export const ACCION_DESCARTAR = 'descartarMovimiento'
 
 /**
- * Suscribe el check y el tacho de la barra de abajo.
+ * Suscribe el check y el tacho de la barra de abajo, **solo mientras la
+ * pantalla está en foco**.
  *
- * **Sin arreglo de dependencias a propósito**: las dos funciones se rearman en
- * cada render de la pantalla y acá se vuelve a suscribir con ellas, así el tap
- * llega al borrador que está en pantalla y no al del primer render. Con un
- * `[]`, guardar mandaría lo que había cuando la pantalla se montó.
+ * El foco no es un detalle: `movimiento` y `recurrencia` son rutas de las tabs
+ * y **quedan montadas** al volver atrás, y el evento lo recibe todo el que esté
+ * suscrito. Sin esta condición, un tap en el tacho de la vista del movimiento
+ * disparaba también el de la vista del plan abierta un rato antes, que abría su
+ * propio "Eliminar la recurrencia" encima: confirmando ahí se terminaba un plan
+ * que la persona no estaba mirando, y el plan dejaba de proponer y desaparecía
+ * de la lista sin que nada lo explicara.
+ *
+ * Los handlers se leen de un ref y no se capturan en la suscripción: se rearman
+ * en cada render de la pantalla, y el tap tiene que llegar al borrador que está
+ * en pantalla y no al del primer render. Con el ref eso no cuesta volver a
+ * suscribirse.
  */
 export function useAccionesDeLaBarra(guardar: () => void, descartar: () => void) {
-  useEffect(() => {
-    const check = DeviceEventEmitter.addListener(ACCION_GUARDAR, guardar)
-    const tacho = DeviceEventEmitter.addListener(ACCION_DESCARTAR, descartar)
-    return () => {
-      check.remove()
-      tacho.remove()
-    }
-  })
+  const ultimos = useRef({ guardar, descartar })
+  ultimos.current = { guardar, descartar }
+
+  useFocusEffect(
+    useCallback(() => {
+      const check = DeviceEventEmitter.addListener(ACCION_GUARDAR, () =>
+        ultimos.current.guardar()
+      )
+      const tacho = DeviceEventEmitter.addListener(ACCION_DESCARTAR, () =>
+        ultimos.current.descartar()
+      )
+      return () => {
+        check.remove()
+        tacho.remove()
+      }
+    }, [])
+  )
 }

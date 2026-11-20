@@ -91,9 +91,12 @@ una pantalla, y están ahí porque antes estaban copiados en cada una:
 - `accionesDeLaBarra.ts` — los dos botones de la barra de abajo. La barra la
   dibuja el footer de la app, que sabe en qué ruta está, y el tap llega a la
   pantalla como un evento de `DeviceEventEmitter`. Una pantalla los toma con
-  `useAccionesDeLaBarra(guardar, descartar)`, que **se suscribe sin arreglo de
-  dependencias a propósito**: con `[]`, el check guardaría el borrador del
-  primer render.
+  `useAccionesDeLaBarra(guardar, descartar)`, que **se suscribe solo mientras la
+  pantalla está en foco** (`useFocusEffect`) y lee los handlers de un ref. Las
+  dos cosas importan: `movimiento` y `recurrencia` son rutas de las tabs y
+  quedan montadas, así que sin el foco un tap llega también a la otra —y el
+  tacho terminaba un plan que nadie estaba mirando—; y sin el ref el check
+  guardaría el borrador del primer render.
 
 Los tests viven en `__tests__/` al lado de lo que prueban.
 
