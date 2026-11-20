@@ -1,4 +1,5 @@
 const { createSupabaseClient } = require('../supabase')
+const { columnasDeLaRepeticion, parametrosDeLaRepeticion } = require('./columnas')
 
 /**
  * Las consultas de los planes de recurrencia y de las decisiones ya tomadas,
@@ -51,6 +52,7 @@ function repositorioDeRecurrencias(token) {
           metodo: plan.metodo,
           notas: plan.notas,
           frecuencia: plan.frecuencia,
+          ...columnasDeLaRepeticion(plan.repeticion),
           vigente_desde: plan.vigenteDesde,
           vigente_hasta: plan.vigenteHasta,
           input_original: plan.inputOriginal,
@@ -185,6 +187,7 @@ function repositorioDeRecurrencias(token) {
         p_metodo: plan.metodo,
         p_notas: plan.notas,
         p_frecuencia: plan.frecuencia,
+        ...parametrosDeLaRepeticion(plan.repeticion),
         p_vigente_hasta: plan.vigenteHasta,
       })
     },

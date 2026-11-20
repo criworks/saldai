@@ -1,4 +1,5 @@
 const { createSupabaseClient } = require('../supabase')
+const { parametrosDeLaRepeticion } = require('../recurrencias/columnas')
 
 /**
  * Las consultas a la tabla `movimientos`, atadas a la sesión del usuario.
@@ -67,6 +68,7 @@ function repositorioDeMovimientos(token) {
           p_zona: contexto?.zona,
           p_hoy_resuelto: contexto?.hoyResuelto,
           p_frecuencia: recurrencia.frecuencia,
+          ...parametrosDeLaRepeticion(recurrencia.repeticion),
           p_vigente_hasta: recurrencia.vigenteHasta,
         })
     },
@@ -85,6 +87,7 @@ function repositorioDeMovimientos(token) {
         .rpc('atar_recurrencia_a_movimiento', {
           p_movimiento_id: id,
           p_frecuencia: recurrencia.frecuencia,
+          ...parametrosDeLaRepeticion(recurrencia.repeticion),
           p_vigente_hasta: recurrencia.vigenteHasta,
         })
     },
