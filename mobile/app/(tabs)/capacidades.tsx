@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import React from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,11 +9,23 @@ import { usePreferencias } from '@/features/perfil';
 /**
  * General > Capacidades: lo que la app puede hacer y el usuario prende o apaga.
  *
- * Las filas no navegan: acá se prende y se apaga, nada más. La configuración de
- * cada capacidad vive en otro lado, porque una pantalla que es a la vez el
- * interruptor y el panel de ajustes obliga a entrar para apagar algo.
+ * Cada fila prende y apaga la capacidad con su switch, y **entra a
+ * configurarla** tocando el resto de la fila, con el chevron al lado del título
+ * para decirlo. Los ajustes de una capacidad no están en esta pantalla, porque
+ * una que fuera a la vez el interruptor y el panel obligaría a entrar para
+ * apagar algo; pero es de acá de donde se entra.
+ *
+ * Hoy solo Recurrencias tiene a dónde ir: su lista de planes. Las otras dos
+ * siguen sin chevron, que es lo que distingue una fila que lleva a algún lado
+ * de una que solo se prende.
+ *
+ * Y con la capacidad apagada tampoco se entra: apagarla esconde la función en
+ * toda la app, así que un chevron que lleva a configurar lo que está apagado
+ * promete algo que no se cumple. Prendiéndola vuelve.
  */
 export default function CapacidadesScreen() {
+  const router = useRouter();
+
   // Mientras carga los switches se ven apagados, que es el estado de la v1: al
   // revés aparecerían prendidos y se apagarían solos al llegar la respuesta.
   const {
@@ -77,7 +90,9 @@ export default function CapacidadesScreen() {
               switchValue={recurrenciasVisibles}
               onSwitchChange={(activo) => guardar({ recurrenciasActivo: activo })}
               switchDisabled={guardando}
-              hideChevron
+              {...(recurrenciasVisibles
+                ? { onPress: () => router.push('/recurrencias') }
+                : { hideChevron: true })}
             />
           )}
         </View>

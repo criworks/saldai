@@ -55,7 +55,7 @@ app/                        # Rutas (Expo Router)
   (tabs)/categorias.tsx
   (tabs)/configuraciones.tsx
   (tabs)/capacidades.tsx    # General > Capacidades: los switches de las funciones
-  (tabs)/recurrencias.tsx   # La lista de planes de recurrencia
+  (tabs)/recurrencias.tsx   # La lista de planes de recurrencia (se entra desde Capacidades)
   (tabs)/recurrencia.tsx    # Un plan, con la forma de un movimiento
   (tabs)/movimiento.tsx     # Un movimiento: por confirmar o registrado
   (tabs)/cuenta.tsx
@@ -276,6 +276,19 @@ función le pide a la persona.
 - `SafeAreaView` de `react-native-safe-area-context`.
 - `<FlatList>` para listas largas, no `<ScrollView>` con `map`.
 - Clases con nombre semántico, no valores sueltos.
+
+---
+
+## Patrones del diseño
+
+**Una lista de switches que además navega** (hoy, Capacidades): el switch
+prende la capacidad y **todo el resto del container entra a configurarla**, con
+el **chevron pegado al título** y no al final de la fila. Al final quedaría al
+lado del switch y los dos controles se leerían como uno solo: parecería que el
+chevron es del switch, o que tocar ahí lo conmuta. Lo hace `MenuItem`, que
+decide dónde va el chevron según si la fila lleva switch, así que una fila nueva
+no tiene que acordarse. Una fila que no lleva a ninguna parte va con
+`hideChevron`: el chevron es lo único que dice que se puede entrar.
 
 ---
 

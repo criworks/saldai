@@ -37,3 +37,21 @@ test('el tap del switch no navega', () => {
   expect(alCambiar).toHaveBeenCalledWith(true)
   expect(alPresionar).not.toHaveBeenCalled()
 })
+
+test('el container navega: tocar el título entra, y el switch sigue siendo del switch', () => {
+  // El área de click es todo menos el switch, así que el título tiene que
+  // entrar: es lo que el chevron de al lado está prometiendo.
+  const alPresionar = jest.fn()
+  const { getByText } = render(
+    <MenuItem
+      title="Recurrencias"
+      switchValue
+      onSwitchChange={() => {}}
+      onPress={alPresionar}
+    />
+  )
+
+  fireEvent.press(getByText('Recurrencias'))
+
+  expect(alPresionar).toHaveBeenCalled()
+})

@@ -7,6 +7,11 @@ import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-c
 import { fetchPreferencias, guardarPreferencias } from '@/features/perfil/api'
 import CapacidadesScreen from '../capacidades'
 
+const mockNavegar = jest.fn()
+jest.mock('expo-router', () => ({
+  useRouter: () => ({ navigate: mockNavegar, push: mockNavegar }),
+}))
+
 const fetchMock = fetchPreferencias as jest.MockedFunction<typeof fetchPreferencias>
 const guardarMock = guardarPreferencias as jest.MockedFunction<typeof guardarPreferencias>
 
@@ -98,4 +103,44 @@ test('prender las recurrencias las guarda como activas', async () => {
   fireEvent(screen.getByTestId('switch-Recurrencias'), 'valueChange', true)
 
   await waitFor(() => expect(guardarMock).toHaveBeenCalledWith({ recurrenciasActivo: true }))
+})
+
+test('a Recurrencias se entra desde su fila, tocando el container', async () => {
+  // Es de acá de donde se entra a la lista de planes: sin esto la pantalla de
+  // Recurrencias existía y no se alcanzaba desde ningún lado.
+  montar()
+
+  await waitFor(() => expect(screen.getByText('Recurrencias')).toBeTruthy())
+  fireEvent.press(screen.getByText('Recurrencias'))
+
+  expect(mockNavegar).toHaveBeenCalledWith('/recurrencias')
+})
+
+test('el switch de la fila conmuta y no navega', async () => {
+  // Las dos acciones conviven en la fila, y el switch se queda con su tap: si
+  // navegara, apagar la capacidad abriría la pantalla que acaba de esconder.
+  montar()
+
+  await waitFor(() => expect(screen.getByTestId('switch-Recurrencias')).toBeTruthy())
+  fireEvent(screen.getByTestId('switch-Recurrencias'), 'valueChange', false)
+
+  await waitFor(() => expect(guardarMock).toHaveBeenCalledWith({ recurrenciasActivo: false }))
+  expect(mockNavegar).not.toHaveBeenCalled()
+})
+
+test('con la capacidad apagada la fila no lleva a ninguna parte', async () => {
+  fetchMock.mockResolvedValue(
+    respuesta({ habilitado: true, activo: false }, { habilitado: true, activo: false }, {
+      habilitado: true,
+      activo: false,
+    }),
+  )
+  montar()
+
+  await waitFor(() =>
+    expect(screen.getByTestId('switch-Recurrencias').props.accessibilityState.checked).toBe(false),
+  )
+  fireEvent.press(screen.getByText('Recurrencias'))
+
+  expect(mockNavegar).not.toHaveBeenCalled()
 })

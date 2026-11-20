@@ -14,6 +14,10 @@ interface MenuItemProps {
   descripcion?: string;
   value?: string;
   onPress?: () => void;
+  /**
+   * Saca el chevron. Es para una fila que no lleva a ninguna parte: una con
+   * `onPress` lo necesita, porque es lo único que dice que se puede entrar.
+   */
   hideChevron?: boolean;
   /**
    * Si va, la fila lleva un switch antes del chevron. `undefined` es una fila
@@ -29,10 +33,20 @@ interface MenuItemProps {
  * Una fila del menú de configuraciones.
  *
  * El switch va acá y no en una fila aparte porque en el diseño la misma fila
- * puede llevar título, switch y chevron a la vez: el switch prende la función y
- * el chevron entra a configurarla. Como son dos acciones distintas en una
- * fila, el switch se queda con su propio tap —`Pressable` sobre `Pressable`, el
- * de adentro gana— y el resto de la fila navega.
+ * puede llevar título, switch y navegación a la vez: el switch prende la
+ * función y entrar a la fila la configura. Como son dos acciones distintas en
+ * una fila, el switch se queda con su propio tap —`Pressable` sobre
+ * `Pressable`, el de adentro gana— y **todo el resto del container navega**.
+ *
+ * **Dónde va el chevron depende de si la fila tiene switch**, y es el patrón
+ * del diseño para una lista de switches que además navega:
+ *
+ * - Sin switch, va al final de la fila, que es donde se lo busca en una fila
+ *   que no hace otra cosa.
+ * - Con switch, va **pegado al título**. Al final quedaría al lado del switch,
+ *   y entonces los dos controles de la fila se leerían como uno: parecería que
+ *   el chevron es del switch o que tocar ahí lo conmuta. Junto al título dice
+ *   qué es lo que lleva a otra parte.
  */
 export function MenuItem({
   title,
@@ -44,18 +58,26 @@ export function MenuItem({
   onSwitchChange,
   switchDisabled,
 }: MenuItemProps) {
+  const llevaSwitch = switchValue !== undefined && !!onSwitchChange;
+  const chevron = !hideChevron ? (
+    <CaretRight size={18} color={colors.textMuted} weight="regular" />
+  ) : null;
+
   const fila = (
     <View className="flex-row items-center justify-between py-md w-full">
-      <Text className="text-muted-foreground text-md font-normal leading-[normal]">
-        {title}
-      </Text>
+      <View className="flex-row items-center gap-xs">
+        <Text className="text-muted-foreground text-md font-normal leading-[normal]">
+          {title}
+        </Text>
+        {llevaSwitch ? chevron : null}
+      </View>
       <View className="flex-row items-center gap-sm">
         {value ? (
           <Text className="text-foreground text-md font-medium leading-[normal]">
             {value}
           </Text>
         ) : null}
-        {switchValue !== undefined && onSwitchChange ? (
+        {llevaSwitch ? (
           <Switch
             value={switchValue}
             onValueChange={onSwitchChange}
@@ -64,7 +86,7 @@ export function MenuItem({
             testID={`switch-${title}`}
           />
         ) : null}
-        {!hideChevron && <CaretRight size={18} color={colors.textMuted} weight="regular" />}
+        {llevaSwitch ? null : chevron}
       </View>
     </View>
   );
