@@ -79,6 +79,22 @@ En `components/ui/` van solo los primitivos sin dominio (`Alert`, `Input`,
 `BotonLimpiar`, `MenuItem`, `button`, `text`…). Un componente que lee un
 contexto de movimientos pertenece a `features/movimientos/componentes/`.
 
+Dentro de `features/movimientos/` hay tres archivos que son del dominio y no de
+una pantalla, y están ahí porque antes estaban copiados en cada una:
+
+- `fechas.ts` — pasar entre `AAAA-MM-DD` y `Date` (`new Date('2026-03-05')` se
+  lee en UTC y en Chile corre el día para atrás), el "Hoy"/"Ayer" que usan el
+  chip de la captura y los encabezados del listado, y el fin de un mes.
+- `agrupacion.ts` — `agruparPorDia`, que agrupa por fecha lo que cae en un día.
+  Es genérico porque bajo un encabezado caen dos cosas: un movimiento y una
+  propuesta por confirmar.
+- `accionesDeLaBarra.ts` — los dos botones de la barra de abajo. La barra la
+  dibuja el footer de la app, que sabe en qué ruta está, y el tap llega a la
+  pantalla como un evento de `DeviceEventEmitter`. Una pantalla los toma con
+  `useAccionesDeLaBarra(guardar, descartar)`, que **se suscribe sin arreglo de
+  dependencias a propósito**: con `[]`, el check guardaría el borrador del
+  primer render.
+
 Los tests viven en `__tests__/` al lado de lo que prueban.
 
 ---
@@ -130,6 +146,12 @@ desde la lista caería en una caché que no la tiene.
 Lo que viaja en el `PATCH` es **solo lo que cambió** (`cambioPendiente`, en
 `features/movimientos/edicion.ts`): la API marca como editados a mano los campos que
 recibe, y esa marca decide si un reclasificar masivo puede tocar la fila.
+
+**Confirmar una propuesta pasa por esas mismas funciones**, pasándoles
+`propuesta.movimiento` —el movimiento que crearía confirmarla sin tocar nada—
+como sujeto: confirmar es corregir un movimiento, y la regla de qué viaja es la
+misma. La feature de recurrencias tenía su propia copia y era una regla que se
+iba a separar de a un arreglo.
 
 ---
 

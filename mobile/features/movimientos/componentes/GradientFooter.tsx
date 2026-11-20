@@ -11,6 +11,7 @@ import { categoryEmoji, colors, withAlpha } from '@/constants/theme';
 import { usePreferencias } from '@/features/perfil';
 import { useFilter } from '../FilterContext';
 import { useMovimientos } from '../MovimientosContext';
+import { ACCION_DESCARTAR, ACCION_GUARDAR } from '../accionesDeLaBarra';
 
 export function GradientFooter(props: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
@@ -229,7 +230,7 @@ export function GradientFooter(props: BottomTabBarProps) {
               accessibilityRole="button"
               accessibilityLabel="Descartar este movimiento"
               testID="descartar-movimiento"
-              onPress={() => DeviceEventEmitter.emit('descartarMovimiento')}
+              onPress={() => DeviceEventEmitter.emit(ACCION_DESCARTAR)}
             >
               <Trash size={24} color={colors.errorStrong} />
             </Pressable>
@@ -239,7 +240,7 @@ export function GradientFooter(props: BottomTabBarProps) {
               accessibilityRole="button"
               accessibilityLabel="Guardar este movimiento"
               testID="guardar-movimiento"
-              onPress={() => DeviceEventEmitter.emit('guardarMovimiento')}
+              onPress={() => DeviceEventEmitter.emit(ACCION_GUARDAR)}
             >
               <Check size={24} className="text-primary-foreground" weight="bold" />
             </Pressable>

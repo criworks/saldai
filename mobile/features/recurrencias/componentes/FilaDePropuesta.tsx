@@ -4,6 +4,7 @@ import React from 'react'
 import { ActivityIndicator, Pressable, Text, View } from 'react-native'
 import { ExpenseItem } from '@/features/movimientos'
 import { colors } from '@/constants/theme'
+import { llaveDePropuesta } from '../propuestas'
 
 export interface FilaDePropuestaProps {
   propuesta: PropuestaPendiente
@@ -19,11 +20,6 @@ export interface FilaDePropuestaProps {
   metodosVisibles?: boolean
   /** Hay una decisión en vuelo sobre esta propuesta: apaga los dos botones. */
   ocupada?: boolean
-}
-
-/** La misma llave que usa la lista: un plan y una fecha identifican la propuesta. */
-export function llaveDePropuesta(propuesta: PropuestaPendiente): string {
-  return `${propuesta.recurrenciaId}-${propuesta.fecha}`
 }
 
 /**

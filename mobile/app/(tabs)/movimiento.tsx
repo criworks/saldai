@@ -7,7 +7,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Trash } from 'phosphor-react-native'
 import React, { useEffect, useMemo, useState } from 'react'
-import { ActivityIndicator, DeviceEventEmitter, Text, View } from 'react-native'
+import { ActivityIndicator, Text, View } from 'react-native'
 import { Alert } from '@/components/ui/Alert'
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal'
 import { colors } from '@/constants/theme'
@@ -17,6 +17,7 @@ import {
   diaDesdeIso,
   FormularioDeMovimiento,
   isoDelDia,
+  useAccionesDeLaBarra,
   useMovimiento,
   useMovimientos,
   type BorradorDeMovimiento,
@@ -24,12 +25,23 @@ import {
 import { usePreferencias } from '@/features/perfil'
 import {
   BotonDeRecurrencia,
-  borradorDePropuesta,
-  cambioDeLaPropuesta,
   usePropuestas,
   useRecurrenciaDeMovimiento,
   useRecurrencias,
 } from '@/features/recurrencias'
+
+/**
+ * Lo que la pantalla está mostrando, con su tipo adentro.
+ *
+ * Es una unión y no dos piezas de estado sueltas porque el tipo tiene que venir
+ * de **lo que se cargó** y no de los parámetros: eran dos fuentes para el mismo
+ * dato, y leer una propuesta de los parámetros con un movimiento guardado en el
+ * estado es exactamente el desfase que mandaba el PATCH contra el sujeto
+ * anterior.
+ */
+type Sujeto =
+  | { tipo: 'propuesta'; propuesta: PropuestaPendiente }
+  | { tipo: 'movimiento'; movimiento: Movimiento }
 
 /**
  * Un movimiento, en sus dos estados: **por confirmar** y **confirmado**.
@@ -97,7 +109,7 @@ export default function MovimientoScreen() {
   // Hace falta porque esta ruta vive en las tabs y **queda montada** cuando se
   // vuelve atrás: el siguiente `push` entra al mismo componente con su estado
   // intacto. Sin atar el borrador a esta llave, abrir otra fila mostraba el
-  // movimiento anterior, y las acciones se mandaban contra el `original` viejo
+  // movimiento anterior, y las acciones se mandaban contra el sujeto viejo
   // —con una propuesta en pantalla y un movimiento guardado, el PATCH salía con
   // un id `undefined` y la API respondía que no era un uuid—.
   const llaveDelSujeto = id ?? (recurrenciaId && fecha ? `${recurrenciaId}|${fecha}` : '')
@@ -108,7 +120,7 @@ export default function MovimientoScreen() {
   // lista, así que sin la copia la pantalla se quedaría sin nada que mostrar
   // justo mientras vuelve atrás.
   const [borrador, setBorrador] = useState<BorradorDeMovimiento | null>(null)
-  const [original, setOriginal] = useState<Movimiento | PropuestaPendiente | null>(null)
+  const [sujeto, setSujeto] = useState<Sujeto | null>(null)
   const [cargado, setCargado] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [confirmarBorrado, setConfirmarBorrado] = useState(false)
@@ -117,11 +129,13 @@ export default function MovimientoScreen() {
     if (cargado === llaveDelSujeto) return
 
     if (propuesta) {
-      setBorrador(borradorDePropuesta(propuesta))
-      setOriginal(propuesta)
+      // El borrador de una propuesta se arma con lo mismo que el de un
+      // movimiento: confirmar es corregir el movimiento que el plan propone.
+      setBorrador(borradorDe(propuesta.movimiento))
+      setSujeto({ tipo: 'propuesta', propuesta })
     } else if (movimiento) {
       setBorrador(borradorDe(movimiento))
-      setOriginal(movimiento)
+      setSujeto({ tipo: 'movimiento', movimiento })
     } else {
       // Todavía no llegó a la caché: no se arma nada y la pantalla espera. Sin
       // este caso, el borrador del sujeto anterior seguiría en pantalla.
@@ -134,13 +148,15 @@ export default function MovimientoScreen() {
     setConfirmarBorrado(false)
   }, [cargado, llaveDelSujeto, movimiento, propuesta])
 
-  const esPropuesta = !!recurrenciaId && !!fecha
-
-  // De qué plan viene este movimiento. En una propuesta llega en los parámetros;
-  // en un movimiento registrado, en su fila. En los dos casos lo que importa es
-  // el plan **vivo** de la cadena, y eso lo resuelve el hook: desde un movimiento
-  // de marzo, el id que trae la fila puede ser una versión ya cerrada.
-  const idDelPlan = recurrenciaId ?? movimiento?.recurrencia_id ?? null
+  // De qué plan viene este movimiento. En una propuesta es el plan que la
+  // propone; en un movimiento registrado, el que trae su fila. En los dos casos
+  // lo que importa es el plan **vivo** de la cadena, y eso lo resuelve el hook:
+  // desde un movimiento de marzo, el id que trae la fila puede ser una versión
+  // ya cerrada.
+  const idDelPlan =
+    sujeto?.tipo === 'propuesta'
+      ? sujeto.propuesta.recurrenciaId
+      : sujeto?.movimiento.recurrencia_id ?? null
   const { plan } = useRecurrenciaDeMovimiento(recurrenciasVisibles ? idDelPlan : null)
 
   const ocupado =
@@ -162,8 +178,8 @@ export default function MovimientoScreen() {
     try {
       if (plan) {
         await editarPlan({ id: plan.id, cambio: { desde: isoDelDia(new Date()), frecuencia } })
-      } else if (!esPropuesta && original) {
-        await atarRecurrencia({ id: String((original as Movimiento).id), recurrencia: { frecuencia } })
+      } else if (sujeto?.tipo === 'movimiento') {
+        await atarRecurrencia({ id: String(sujeto.movimiento.id), recurrencia: { frecuencia } })
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo guardar la recurrencia')
@@ -180,19 +196,21 @@ export default function MovimientoScreen() {
   }
 
   const guardar = async () => {
-    if (!borrador || !original) return
+    if (!borrador || !sujeto) return
     try {
-      if (esPropuesta) {
-        const laPropuesta = original as PropuestaPendiente
+      if (sujeto.tipo === 'propuesta') {
+        const { propuesta: laPropuesta } = sujeto
         await confirmar({
           recurrenciaId: laPropuesta.recurrenciaId,
           // La fecha que cierra la propuesta es la **prevista**, la que el plan
           // proponía; si la persona le cambió la fecha, eso va en el cambio.
           fecha: laPropuesta.fecha,
-          cambio: cambioDeLaPropuesta(laPropuesta, borrador),
+          // Confirmar sin tocar nada manda `{}`, y eso es válido: no es un
+          // cuerpo vacío que se rechaza, es "confirmo lo que proponés".
+          cambio: cambioPendiente(laPropuesta.movimiento, borrador),
         })
       } else {
-        const elMovimiento = original as Movimiento
+        const elMovimiento = sujeto.movimiento
         const cambio = cambioPendiente(elMovimiento, borrador)
         // Sin nada que guardar el check es simplemente volver: un PATCH vacío
         // lo rechaza la API, y además marcaría campos como editados a mano.
@@ -209,13 +227,13 @@ export default function MovimientoScreen() {
   }
 
   const descartar = async () => {
-    if (!original) return
+    if (!sujeto) return
     try {
-      if (esPropuesta) {
-        const laPropuesta = original as PropuestaPendiente
+      if (sujeto.tipo === 'propuesta') {
+        const { propuesta: laPropuesta } = sujeto
         await omitir({ recurrenciaId: laPropuesta.recurrenciaId, fecha: laPropuesta.fecha })
       } else {
-        await eliminar(String((original as Movimiento).id))
+        await eliminar(String(sujeto.movimiento.id))
       }
       router.back()
     } catch (e) {
@@ -226,24 +244,14 @@ export default function MovimientoScreen() {
   // Omitir no pide confirmación: no borra nada y la decisión se puede deshacer
   // desde la pantalla de la recurrencia. Eliminar sí, porque no se recupera.
   const pedirDescartar = () => {
-    if (esPropuesta) {
+    if (sujeto?.tipo === 'propuesta') {
       descartar()
       return
     }
     setConfirmarBorrado(true)
   }
 
-  // Sin arreglo de dependencias a propósito: las dos funciones se rearman en
-  // cada render y se vuelven a suscribir con ellas, así el tap del footer
-  // siempre llega al borrador que está en pantalla y no al del primer render.
-  useEffect(() => {
-    const check = DeviceEventEmitter.addListener('guardarMovimiento', guardar)
-    const tacho = DeviceEventEmitter.addListener('descartarMovimiento', pedirDescartar)
-    return () => {
-      check.remove()
-      tacho.remove()
-    }
-  })
+  useAccionesDeLaBarra(guardar, pedirDescartar)
 
   if (!borrador || cargado !== llaveDelSujeto) {
     // O todavía no llegó el mes a la caché, o la fila ya no está (se eliminó en
@@ -268,11 +276,11 @@ export default function MovimientoScreen() {
         si la persona le cambia la fecha al movimiento. Un movimiento ya
         confirmado no necesita decir que lo está.
       */}
-      {esPropuesta && (
+      {sujeto?.tipo === 'propuesta' && (
         <View className="px-xl pt-xl">
           <Text className="text-card-foreground text-subtitle font-medium">Por confirmar</Text>
           <Text className="text-muted-foreground text-base font-normal">
-            {`Del ${isoAChileno((original as PropuestaPendiente | null)?.fecha ?? borrador.fecha)}`}
+            {`Del ${isoAChileno(sujeto.propuesta.fecha)}`}
           </Text>
         </View>
       )}

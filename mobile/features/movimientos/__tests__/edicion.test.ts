@@ -1,5 +1,5 @@
 import type { Movimiento } from '@saldai/core'
-import { borradorDe, cambioPendiente, hayAlgoQueGuardar } from '../edicion'
+import { borradorDe, cambioPendiente, hayAlgoQueGuardar, montoEItemValidos } from '../edicion'
 
 const MOVIMIENTO: Movimiento = {
   id: 'abc',
@@ -89,4 +89,41 @@ test('varios campos a la vez viajan juntos', () => {
     metodo: 'EF',
     notas: 'al aeropuerto',
   })
+})
+
+test('lo que una recurrencia propone sirve de sujeto, igual que un movimiento', () => {
+  // Confirmar una propuesta es corregir el movimiento que el plan propone, así
+  // que pasa por estas mismas funciones: tenerlas escritas de nuevo en la
+  // feature de recurrencias era tener dos reglas de "qué viaja en el PATCH".
+  const propuesto = {
+    monto: 525457,
+    item: 'arriendo',
+    categoria: 'Básicos' as const,
+    metodo: 'TC' as const,
+    fecha: '2026-03-05',
+    notas: null,
+  }
+
+  const borrador = borradorDe(propuesto)
+  expect(borrador).toEqual({
+    monto: '525457',
+    item: 'arriendo',
+    categoria: 'Básicos',
+    metodo: 'TC',
+    fecha: '2026-03-05',
+    notas: '',
+  })
+
+  // Confirmar sin tocar nada no marca ningún campo como corregido a mano.
+  expect(cambioPendiente(propuesto, borrador)).toEqual({})
+  expect(cambioPendiente(propuesto, { ...borrador, monto: '600000' })).toEqual({ monto: 600000 })
+})
+
+test('un monto en cero o un item vacío no alcanzan, ni para un movimiento ni para un plan', () => {
+  const borrador = borradorDe(MOVIMIENTO)
+
+  expect(montoEItemValidos(borrador)).toBe(true)
+  expect(montoEItemValidos({ ...borrador, monto: '0' })).toBe(false)
+  expect(montoEItemValidos({ ...borrador, monto: '' })).toBe(false)
+  expect(montoEItemValidos({ ...borrador, item: '   ' })).toBe(false)
 })

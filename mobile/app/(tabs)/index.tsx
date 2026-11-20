@@ -11,46 +11,18 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Alarm } from 'phosphor-react-native'
 import { colors, SIN_CATEGORIA } from '@/constants/theme'
-import { EncabezadoDelMes, ExpenseItem, useFilter, useMovimientos, Movimiento } from '@/features/movimientos'
+import {
+  agruparPorDia,
+  EncabezadoDelMes,
+  ExpenseItem,
+  useFilter,
+  useMovimientos,
+  Movimiento,
+} from '@/features/movimientos'
 import { usePreferencias } from '@/features/perfil'
 import { FilaDePropuesta, llaveDePropuesta, usePropuestas } from '@/features/recurrencias'
 import { Alert } from '@/components/ui/Alert'
 import type { PropuestaPendiente } from '@saldai/core'
-
-/**
- * `AAAA-MM-DD` a Date del día, en hora local.
- *
- * La columna es `date` y la API devuelve ISO, así que no hay más formatos que
- * atender; antes esto también aceptaba `DD/MM/AAAA`, que era el formato viejo
- * de la columna. Se arma con las partes y no con `new Date(iso)` porque esa
- * forma lo interpreta en UTC y en Chile corre el día para atrás.
- */
-function fechaDelDia(iso: string): Date {
-  const partes = iso?.split('-').map(Number)
-  if (!partes || partes.length !== 3 || partes.some(Number.isNaN)) return new Date(0)
-
-  const [anio, mes, dia] = partes
-  return new Date(anio, mes - 1, dia)
-}
-
-/** El título de cada grupo: "Hoy", "Ayer" o "Jue 26". */
-function tituloDelDia(dia: Date): string {
-  if (isNaN(dia.getTime()) || dia.getTime() === 0) return 'Desconocido'
-
-  const hoy = new Date()
-  hoy.setHours(0, 0, 0, 0)
-
-  const ayer = new Date(hoy)
-  ayer.setDate(ayer.getDate() - 1)
-
-  if (dia.getTime() === hoy.getTime()) return 'Hoy'
-  if (dia.getTime() === ayer.getTime()) return 'Ayer'
-
-  // El resto, abreviado y sin el punto que agrega la plataforma: "Jue 26".
-  const formato = new Intl.DateTimeFormat('es-ES', { weekday: 'short', day: 'numeric' })
-  const texto = formato.format(dia).replace('.', '')
-  return texto.charAt(0).toUpperCase() + texto.slice(1)
-}
 
 /**
  * Lo que puede haber bajo el encabezado de un día: un movimiento registrado o
@@ -167,43 +139,32 @@ export default function DashboardScreen() {
   // aparte arriba: una propuesta del 5 es plata que salió el 5, y cuando el
   // usuario está cuadrando el mes lo que quiere ver es el día completo, con lo
   // que ya registró y lo que el plan dice que falta.
-  const secciones = useMemo(() => {
-    const items = [
-      ...movimientosVisibles.map((movimiento) => ({
-        dia: fechaDelDia(movimiento.fecha),
-        // Dentro de un día las propuestas van primero: son lo único que pide
-        // una decisión, y el resto del día ya está decidido.
-        orden: 1,
-        item: {
-          tipo: 'movimiento',
-          llave: `movimiento-${movimiento.id}`,
-          movimiento,
-        } as ItemDelDia,
-      })),
-      ...propuestasDelMes.map((propuesta) => ({
-        dia: fechaDelDia(propuesta.fecha),
-        orden: 0,
-        item: {
-          tipo: 'propuesta',
-          llave: `propuesta-${llaveDePropuesta(propuesta)}`,
-          propuesta,
-        } as ItemDelDia,
-      })),
-    ]
-
-    items.sort((a, b) => b.dia.getTime() - a.dia.getTime() || a.orden - b.orden)
-
-    // Un Map y no un objeto: el Map mantiene el orden de inserción, que acá es
-    // el orden en que se van a ver los grupos.
-    const porDia = new Map<string, ItemDelDia[]>()
-    for (const { dia, item } of items) {
-      const titulo = tituloDelDia(dia)
-      if (!porDia.has(titulo)) porDia.set(titulo, [])
-      porDia.get(titulo)!.push(item)
-    }
-
-    return Array.from(porDia, ([titulo, data]) => ({ titulo, data }))
-  }, [movimientosVisibles, propuestasDelMes])
+  const secciones = useMemo(
+    () =>
+      agruparPorDia<ItemDelDia>([
+        ...movimientosVisibles.map((movimiento) => ({
+          fecha: movimiento.fecha,
+          // Dentro de un día las propuestas van primero: son lo único que pide
+          // una decisión, y el resto del día ya está decidido.
+          orden: 1,
+          item: {
+            tipo: 'movimiento' as const,
+            llave: `movimiento-${movimiento.id}`,
+            movimiento,
+          },
+        })),
+        ...propuestasDelMes.map((propuesta) => ({
+          fecha: propuesta.fecha,
+          orden: 0,
+          item: {
+            tipo: 'propuesta' as const,
+            llave: `propuesta-${llaveDePropuesta(propuesta)}`,
+            propuesta,
+          },
+        })),
+      ]),
+    [movimientosVisibles, propuestasDelMes]
+  )
 
   // Con filtro, el total es el de lo que se ve. El total del mes arriba de una
   // lista recortada es un número que no corresponde a ninguna de sus filas.

@@ -1,5 +1,20 @@
 import { SIN_CATEGORIA, type CambioDeMovimiento, type Movimiento, type Metodo } from '@saldai/core'
 
+/**
+ * Contra qué se compara el borrador.
+ *
+ * Son los seis campos que el formulario edita, y los tiene igual un movimiento
+ * guardado que el que una propuesta de recurrencia propone. Está escrito como
+ * los campos y no como `Movimiento` porque confirmar una propuesta es lo mismo
+ * que corregir un movimiento —solo lo que difiere viaja, y eso es lo que queda
+ * marcado en `campos_editados`—, y tenerlo dos veces era tener dos reglas que
+ * se iban a separar de a un arreglo.
+ */
+export type SujetoDelBorrador = Pick<
+  Movimiento,
+  'monto' | 'item' | 'categoria' | 'metodo' | 'fecha' | 'notas'
+>
+
 /** Lo que el editor tiene en pantalla. Todo texto, como lo escribe el usuario. */
 export interface BorradorDeMovimiento {
   /** Solo dígitos, sin separadores: lo que se escribe en el campo de monto. */
@@ -13,8 +28,13 @@ export interface BorradorDeMovimiento {
   notas: string
 }
 
-/** El borrador con el que abre el editor: el movimiento tal como está. */
-export function borradorDe(movimiento: Movimiento): BorradorDeMovimiento {
+/**
+ * El borrador con el que abre el editor: el sujeto tal como está.
+ *
+ * Desde una propuesta se le pasa `propuesta.movimiento`, que es el movimiento
+ * que crearía confirmarla sin tocar nada.
+ */
+export function borradorDe(movimiento: SujetoDelBorrador): BorradorDeMovimiento {
   return {
     monto: String(movimiento.monto),
     item: movimiento.item,
@@ -35,10 +55,11 @@ export function borradorDe(movimiento: Movimiento): BorradorDeMovimiento {
  *
  * Un borrador igual al movimiento devuelve `{}`, y con eso el editor sabe que
  * no hay nada que guardar: así el botón no manda un PATCH que la API va a
- * rechazar por vacío.
+ * rechazar por vacío. Al confirmar una propuesta `{}` sí es válido, y significa
+ * "confirmo lo que proponés".
  */
 export function cambioPendiente(
-  movimiento: Movimiento,
+  movimiento: SujetoDelBorrador,
   borrador: BorradorDeMovimiento
 ): CambioDeMovimiento {
   const cambio: CambioDeMovimiento = {}
@@ -69,11 +90,26 @@ export function cambioPendiente(
   return cambio
 }
 
-/** `true` si el borrador se puede guardar: hay algo que cambió y el monto sirve. */
-export function hayAlgoQueGuardar(movimiento: Movimiento, borrador: BorradorDeMovimiento): boolean {
+/**
+ * `true` si el borrador tiene lo mínimo: un monto que es un entero positivo y
+ * un item con algo escrito.
+ *
+ * Es lo mínimo de un movimiento y también de un plan de recurrencia, y está acá
+ * una sola vez porque la pantalla del plan lo tenía escrito de nuevo: con dos
+ * copias, subir el tope del monto en una dejaba la otra aceptando lo que la API
+ * iba a rechazar.
+ */
+export function montoEItemValidos(borrador: BorradorDeMovimiento): boolean {
   const monto = parseInt(borrador.monto, 10)
-  if (!Number.isInteger(monto) || monto <= 0) return false
-  if (!borrador.item.trim()) return false
+  return Number.isInteger(monto) && monto > 0 && !!borrador.item.trim()
+}
+
+/** `true` si el borrador se puede guardar: hay algo que cambió y el monto sirve. */
+export function hayAlgoQueGuardar(
+  movimiento: SujetoDelBorrador,
+  borrador: BorradorDeMovimiento
+): boolean {
+  if (!montoEItemValidos(borrador)) return false
 
   return Object.keys(cambioPendiente(movimiento, borrador)).length > 0
 }
