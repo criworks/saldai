@@ -3,7 +3,6 @@ const {
   aIsoCivil,
   desdeIsoCivil,
   esOcurrenciaDelPlan,
-  hoyCivil,
   movimientoDeLaPropuesta,
   planVigente,
   planVivoDeLaCadena,
@@ -18,11 +17,11 @@ const { requireAuth } = require('../middleware/auth.js')
 const { repositorioDeRecurrencias } = require('../recurrencias/repositorio')
 const {
   hastaDelPedido,
+  hoyDelPedido,
   validarIdDeRecurrencia,
   validarPropuesta,
-  zonaDelPedido,
 } = require('../recurrencias/validacion')
-const { errorDeBase, errorDeEntrada, noEncontrado } = require('../respuestas')
+const { conflicto, errorDeBase, errorDeEntrada, noEncontrado } = require('../respuestas')
 
 /**
  * Las rutas de recurrencia con confirmación.
@@ -38,6 +37,61 @@ const { errorDeBase, errorDeEntrada, noEncontrado } = require('../respuestas')
  * le deben al usuario: con la zona equivocada, el día 1 a las 23:00 en Chile la
  * API todavía no propondría la cuota del mes.
  */
+/**
+ * El plan de un id y **el vivo de su cadena**.
+ *
+ * Las dos rutas que actúan sobre un plan existente lo necesitan igual, y por la
+ * misma razón: desde un movimiento de marzo llega la versión del plan que lo
+ * propuso, que puede estar cerrada por un "editar de aquí en adelante"
+ * posterior. Si una de las dos resolviera la cadena y la otra no, terminar una
+ * recurrencia desde un movimiento viejo cerraría una versión ya cerrada y el
+ * plan seguiría proponiendo.
+ *
+ * Devuelve el error de la base tal cual para que la ruta responda con su propio
+ * mensaje.
+ */
+async function planYSuCadena(repositorio, id, userId) {
+  const plan = await repositorio.buscar(id, { userId })
+  if (plan.error) return { error: plan.error, mensaje: 'Error al leer la recurrencia' }
+  if (!plan.data) return { noExiste: true }
+
+  const planes = await repositorio.listar({ userId })
+  if (planes.error) return { error: planes.error, mensaje: 'Error al leer las recurrencias' }
+
+  return { plan: plan.data, vivo: planVivoDeLaCadena(planes.data, id) ?? plan.data }
+}
+
+/**
+ * La propuesta que viene en el pedido, comprobada contra su plan.
+ *
+ * Confirmar y omitir reciben lo mismo —un plan y una fecha— y tienen que
+ * comprobar lo mismo: que la fecha sea de verdad una de las que ese plan
+ * propone. Sin eso, el cuerpo podría cerrar cualquier fecha y crear un
+ * movimiento con el monto del plan en un día que nunca se propuso, y escrita
+ * dos veces era una comprobación que una de las dos rutas podía perder.
+ */
+async function propuestaDelPedido(repositorio, cuerpo, userId) {
+  const propuesta = validarPropuesta(cuerpo)
+  if (!propuesta.ok) return { errores: propuesta.errores }
+
+  const plan = await repositorio.buscar(propuesta.valor.recurrenciaId, { userId })
+  if (plan.error) return { error: plan.error, mensaje: 'Error al leer la recurrencia' }
+  if (!plan.data) return { noExiste: true }
+
+  if (!esOcurrenciaDelPlan(plan.data, propuesta.valor.fecha)) {
+    return { errores: ['Esa fecha no es una ocurrencia de la recurrencia'] }
+  }
+
+  return { plan: plan.data, valor: propuesta.valor }
+}
+
+/** La respuesta de un pedido que no llegó a tener plan. */
+function noSePudoLeer(res, pedido) {
+  if (pedido.errores) return errorDeEntrada(res, pedido.errores)
+  if (pedido.noExiste) return noEncontrado(res, 'No existe esa recurrencia')
+  return errorDeBase(res, pedido.mensaje, pedido.error)
+}
+
 function rutasDeRecurrencias({ zona, limites }) {
   const router = express.Router()
 
@@ -54,8 +108,7 @@ function rutasDeRecurrencias({ zona, limites }) {
 
     if (error) return errorDeBase(res, 'Error al leer las recurrencias', error)
 
-    const { zona: zonaUsada, advertencias } = zonaDelPedido(req.query.zona, zona)
-    const hoy = aIsoCivil(hoyCivil(zonaUsada))
+    const { hoy, advertencias } = hoyDelPedido(req.query.zona, zona)
     const datos = req.query.todas === '1' ? data : data.filter((p) => planVigente(p, hoy))
 
     return res.status(200).json({ ok: true, errores: [], advertencias, datos })
@@ -101,8 +154,7 @@ function rutasDeRecurrencias({ zona, limites }) {
   // Va antes de `/:id` para que `propuestas` no se lea como un id.
   router.get('/propuestas', limites.conSesion, requireAuth, async (req, res) => {
     const repositorio = repositorioDeRecurrencias(req.token)
-    const { zona: zonaUsada, advertencias } = zonaDelPedido(req.query.zona, zona)
-    const hoy = aIsoCivil(hoyCivil(zonaUsada))
+    const { hoy, advertencias } = hoyDelPedido(req.query.zona, zona)
     const ventana = hastaDelPedido(req.query.hasta, hoy)
 
     const planes = await repositorio.listar({ userId: req.userId })
@@ -142,21 +194,10 @@ function rutasDeRecurrencias({ zona, limites }) {
   // que de verdad difieren del plan quedan marcados en `campos_editados`, así
   // un reclasificar masivo no le pisa la corrección.
   router.post('/propuestas/confirmar', limites.conSesion, requireAuth, async (req, res) => {
-    const propuesta = validarPropuesta(req.body)
-    if (!propuesta.ok) return errorDeEntrada(res, propuesta.errores)
-
     const repositorio = repositorioDeRecurrencias(req.token)
 
-    const plan = await repositorio.buscar(propuesta.valor.recurrenciaId, { userId: req.userId })
-    if (plan.error) return errorDeBase(res, 'Error al leer la recurrencia', plan.error)
-    if (!plan.data) return noEncontrado(res, 'No existe esa recurrencia')
-
-    // Que la fecha sea una de las que el plan propone se comprueba acá y no se
-    // da por buena: sin esto, el cuerpo podría cerrar cualquier fecha y crear
-    // un movimiento con el monto del plan en un día que nunca se propuso.
-    if (!esOcurrenciaDelPlan(plan.data, propuesta.valor.fecha)) {
-      return errorDeEntrada(res, ['Esa fecha no es una ocurrencia de la recurrencia'])
-    }
+    const pedido = await propuestaDelPedido(repositorio, req.body, req.userId)
+    if (!pedido.plan) return noSePudoLeer(res, pedido)
 
     let campos = {}
     if (req.body?.cambio !== undefined && req.body?.cambio !== null) {
@@ -166,14 +207,14 @@ function rutasDeRecurrencias({ zona, limites }) {
     }
 
     const { movimiento, camposEditados } = movimientoDeLaPropuesta(
-      plan.data,
-      propuesta.valor.fecha,
+      pedido.plan,
+      pedido.valor.fecha,
       campos
     )
 
     const { data, error } = await repositorio.confirmar({
-      recurrenciaId: propuesta.valor.recurrenciaId,
-      fechaPrevista: propuesta.valor.fecha,
+      recurrenciaId: pedido.valor.recurrenciaId,
+      fechaPrevista: pedido.valor.fecha,
       movimiento,
       camposEditados,
     })
@@ -182,11 +223,7 @@ function rutasDeRecurrencias({ zona, limites }) {
       // 23505 es la violación del unique de la ocurrencia: esa fecha ya estaba
       // decidida. Es lo que hace que un doble toque no cree dos movimientos, y
       // es un 409 del cliente y no un error de la base.
-      if (error.code === '23505') {
-        return res
-          .status(409)
-          .json({ ok: false, errores: ['Esa propuesta ya estaba decidida'], datos: null })
-      }
+      if (error.code === '23505') return conflicto(res, 'Esa propuesta ya estaba decidida')
       return errorDeBase(res, 'Error al confirmar la propuesta', error)
     }
 
@@ -199,31 +236,19 @@ function rutasDeRecurrencias({ zona, limites }) {
   // ningún movimiento, así que no aparece en ninguna suma, y la propuesta no
   // vuelve a ofrecerse.
   router.post('/propuestas/omitir', limites.conSesion, requireAuth, async (req, res) => {
-    const propuesta = validarPropuesta(req.body)
-    if (!propuesta.ok) return errorDeEntrada(res, propuesta.errores)
-
     const repositorio = repositorioDeRecurrencias(req.token)
 
-    const plan = await repositorio.buscar(propuesta.valor.recurrenciaId, { userId: req.userId })
-    if (plan.error) return errorDeBase(res, 'Error al leer la recurrencia', plan.error)
-    if (!plan.data) return noEncontrado(res, 'No existe esa recurrencia')
-
-    if (!esOcurrenciaDelPlan(plan.data, propuesta.valor.fecha)) {
-      return errorDeEntrada(res, ['Esa fecha no es una ocurrencia de la recurrencia'])
-    }
+    const pedido = await propuestaDelPedido(repositorio, req.body, req.userId)
+    if (!pedido.plan) return noSePudoLeer(res, pedido)
 
     const { data, error } = await repositorio.omitir({
       userId: req.userId,
-      recurrenciaId: propuesta.valor.recurrenciaId,
-      fechaPrevista: propuesta.valor.fecha,
+      recurrenciaId: pedido.valor.recurrenciaId,
+      fechaPrevista: pedido.valor.fecha,
     })
 
     if (error) {
-      if (error.code === '23505') {
-        return res
-          .status(409)
-          .json({ ok: false, errores: ['Esa propuesta ya estaba decidida'], datos: null })
-      }
+      if (error.code === '23505') return conflicto(res, 'Esa propuesta ya estaba decidida')
       return errorDeBase(res, 'Error al omitir la propuesta', error)
     }
 
@@ -264,20 +289,14 @@ function rutasDeRecurrencias({ zona, limites }) {
     const id = validarIdDeRecurrencia(req.params.id)
     if (!id.ok) return errorDeEntrada(res, id.errores)
 
-    const repositorio = repositorioDeRecurrencias(req.token)
-
-    const plan = await repositorio.buscar(id.valor, { userId: req.userId })
-    if (plan.error) return errorDeBase(res, 'Error al leer la recurrencia', plan.error)
-    if (!plan.data) return noEncontrado(res, 'No existe esa recurrencia')
-
-    const planes = await repositorio.listar({ userId: req.userId })
-    if (planes.error) return errorDeBase(res, 'Error al leer las recurrencias', planes.error)
+    const cadena = await planYSuCadena(repositorioDeRecurrencias(req.token), id.valor, req.userId)
+    if (!cadena.plan) return noSePudoLeer(res, cadena)
 
     return res.status(200).json({
       ok: true,
       errores: [],
-      datos: plan.data,
-      vivo: planVivoDeLaCadena(planes.data, id.valor) ?? plan.data,
+      datos: cadena.plan,
+      vivo: cadena.vivo,
     })
   })
 
@@ -302,16 +321,11 @@ function rutasDeRecurrencias({ zona, limites }) {
 
     const repositorio = repositorioDeRecurrencias(req.token)
 
-    const plan = await repositorio.buscar(id.valor, { userId: req.userId })
-    if (plan.error) return errorDeBase(res, 'Error al leer la recurrencia', plan.error)
-    if (!plan.data) return noEncontrado(res, 'No existe esa recurrencia')
+    const cadena = await planYSuCadena(repositorio, id.valor, req.userId)
+    if (!cadena.plan) return noSePudoLeer(res, cadena)
+    const vivo = cadena.vivo
 
-    const planes = await repositorio.listar({ userId: req.userId })
-    if (planes.error) return errorDeBase(res, 'Error al leer las recurrencias', planes.error)
-    const vivo = planVivoDeLaCadena(planes.data, id.valor) ?? plan.data
-
-    const { zona: zonaUsada, advertencias } = zonaDelPedido(req.body?.zona, zona)
-    const hoy = aIsoCivil(hoyCivil(zonaUsada))
+    const { hoy, advertencias } = hoyDelPedido(req.body?.zona, zona)
     const ayer = aIsoCivil(sumarDias(desdeIsoCivil(hoy), -1))
 
     // Un plan anclado hoy o después nunca propuso otra cosa que su ancla: se

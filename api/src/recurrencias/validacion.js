@@ -12,6 +12,7 @@ const {
   desdeIsoCivil,
   esFechaIso,
   esZonaValida,
+  hoyCivil,
   sumarDias,
 } = require('@saldai/core')
 
@@ -70,6 +71,20 @@ function zonaDelPedido(valor, porDefecto) {
 }
 
 /**
+ * El "hoy" del pedido, ya resuelto en la zona que corresponde.
+ *
+ * Las rutas que dependen de qué día es —cuáles planes siguen vigentes, cuántas
+ * propuestas se deben, en qué día se corta un plan— necesitaban las dos cosas
+ * juntas, y las tres lo escribían igual: resolver la zona, advertir si no se
+ * entendía y pasar el "hoy" civil a ISO. Con tres copias, cambiar cómo se
+ * resuelve el día dejaba a alguna atrás.
+ */
+function hoyDelPedido(valor, porDefecto) {
+  const { zona, advertencias } = zonaDelPedido(valor, porDefecto)
+  return { zona, hoy: aIsoCivil(hoyCivil(zona)), advertencias }
+}
+
+/**
  * Un año y pico de propuestas por delante. El tope existe porque las
  * ocurrencias se derivan una por una: un `hasta` de 2099 en una recurrencia
  * diaria son decenas de miles de fechas calculadas para una respuesta que nadie
@@ -116,6 +131,7 @@ function hastaDelPedido(valor, hoy) {
 
 module.exports = {
   hastaDelPedido,
+  hoyDelPedido,
   validarIdDeRecurrencia,
   validarPropuesta,
   zonaDelPedido,

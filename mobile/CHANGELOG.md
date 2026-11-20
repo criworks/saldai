@@ -41,6 +41,7 @@ del formato; el texto de cada entrada es el original.
 
 ### Fixed
 - **La vista de un movimiento y la de un plan ya no abren con lo de la vez anterior.** Abrir una fila mostraba el movimiento que se había abierto antes, y con eso el check y el tacho salían contra ese otro: en una propuesta aparecía "el parámetro id tiene que ser el uuid de un movimiento" y no se podía ni guardar ni eliminar. Pasaba porque las dos pantallas viven en las pestañas y volver atrás no las cierra, así que la siguiente entrada reusaba lo que había quedado escrito. "Nueva recurrencia" tenía lo mismo: abría con los valores del plan que se acababa de editar. Queda anotado en `docs/aprendizajes.md`.
+- **Abrir una recurrencia mientras la lista viene en camino ya no dice "Esa recurrencia ya no está".** Era el mismo cartel para dos cosas distintas —esperar y no estar—, así que entrar a un plan con la app recién abierta avisaba de un problema que no existía. Ahora espera, y el cartel queda para cuando el plan de verdad no está.
 
 ## [1.8.1] - 2026-11-13
 ### Changed

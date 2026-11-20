@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { DeviceEventEmitter, View } from 'react-native'
 import {
   FormularioDeMovimiento,
+  nombreRelativoDelDia,
   useMovimientoMutation,
   type ValoresDelMovimiento,
 } from '@/features/movimientos'
@@ -19,14 +20,8 @@ import { BotonDeRecurrencia } from '@/features/recurrencias'
  * habría tecleado.
  */
 function textoDeLaFecha(elegida: Date): string {
-  const hoy = new Date()
-  hoy.setHours(0, 0, 0, 0)
-  const dia = new Date(elegida)
-  dia.setHours(0, 0, 0, 0)
-
-  const dias = Math.round((hoy.getTime() - dia.getTime()) / 86_400_000)
-  if (dias === 0) return 'Hoy'
-  if (dias === 1) return 'Ayer'
+  const relativo = nombreRelativoDelDia(elegida)
+  if (relativo) return relativo
 
   const dd = String(elegida.getDate()).padStart(2, '0')
   const mm = String(elegida.getMonth() + 1).padStart(2, '0')

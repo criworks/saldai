@@ -1,3 +1,5 @@
+import { finDelMes, isoDelDia } from '@/features/movimientos'
+
 /**
  * Hasta dónde pedirle propuestas a la API.
  *
@@ -13,13 +15,9 @@
  * ellas el aviso que las cuenta.
  */
 export function ventanaDePropuestas(mes: number, anio: number, hoy: Date = new Date()): string {
-  // El día 0 del mes siguiente es el último del mes pedido, sin tener que saber
-  // cuántos días tiene ni si el año es bisiesto.
-  const ultimo = new Date(anio, mes, 0)
-  const finDelMes = `${ultimo.getFullYear()}-${String(ultimo.getMonth() + 1).padStart(2, '0')}-${String(ultimo.getDate()).padStart(2, '0')}`
-
-  const hoyIso = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`
+  const fin = finDelMes(mes, anio)
+  const hoyIso = isoDelDia(hoy)
 
   // Las dos son `AAAA-MM-DD`, así que la comparación de textos alcanza.
-  return finDelMes > hoyIso ? finDelMes : hoyIso
+  return fin > hoyIso ? fin : hoyIso
 }

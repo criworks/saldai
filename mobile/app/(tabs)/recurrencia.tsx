@@ -9,7 +9,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Trash } from 'phosphor-react-native'
 import React, { useEffect, useState } from 'react'
-import { DeviceEventEmitter, Text, View } from 'react-native'
+import { ActivityIndicator, Text, View } from 'react-native'
 import { Alert } from '@/components/ui/Alert'
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal'
 import { colors } from '@/constants/theme'
@@ -17,6 +17,8 @@ import {
   diaDesdeIso,
   FormularioDeMovimiento,
   isoDelDia,
+  montoEItemValidos,
+  useAccionesDeLaBarra,
   type BorradorDeMovimiento,
 } from '@/features/movimientos'
 import { BotonDeRecurrencia, useRecurrencias } from '@/features/recurrencias'
@@ -81,7 +83,7 @@ export default function RecurrenciaScreen() {
   const router = useRouter()
   const { id } = useLocalSearchParams<{ id?: string }>()
 
-  const { recurrencias, crear, creando, editar, editando, terminar, terminando } =
+  const { recurrencias, cargando, crear, creando, editar, editando, terminar, terminando } =
     useRecurrencias()
 
   const plan = id ? recurrencias.find((r) => r.id === id) ?? null : null
@@ -133,12 +135,13 @@ export default function RecurrenciaScreen() {
   const guardar = async () => {
     if (!borrador) return
 
-    const monto = parseInt(borrador.monto, 10)
-    const item = borrador.item.trim()
-    if (!Number.isInteger(monto) || monto <= 0 || !item) {
+    if (!montoEItemValidos(borrador)) {
       setError('Un plan necesita monto e item')
       return
     }
+
+    const monto = parseInt(borrador.monto, 10)
+    const item = borrador.item.trim()
 
     try {
       if (original) {
@@ -196,20 +199,22 @@ export default function RecurrenciaScreen() {
     setConfirmarEliminar(true)
   }
 
-  // Sin arreglo de dependencias a propósito, igual que en la vista del
-  // movimiento: las dos funciones se rearman en cada render y se vuelven a
-  // suscribir con ellas, así el tap del footer llega al borrador que está en
-  // pantalla y no al del primer render.
-  useEffect(() => {
-    const check = DeviceEventEmitter.addListener('guardarMovimiento', guardar)
-    const tacho = DeviceEventEmitter.addListener('descartarMovimiento', pedirEliminar)
-    return () => {
-      check.remove()
-      tacho.remove()
-    }
-  })
+  useAccionesDeLaBarra(guardar, pedirEliminar)
 
   if (!borrador || cargado !== llaveDelPlan) {
+    // Dos casos que se veían igual y no lo son: mientras la lista viene en
+    // camino esto es una espera, y decir "ya no está" ahí era avisar de un
+    // problema que no había. El mensaje queda para cuando la lista llegó y el
+    // plan no estaba (lo terminó otra pantalla), y el spinner es el mismo que
+    // la vista del movimiento.
+    if (cargando) {
+      return (
+        <View className="flex-1 bg-background items-center justify-center">
+          <ActivityIndicator size="small" color={colors.textMuted} />
+        </View>
+      )
+    }
+
     return (
       <View className="flex-1 bg-background items-center justify-center">
         <Text className="text-muted-foreground text-body font-normal">
