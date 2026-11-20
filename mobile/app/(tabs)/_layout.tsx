@@ -32,6 +32,7 @@ export default function TabLayout() {
             fila del mes, con su id o con la propuesta en los parámetros.
           */}
           <Tabs.Screen name="movimiento" options={{ href: null }} />
+          <Tabs.Screen name="recurrencia" options={{ href: null }} />
         </Tabs>
       </MovimientosProvider>
     </FilterProvider>

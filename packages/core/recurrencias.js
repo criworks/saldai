@@ -105,6 +105,32 @@ function ocurrenciasDelPlan(plan, { hasta }) {
   return fechas
 }
 
+/**
+ * La primera fecha que el plan propone a partir de `desde`, inclusive. `null` si
+ * el plan ya no propone ninguna.
+ *
+ * Es lo que hace falta para "editar de aquí en adelante" sin mover el día: el
+ * `desde` de un cambio pasa a ser el ancla del plan que sigue, así que con "hoy"
+ * el arriendo del 5 se muda al día en que a alguien le tocó editar el monto.
+ * Con la próxima ocurrencia, el día se conserva y lo pendiente de antes queda
+ * con los valores viejos, que es de lo que se trata la cadena.
+ */
+function proximaOcurrencia(plan, { desde }) {
+  const limite = desdeIsoCivil(desde)
+  if (!limite) return null
+
+  const fin = plan?.vigente_hasta ? desdeIsoCivil(plan.vigente_hasta) : null
+
+  for (let n = 0; n < MAXIMO_DE_OCURRENCIAS; n++) {
+    const fecha = ocurrenciaNumero(plan, n)
+    if (!fecha) return null
+    if (fin && fecha.getTime() > fin.getTime()) return null
+    if (fecha.getTime() >= limite.getTime()) return aIsoCivil(fecha)
+  }
+
+  return null
+}
+
 /** `true` si esa fecha es una de las que el plan propone. */
 function esOcurrenciaDelPlan(plan, fecha) {
   if (!esFechaIso(fecha)) return false
@@ -537,6 +563,7 @@ module.exports = {
   MAXIMO_DE_OCURRENCIAS,
   ocurrenciaNumero,
   ocurrenciasDelPlan,
+  proximaOcurrencia,
   esOcurrenciaDelPlan,
   propuestasPendientes,
   movimientoDeLaPropuesta,

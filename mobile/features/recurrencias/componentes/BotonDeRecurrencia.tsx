@@ -28,6 +28,12 @@ export interface BotonDeRecurrenciaProps {
    * confirmación; sin plan es soltar lo que se acababa de elegir.
    */
   onQuitar: () => void
+  /**
+   * Si el selector ofrece quitar la recurrencia. En la vista de un plan no:
+   * ahí todo es recurrente y el tacho de la barra de abajo es el que lo
+   * elimina, así que ofrecerlo dos veces son dos caminos para lo mismo.
+   */
+  permitirQuitar?: boolean
   ocupado?: boolean
 }
 
@@ -53,6 +59,7 @@ export function BotonDeRecurrencia({
   frecuenciaElegida,
   onElegir,
   onQuitar,
+  permitirQuitar = true,
   ocupado,
 }: BotonDeRecurrenciaProps) {
   const [abierto, setAbierto] = useState(false)
@@ -152,7 +159,7 @@ export function BotonDeRecurrencia({
                   ))}
                 </View>
 
-                {activo && (
+                {activo && permitirQuitar && (
                   <Pressable
                     onPress={() => {
                       setAbierto(false)

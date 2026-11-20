@@ -63,14 +63,15 @@ export function GradientFooter(props: BottomTabBarProps) {
   // navegación que tiene sentido es salir.
   const esPantallaDeAjuste = routeName === 'zona-horaria' || routeName === 'capacidades';
   /*
-    La vista de un movimiento: la barra cambia de significado entera. A la
+    La vista de un movimiento o de un plan: la barra cambia de significado
+    entera. A la
     izquierda, volver sin guardar; a la derecha, descartar y aceptar. Qué hacen
     esos dos lo decide la pantalla según el estado del movimiento —confirmar u
     omitir una propuesta, guardar o eliminar uno ya registrado—, así que de acá
     sale un evento y no una acción: el footer no sabe qué movimiento se está
     mirando, y pasarle un callback por la navegación lo ataría a la pantalla.
   */
-  const esMovimiento = routeName === 'movimiento';
+  const esMovimiento = routeName === 'movimiento' || routeName === 'recurrencia';
   const isEnCursoActive = routeName === 'index' && mes === currentCalendarMonth;
 
   const handleCategoryPress = (category: string) => {
