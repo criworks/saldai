@@ -8,6 +8,7 @@ const {
   validarInput,
   validarMes,
 } = require('../src/movimientos/validacion')
+const { hastaDelPedido } = require('../src/recurrencias/validacion')
 
 test('el input tiene que ser un string con algo', () => {
   assert.strictEqual(validarInput('45000, uber').ok, true)
@@ -63,4 +64,34 @@ test('el id de un movimiento tiene que ser un uuid', () => {
     assert.strictEqual(ok, false, `aceptó ${invalido}`)
     assert.match(errores[0], /uuid de un movimiento/)
   }
+})
+
+test("'hasta' solo estira la ventana de propuestas hacia adelante", () => {
+  const hoy = '2026-11-20'
+
+  // Sin el parámetro, hasta hoy.
+  assert.deepStrictEqual(hastaDelPedido(undefined, hoy), { hasta: hoy, advertencias: [] })
+
+  // Hacia adelante manda el pedido: es lo que deja pedir el mes que se está
+  // mirando.
+  assert.strictEqual(hastaDelPedido('2026-11-30', hoy).hasta, '2026-11-30')
+
+  // Hacia atrás no: lo atrasado se debe igual, y es lo que el usuario se está
+  // olvidando. Mirando septiembre, las propuestas de octubre siguen viniendo.
+  assert.strictEqual(hastaDelPedido('2026-09-30', hoy).hasta, hoy)
+  assert.deepStrictEqual(hastaDelPedido('2026-09-30', hoy).advertencias, [])
+})
+
+test("un 'hasta' muy lejano o ilegible no deja al usuario sin propuestas", () => {
+  const hoy = '2026-11-20'
+
+  // Las ocurrencias se derivan una por una, así que hay tope. Advierte en vez
+  // de rechazar, para no devolver una lista vacía por un parámetro de más.
+  const lejano = hastaDelPedido('2099-01-01', hoy)
+  assert.strictEqual(lejano.hasta, '2027-12-25')
+  assert.match(lejano.advertencias[0], /no puede pasar de/)
+
+  const ilegible = hastaDelPedido('el mes que viene', hoy)
+  assert.strictEqual(ilegible.hasta, hoy)
+  assert.match(ilegible.advertencias[0], /no reconocida/)
 })

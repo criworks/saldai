@@ -17,8 +17,8 @@ export interface ExpenseItemProps {
   /** El método de pago. Se omite igual que la categoría. */
   metodo?: Metodo;
   /**
-   * El movimiento nace de un plan de recurrencia, o es una propuesta de uno.
-   * Dibuja el reloj adelante.
+   * La fila es una propuesta de un plan todavía sin confirmar. Dibuja el reloj
+   * adelante.
    */
   recurrente?: boolean;
 }
@@ -33,12 +33,14 @@ export interface ExpenseItemProps {
  * saber de preferencias ni pedirlas. Así el playground la puede dibujar en sus
  * cuatro combinaciones sin montar la consulta.
  *
- * El reloj adelante marca lo que viene de un plan, y lo marca igual en una
- * propuesta por confirmar y en un movimiento ya registrado. Es a propósito: si
- * el usuario marca como recurrente algo de hace tres meses, las propuestas de
- * los meses intermedios conviven en el feed con los movimientos que él cargó a
- * mano en su momento, y el reloj es lo que le deja ver cuál es cuál antes de
- * confirmar algo repetido.
+ * El reloj adelante marca **lo que está por confirmar**, y nada más. No marca
+ * "viene de un plan": el movimiento que ancla una recurrencia, y cualquier
+ * repetición ya confirmada, son movimientos como los demás y se ven como los
+ * demás. El reloj está para lo que todavía le pide algo al usuario, y por eso
+ * sirve justo en el caso difícil: si marca como recurrente algo de hace tres
+ * meses, las propuestas de los meses intermedios conviven en el feed con los
+ * movimientos que él cargó a mano en su momento, y el reloj es lo que le deja
+ * ver cuál es cuál antes de confirmar algo repetido.
  *
  * "Sin categoría" no se dibuja. Es lo que queda cuando ni el usuario ni el
  * parser eligieron, igual que en el selector de la captura, y una burbuja en

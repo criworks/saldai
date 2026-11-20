@@ -23,7 +23,7 @@ export function useRecurrencias() {
 
   const invalidar = () => {
     cliente.invalidateQueries({ queryKey: llaves.recurrencias() })
-    cliente.invalidateQueries({ queryKey: llaves.propuestas() })
+    cliente.invalidateQueries({ queryKey: llaves.todasLasPropuestas() })
   }
 
   const alta = useMutation({

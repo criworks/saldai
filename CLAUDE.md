@@ -122,7 +122,11 @@ confirmar es lo que **crea** el movimiento. Las propuestas **no se guardan**:
 una pendiente es la ausencia de una fila en `public.ocurrencias_recurrentes`,
 que es donde van las decisiones ya tomadas (`confirmada` u `omitida`). Las
 fechas se derivan del plan en `packages/core/recurrencias.js`, y por eso no hay
-ningún proceso que corra solo. Confirmar y editar-de-aquí-en-adelante pasan por
+ningún proceso que corra solo. `GET /recurrencias/propuestas` acepta `hasta`
+(ISO) para decir hasta dónde proponer, porque la app las muestra en el día que
+les toca dentro del mes que se está mirando; **solo estira la ventana hacia
+adelante**, con un tope de 400 días: un valor anterior a hoy se ignora, porque
+lo atrasado se debe igual y es lo que el usuario se está olvidando. Confirmar y editar-de-aquí-en-adelante pasan por
 dos funciones de Postgres (`confirmar_ocurrencia_recurrente`,
 `editar_recurrencia_desde`) porque cada una escribe dos tablas y a medias
 dejan, respectivamente, un movimiento duplicable y un perfil sin recurrencia.

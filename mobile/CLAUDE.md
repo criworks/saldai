@@ -55,7 +55,9 @@ app/                        # Rutas (Expo Router)
   (tabs)/categorias.tsx
   (tabs)/configuraciones.tsx
   (tabs)/capacidades.tsx    # General > Capacidades: los switches de las funciones
-  (tabs)/recurrencias.tsx   # Crear y editar planes de recurrencia
+  (tabs)/recurrencias.tsx   # La lista de planes de recurrencia
+  (tabs)/recurrencia.tsx    # Un plan, con la forma de un movimiento
+  (tabs)/movimiento.tsx     # Un movimiento: por confirmar o registrado
   (tabs)/cuenta.tsx
   playground.tsx            # Pruebas de UI (solo en dev con mocks)
 features/movimientos/            # Estado, componentes y llamadas de movimientos
@@ -117,6 +119,13 @@ que no es el que está en pantalla, porque se confirma la propuesta de marzo en
 abril. Omitir no crea movimiento, así que no toca la caché de movimientos. Crear o
 editar un plan invalida también las propuestas: un plan nuevo propone desde su
 fecha ancla, que puede ser pasada.
+
+La ventana de las propuestas la decide `usePropuestas()` y no cada pantalla, con
+`ventanaDePropuestas(mes, anio)`: llega al fin del mes que se está mirando y
+nunca antes de hoy. Va en la llave de caché, y es lo que deja que el listado del
+mes y la vista de una propuesta lean la **misma** consulta — con una ventana por
+pantalla quedarían en llaves distintas, y abrir una propuesta de fin de mes
+desde la lista caería en una caché que no la tiene.
 
 Lo que viaja en el `PATCH` es **solo lo que cambió** (`cambioPendiente`, en
 `features/movimientos/edicion.ts`): la API marca como editados a mano los campos que
