@@ -84,18 +84,27 @@ alter table public.recurrencias
 --
 -- **Agregarle un parámetro a una función de Postgres no la reemplaza: la
 -- sobrecarga.** `create or replace` con una firma distinta deja las dos
--- funciones existiendo, y PostgREST elige por los nombres de los argumentos que
--- le manden: la vieja seguiría siendo elegible y un `PATCH` que mande la regla
--- podría caer en la que la descarta, guardando el plan **sin** regla y
--- respondiendo 200. No hay error que mirar. Por eso cada `drop function` de
--- abajo es parte del cambio y no una limpieza, y va con la firma completa,
--- porque es la firma lo que identifica a la función.
+-- funciones existiendo, y PostgREST elige según los nombres de los argumentos
+-- que le manden. Eso es una trampa y acá es, además, la salida:
+--
+--   * **La trampa:** si la API mandara la regla solo a veces, un `PATCH` podría
+--     caer en la función vieja, guardar el plan **sin** regla y responder 200,
+--     sin ningún error que mirar. Por eso la API manda **siempre** los cuatro
+--     parámetros, con `null` cuando no hay regla
+--     (`api/src/recurrencias/columnas.js`): con las cuatro claves presentes la
+--     única firma que calza es la nueva.
+--   * **La salida:** las migraciones las aplica una persona a mano y el deploy
+--     de Render sale solo al mergear a `main`, así que los dos momentos no
+--     coinciden. Si esta migración borrara las firmas viejas, la API que está en
+--     producción quedaría llamando funciones que ya no existen —y al revés, si
+--     el deploy va primero, la API nueva llama firmas que la base todavía no
+--     tiene—. **Las dos versiones conviven**, igual que convivieron la vista
+--     `public.gastos` y la ruta `/gastos` en el renombre, y por la misma razón.
+--
+-- **Las firmas viejas son temporales.** Se borran en una migración posterior al
+-- release que lleve la regla a producción, cuando ninguna API les hable más.
 
-drop function if exists public.editar_recurrencia_desde(
-  uuid, date, integer, text, text, text, text, text, text, text, date
-);
-
-create function public.editar_recurrencia_desde(
+create or replace function public.editar_recurrencia_desde(
   p_recurrencia_id    uuid,
   p_desde             date,
   p_monto             integer,
@@ -178,9 +187,7 @@ begin
 end;
 $$;
 
-drop function if exists public.atar_recurrencia_a_movimiento(uuid, text, date);
-
-create function public.atar_recurrencia_a_movimiento(
+create or replace function public.atar_recurrencia_a_movimiento(
   p_movimiento_id    uuid,
   p_frecuencia       text,
   p_dia_de_la_semana smallint,
@@ -231,11 +238,7 @@ begin
 end;
 $$;
 
-drop function if exists public.crear_movimiento_con_recurrencia(
-  uuid, integer, text, text, text, text, text, date, text, text, date, text, date
-);
-
-create function public.crear_movimiento_con_recurrencia(
+create or replace function public.crear_movimiento_con_recurrencia(
   p_user_id          uuid,
   p_monto            integer,
   p_monto_formateado text,
@@ -287,6 +290,6 @@ begin
 end;
 $$;
 
--- PostgREST cachea el schema, y acá importa más que de costumbre: las firmas
--- cambiaron, así que hasta el reload las llamadas nuevas no encuentran función.
+-- PostgREST cachea el schema: sin esto las firmas nuevas no aparecen hasta el
+-- próximo reinicio, y las llamadas con regla no encontrarían función.
 notify pgrst, 'reload schema';

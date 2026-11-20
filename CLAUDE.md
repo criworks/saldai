@@ -148,11 +148,16 @@ de rangos y otro de coherencia por frecuencia —un plan semanal solo lleva día
 la semana, y en mensual y anual las dos formas del día son excluyentes—, porque
 una regla incoherente no falla al escribirse sino meses después, al derivar las
 fechas. **Agregarle un parámetro a una función de Postgres la sobrecarga en vez
-de reemplazarla**, y PostgREST elige por los nombres de los argumentos: por eso
-la migración borra por firma completa las versiones viejas de
+de reemplazarla**, y PostgREST elige según los nombres de los argumentos que le
+manden. De ahí dos cosas: la API manda **siempre** los cuatro parámetros de la
+regla, con `null` cuando no hay (`api/src/recurrencias/columnas.js`), porque
+mandarlos solo a veces dejaría un `PATCH` cayendo en la función vieja, guardando
+el plan sin regla y respondiendo 200; y las dos versiones de
 `editar_recurrencia_desde`, `atar_recurrencia_a_movimiento` y
-`crear_movimiento_con_recurrencia` antes de recrearlas. Sin eso, un `PATCH` con
-regla podía caer en la función vieja, guardar el plan sin regla y responder 200.
+`crear_movimiento_con_recurrencia` **conviven**, porque la migración la aplica
+una persona y el deploy sale al mergear a `main`, así que borrar la firma vieja
+rompe el hueco entre los dos momentos. Son temporales: se borran en una
+migración posterior al release que lleve la regla a producción.
 
 Las preferencias del perfil (`public.preferencias`) llevan **dos campos por
 flag**: `habilitado` es el entitlement, que decide el plan, y `activo` la
